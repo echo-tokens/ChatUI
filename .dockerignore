@@ -13,5 +13,12 @@ librechat*
 Dockerfile*
 docs
 
-# Ignore all hidden files
-.*
+# Ignore most hidden files (NOT .env)
+.git
+.gitignore
+.DS_Store
+.vscode
+.devcontainer
+.github
+.husky
+.railwayignore

@@ -1,15 +1,42 @@
-Instructions to upload to Railway backend:
+## Development Instructions
 
-- We upload a Docker Image of the code. So, you might need to install Docker/Docker Desktop first to your local machine. Then, run:
+## Deploy to Local
 
-1. docker build -t ghcr.io/echo-tokens/librechat:latest .
-2. docker login ghcr.io
-3. docker push ghcr.io/echo-tokens/librechat:latest
+### Prereqs
+- Node.js 20+ (ideally exactly Node 20, set with `nvm use 20`)
+- Docker & Docker Desktop
+- MongoDB
 
-Step 1 creates a Docker image locally. Step 2 logs into Github's online Docker image repository. Step 3 pushes the local image to the online repo.
+First, stop any existing Docker containers running on Port 3080:
+```
+docker stop $(docker ps -q --filter "publish=3080")
+```
 
-You can name the Docker image in Steps 1 and 3 whatever you like -- using the same name overwrites the previous image. Might be good practice to keep previous versions once things start working.
+Then run:
+```
+docker build -t librechat . # builds the Docker image locally
+docker run --env-file .env -p 3080:3080 librechat
+```
 
+Access on `http://localhost:3080`. DM Marcus for the `.env` file (not on Github, contains stuff that should not be exposed). This should connect directly to the ACTUAL MongoDB database hosted on Railway.
+
+## Deploy to Railway
+
+Just `git commit` and `git push` -- Railway will do the rest.
+
+Under the hood, deploying this code triggers the `build` command in `railway.json` -- which includes creating a new Docker image.
+
+## Notes on Environment Variables
+Local environment variables are located in the `.env` file. Environment variables on Railway are accessed in the Railway service's "Variables" section. The `.env` file is not on Github, and some variables are slightly different between local and Railway: for example, the `MONGO_URI` variable on Railway is the (private) `MongoDB.MONGO_URL` value, whereeas in local deployment the value is the (public) `MongoDB.MONGO_PUBLIC_URL` value.
+
+Previous, failed attempts:
+
+- uploading the Docker image directly from the local machine
+- uploading without a `railway.json` file
+- building through NIXPACKS
+- uploading the Github repo build commands not using Docker
+- trying to upload `.env` to Railway production
+- trying to set Environment Variables through the `build` commands
 
 
 <p align="center">
