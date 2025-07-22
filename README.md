@@ -1,3 +1,17 @@
+Instructions to upload to Railway backend:
+
+- We upload a Docker Image of the code. So, you might need to install Docker/Docker Desktop first to your local machine. Then, run:
+
+1. docker build -t ghcr.io/echo-tokens/librechat:latest .
+2. docker login ghcr.io
+3. docker push ghcr.io/echo-tokens/librechat:latest
+
+Step 1 creates a Docker image locally. Step 2 logs into Github's online Docker image repository. Step 3 pushes the local image to the online repo.
+
+You can name the Docker image in Steps 1 and 3 whatever you like -- using the same name overwrites the previous image. Might be good practice to keep previous versions once things start working.
+
+
+
 <p align="center">
   <a href="https://librechat.ai">
     <img src="client/public/assets/logo.svg" height="256">
