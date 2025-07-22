@@ -32,8 +32,10 @@ RUN \
     npm install --no-audit; \
     # React client build
     NODE_OPTIONS="--max-old-space-size=2048" npm run frontend; \
-    npm prune --production; \
     npm cache clean --force
+
+    # npm prune --production; \
+
 
 RUN mkdir -p /app/client/public/images /app/api/logs
 
