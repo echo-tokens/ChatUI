@@ -189,8 +189,8 @@ const useNewConvo = (index = 0) => {
         const getParams = () => (searchParamsString ? `?${searchParamsString}` : '');
 
         if (conversation.conversationId === Constants.NEW_CONVO && !modelsData) {
-          // Always set title to "AI, democratized" for new conversations
-          document.title = 'AI, democratized';
+          // Always set title to "echo" for new conversations
+          document.title = 'echo';
           const path = `/c/${Constants.NEW_CONVO}${getParams()}`;
           navigate(path, { state: { focusChat: true } });
           return;

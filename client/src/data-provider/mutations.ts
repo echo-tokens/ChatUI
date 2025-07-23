@@ -38,7 +38,7 @@ export const useGenTitleMutation = (): TGenTitleMutation => {
         ...c,
         title: response.title,
       }));
-      document.title = `AI, democratized - ${response.title}`;
+      document.title = `echo - ${response.title}`;
     },
   });
 };

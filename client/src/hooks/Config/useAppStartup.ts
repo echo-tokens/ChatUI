@@ -36,8 +36,8 @@ export default function useAppStartup({
 
   /** Set the app title */
   useEffect(() => {
-    // Always use "AI, democratized" as the base app title
-    const appTitle = 'AI, democratized';
+    // Always use "echo" as the base app title
+    const appTitle = 'echo';
     document.title = appTitle;
     localStorage.setItem(LocalStorageKeys.APP_TITLE, appTitle);
   }, [startupConfig]);

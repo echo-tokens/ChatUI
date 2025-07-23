@@ -36,7 +36,7 @@ export default function Footer({ className }: { className?: string }) {
 
   /* HARDCODED FOOTER - BYPASS CONFIG */
   const mainContentParts = (
-    'echo - AI, democratized'
+    'AI, democratized'
   ).split('|');
 
   useEffect(() => {
