@@ -58,24 +58,15 @@ endpoints:
     titleConvo: true
     titleModel: "gemini-2.0-flash-exp"
 
-  # Custom endpoints
-  custom:
-    - name: "xai"
-      apiKey: "${XAI_API_KEY}"
-      baseURL: "https://api.x.ai/v1"
-      models:
-        default: 
-          - "grok-3-mini"
-          - "grok-3"
-        fetch: false
-      titleConvo: true
-      titleMethod: "completion"
-      titleModel: "grok-3-mini"
-      summarize: false
-      summaryModel: "grok-3-mini"
-      forcePrompt: false
-      modelDisplayLabel: "Grok"
-      iconURL: "https://x.ai/favicon.ico"
+  # xAI (Grok) - Known endpoint, icon provided automatically
+  xai:
+    models:
+      default:
+        - "grok-3-mini"
+        - "grok-3"
+      fetch: false
+    titleConvo: true
+    titleModel: "grok-3-mini"
 
 # Enable file uploads (ChatGPT functionality)
 fileConfig:
@@ -105,5 +96,11 @@ fileConfig:
         - "image/.*"
         - "application/pdf"
         - "text/.*"
-    # xAI now configured as custom endpoint above, no separate file config needed
+    xai:
+      fileLimit: 5
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "text/.*"
  
