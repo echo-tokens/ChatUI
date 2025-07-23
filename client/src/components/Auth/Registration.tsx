@@ -170,7 +170,12 @@ const Registration: React.FC = () => {
             aria-label="Registration form"
             method="POST"
             onSubmit={handleSubmit((data: TRegisterUser) =>
-              registerUser.mutate({ ...data, token: token ?? undefined }),
+              registerUser.mutate({ 
+                ...data, 
+                username: data.email, // Set username to email since we removed username field
+                confirm_password: data.password, // Set confirm_password to password since we removed confirm field
+                token: token ?? undefined 
+              }),
             )}
           >
             {renderInput('name', 'com_auth_full_name', 'text', {
