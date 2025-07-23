@@ -38,7 +38,7 @@ export default function StartupLayout({ isAuthenticated }: { isAuthenticated?: b
   }, [isAuthenticated, navigate, data]);
 
   useEffect(() => {
-    document.title = 'echo';
+    document.title = 'AI, democratized';
   }, [startupConfig?.appTitle]);
 
   useEffect(() => {
