@@ -5,7 +5,7 @@ interface:
   # Core ChatGPT functionality
   modelSelect: true           # Enable model selection dropdown (key requirement)
   multiConvo: true           # Multiple conversations like ChatGPT
-  sidePanel: true            # Keep sidebar for conversation history
+  sidePanel: false           # Hide right sidebar (agents, prompts, etc.)
   
   # Enable ChatGPT-like features
   runCode: true              # Code execution (ChatGPT has this)
