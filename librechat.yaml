@@ -5,14 +5,11 @@ interface:
   # Core ChatGPT functionality
   modelSelect: true           # Enable model selection dropdown (key requirement)
   multiConvo: true           # Multiple conversations like ChatGPT
-  sidePanel: false           # Hide right sidebar (agents, prompts, etc.)
   
-  # Enable ChatGPT-like features
-  runCode: true              # Code execution (ChatGPT has this)
-  webSearch: true            # Web search (ChatGPT has this)
+  # COMPLETELY DISABLE RIGHT SIDEBAR
+  sidePanel: false           # Hide right sidebar completely
   
-  # Minimal - disable advanced features
-  endpointsMenu: false       # Hide endpoint menu (you only want 4 providers)
+  # Also disable all right sidebar features explicitly
   parameters: false          # Hide technical parameters
   presets: false             # No conversation presets
   prompts: false             # No prompt library
@@ -20,6 +17,10 @@ interface:
   agents: false              # No AI agents
   memories: false            # No memory/personalization
   temporaryChat: false       # No temporary chats
+  
+  # Enable core ChatGPT-like features
+  runCode: true              # Code execution (ChatGPT has this)
+  webSearch: true            # Web search (ChatGPT has this)
 
 # Configure your 4 AI providers
 endpoints:
