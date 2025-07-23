@@ -3,6 +3,32 @@ version: 1.2.1
 # Custom footer text (replaces LibreChat branding)
 customFooter: "echo - AI, democratized"
 
+# Hardcoded model specifications (easily changeable)
+modelSpecs:
+  enforce: true  # Force these models only
+  list:
+    - name: "OpenAI Models"
+      endpoint: "openAI"
+      models:
+        - "gpt-4o"
+        - "o1"
+        - "gpt-4o-mini"
+    - name: "Anthropic Models"
+      endpoint: "anthropic"
+      models:
+        - "claude-3-5-sonnet-20241022"
+        - "claude-3-opus-20240229"
+    - name: "Google Models" 
+      endpoint: "google"
+      models:
+        - "gemini-2.0-flash-exp"
+        - "gemini-1.5-pro-latest"
+    - name: "Grok Models"
+      endpoint: "xai"
+      models:
+        - "grok-3-mini"
+        - "grok-3"
+
 # Minimal interface - ChatGPT style with model selection
 interface:
   # Core ChatGPT functionality
@@ -25,46 +51,25 @@ interface:
   runCode: true              # Code execution (ChatGPT has this)
   webSearch: true            # Web search (ChatGPT has this)
 
-# Configure your 4 AI providers
+# Configure your 4 AI providers (models enforced by modelSpecs above)
 endpoints:
-  # OpenAI - Limited to specific models only  
+  # OpenAI - Models controlled by modelSpecs
   openAI:
-    models:
-      default:
-        - "gpt-4o"
-        - "o1"
-        - "gpt-4o-mini"
-      fetch: false
     titleConvo: true
     titleModel: "gpt-4o-mini"
 
-  # Anthropic - Limited to specific models only
+  # Anthropic - Models controlled by modelSpecs  
   anthropic:
-    models:
-      default:
-        - "claude-3-5-sonnet-20241022"
-        - "claude-3-opus-20240229"
-      fetch: false
     titleConvo: true
     titleModel: "claude-3-5-sonnet-20241022"
 
-  # Google - Limited to specific models only
+  # Google - Models controlled by modelSpecs
   google:
-    models:
-      default:
-        - "gemini-2.0-flash-exp"
-        - "gemini-1.5-pro-latest"
-      fetch: false
     titleConvo: true
     titleModel: "gemini-2.0-flash-exp"
 
-  # xAI (Grok) - Known endpoint, icon provided automatically
+  # xAI (Grok) - Models controlled by modelSpecs
   xai:
-    models:
-      default:
-        - "grok-3-mini"
-        - "grok-3"
-      fetch: false
     titleConvo: true
     titleModel: "grok-3-mini"
 

@@ -42,7 +42,8 @@ const DragDropModal = ({ onOptionSelect, setShowModal, files, isVisible }: DragD
         icon: <FileSearch className="icon-md" />,
       });
     }
-    if (capabilities.codeEnabled) {
+    /* CODE INTERPRETER DRAG DROP PERMANENTLY DISABLED - MINIMAL INTERFACE */
+    if (false && capabilities.codeEnabled) {
       _options.push({
         label: localize('com_ui_upload_code_files'),
         value: EToolResources.execute_code,

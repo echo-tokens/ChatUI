@@ -226,7 +226,8 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
     });
   }
 
-  if (canRunCode && codeEnabled) {
+  /* CODE INTERPRETER DROPDOWN PERMANENTLY DISABLED - MINIMAL INTERFACE */
+  if (false && canRunCode && codeEnabled) {
     dropdownItems.push({
       onClick: handleCodeInterpreterToggle,
       hideOnClick: false,
@@ -280,7 +281,8 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
     });
   }
 
-  if (artifactsEnabled) {
+  /* ARTIFACTS DROPDOWN PERMANENTLY DISABLED - MINIMAL INTERFACE */
+  if (false && artifactsEnabled) {
     dropdownItems.push({
       hideOnClick: false,
       render: (props) => (
