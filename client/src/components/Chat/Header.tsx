@@ -55,9 +55,11 @@ export default function Header() {
             } ${!navVisible ? 'translate-x-0' : 'translate-x-[-100px]'}`}
           >
             <ModelSelector startupConfig={startupConfig} />
-            {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
+            {/* PRESETS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
+            {false && <PresetsMenu />}
             {hasAccessToBookmarks === true && <BookmarkMenu />}
-            {hasAccessToMultiConvo === true && <AddMultiConvo />}
+            {/* MULTI CONVERSATIONS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
+            {false && <AddMultiConvo />}
             {isSmallScreen && (
               <>
                 <ExportAndShareMenu
