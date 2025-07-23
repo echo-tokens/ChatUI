@@ -1,4 +1,5 @@
-import { TranslationKeys, useLocalize } from '~/hooks';
+import { useContext } from 'react';
+import { TranslationKeys, useLocalize, ThemeContext } from '~/hooks';
 import { TStartupConfig } from 'librechat-data-provider';
 import { ErrorMessage } from '~/components/Auth/ErrorMessage';
 import SocialLoginRender from './SocialLoginRender';
@@ -25,6 +26,11 @@ function AuthLayout({
   error: TranslationKeys | null;
 }) {
   const localize = useLocalize();
+  const { theme } = useContext(ThemeContext);
+  
+  // Determine which logo to use based on theme
+  const isThemeDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const logoSrc = isThemeDark ? '/assets/logo_full_dark.png' : '/assets/logo_full_light.png';
 
   const hasStartupConfigError = startupConfigError !== null && startupConfigError !== undefined;
   const DisplayError = () => {
@@ -59,35 +65,42 @@ function AuthLayout({
   return (
     <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
       <Banner />
-      <BlinkAnimation active={isFetching}>
-        <div className="mt-6 h-10 w-full bg-cover">
-          <img
-            src="/assets/logo.svg"
-            className="h-full w-full object-contain"
-            alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
-          />
-        </div>
-      </BlinkAnimation>
       <DisplayError />
       <div className="absolute bottom-0 left-0 md:m-4">
         <ThemeSelector />
       </div>
 
-      <div className="flex flex-grow items-center justify-center">
-        <div className="w-authPageWidth overflow-hidden bg-white px-6 py-4 dark:bg-gray-900 sm:max-w-md sm:rounded-lg">
-          {!hasStartupConfigError && !isFetching && (
-            <h1
-              className="mb-4 text-center text-3xl font-semibold text-black dark:text-white"
-              style={{ userSelect: 'none' }}
-            >
-              {header}
-            </h1>
-          )}
-          {children}
-          {!pathname.includes('2fa') &&
-            (pathname.includes('login') || pathname.includes('register')) && (
-              <SocialLoginRender startupConfig={startupConfig} />
+      <div className="flex flex-grow items-center justify-center px-4">
+        <div className="w-full max-w-md space-y-8">
+          {/* Echo Logo Section - Moved down and centered */}
+          <BlinkAnimation active={isFetching}>
+            <div className="flex justify-center">
+              <div className="h-16 w-auto">
+                <img
+                  src={logoSrc}
+                  className="h-full w-auto object-contain"
+                  alt="echo - AI, democratized"
+                />
+              </div>
+            </div>
+          </BlinkAnimation>
+
+          {/* Main Auth Card */}
+          <div className="overflow-hidden bg-white px-6 py-8 dark:bg-gray-900 sm:rounded-lg sm:shadow-lg">
+            {!hasStartupConfigError && !isFetching && (
+              <h1
+                className="mb-6 text-center text-3xl font-semibold text-black dark:text-white"
+                style={{ userSelect: 'none' }}
+              >
+                {header}
+              </h1>
             )}
+            {children}
+            {!pathname.includes('2fa') &&
+              (pathname.includes('login') || pathname.includes('register')) && (
+                <SocialLoginRender startupConfig={startupConfig} />
+              )}
+          </div>
         </div>
       </div>
       <Footer startupConfig={startupConfig} />
