@@ -27,18 +27,18 @@ interface:
 
 # Configure your 4 AI providers
 endpoints:
-  # OpenAI - GPT-4o, o1, GPT-4o-mini
+  # OpenAI - Limited to specific models only  
   openAI:
     models:
       default:
         - "gpt-4o"
         - "o1"
         - "gpt-4o-mini"
-      fetch: false  # Use the specified models only
+      fetch: false
     titleConvo: true
     titleModel: "gpt-4o-mini"
 
-  # Anthropic - Claude 3.5 Sonnet, Claude 3 Opus
+  # Anthropic - Limited to specific models only
   anthropic:
     models:
       default:
@@ -48,7 +48,7 @@ endpoints:
     titleConvo: true
     titleModel: "claude-3-5-sonnet-20241022"
 
-  # Google Gemini - 2.0 Flash Experimental, 1.5 Pro
+  # Google - Limited to specific models only
   google:
     models:
       default:
@@ -58,7 +58,7 @@ endpoints:
     titleConvo: true
     titleModel: "gemini-2.0-flash-exp"
 
-  # Grok (xAI) - Custom endpoint configuration
+  # Custom endpoints
   custom:
     - name: "xai"
       apiKey: "${XAI_API_KEY}"
