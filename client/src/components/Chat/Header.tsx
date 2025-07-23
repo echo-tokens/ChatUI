@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { getConfigDefaults, PermissionTypes, Permissions } from 'librechat-data-provider';
 import type { ContextType } from '~/common';
 import ModelSelector from './Menus/Endpoints/ModelSelector';
-import { PresetsMenu, HeaderNewChat, LogoButton, SidebarToggle } from './Menus';
+import { PresetsMenu, HeaderNewChat, OpenSidebar, LogoButton } from './Menus';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import { useMediaQuery, useHasAccess } from '~/hooks';
@@ -31,8 +31,7 @@ export default function Header() {
     <div className="sticky top-0 z-10 flex h-14 w-full items-center justify-between bg-white p-2 font-semibold text-text-primary dark:bg-gray-800">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
         <div className="mx-1 flex items-center gap-2">
-          {/* Logo Button - positioned where OpenSidebar was (outside animation) */}
-          <LogoButton />
+          <OpenSidebar setNavVisible={setNavVisible} />
           <div
             className={`flex items-center gap-2 ${
               !isSmallScreen ? 'transition-all duration-200 ease-in-out' : ''
@@ -50,10 +49,11 @@ export default function Header() {
             } ${!navVisible ? 'translate-x-0' : 'translate-x-[-100px]'}`}
           >
             <ModelSelector startupConfig={startupConfig} />
+            <LogoButton />
             {/* PRESETS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
             {false && <PresetsMenu />}
-            {/* SidebarToggle - positioned where BookmarkMenu was */}
-            <SidebarToggle setNavVisible={setNavVisible} />
+            {/* BOOKMARKS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
+            {false && <div>BookmarkMenu placeholder</div>}
             {/* MULTI CONVERSATIONS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
             {false && <AddMultiConvo />}
             {isSmallScreen && (
