@@ -128,7 +128,8 @@ const SidePanelGroup = memo(
               </ResizablePanel>
             </>
           )}
-          {!hideSidePanel && interfaceConfig.sidePanel === true && (
+          {/* RIGHT SIDEBAR PERMANENTLY DISABLED - MINIMAL CHATGPT INTERFACE */}
+          {false && (
             <SidePanel
               panelRef={panelRef}
               minSize={minSize}
@@ -145,11 +146,14 @@ const SidePanelGroup = memo(
             />
           )}
         </ResizablePanelGroup>
-        <button
-          aria-label="Close right side panel"
-          className={`nav-mask ${!isCollapsed ? 'active' : ''}`}
-          onClick={handleClosePanel}
-        />
+        {/* SIDEBAR TOGGLE BUTTON DISABLED - NO SIDEBAR TO TOGGLE */}
+        {false && (
+          <button
+            aria-label="Close right side panel"
+            className={`nav-mask ${!isCollapsed ? 'active' : ''}`}
+            onClick={handleClosePanel}
+          />
+        )}
       </>
     );
   },
