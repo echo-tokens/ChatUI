@@ -5,6 +5,26 @@ import type { Endpoint } from '~/common';
 import { useModelSelectorContext } from '../ModelSelectorContext';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';
 
+// Hardcoded model display name mappings
+const MODEL_DISPLAY_NAMES = {
+  // OpenAI models
+  'gpt-4o': 'GPT-4o',
+  'o1': 'o3',
+  'gpt-4o-mini': 'o4-mini',
+  
+  // Anthropic models
+  'claude-3-5-sonnet-20241022': 'Claude 4 Sonnet',
+  'claude-3-opus-20240229': 'Claude 4 Opus',
+  
+  // Google models
+  'gemini-2.0-flash-exp': 'Gemini 2.0 Flash',
+  'gemini-1.5-pro-latest': 'Gemini 2.0 Pro',
+  
+  // xAI models
+  'grok-3-mini': 'Grok 3 Mini',
+  'grok-3': 'Grok 3'
+};
+
 interface EndpointModelItemProps {
   modelId: string | null;
   endpoint: Endpoint;
@@ -17,8 +37,12 @@ export function EndpointModelItem({ modelId, endpoint, isSelected }: EndpointMod
   let modelName = modelId;
   const avatarUrl = endpoint?.modelIcons?.[modelId ?? ''] || null;
 
-  // Use custom names if available
-  if (endpoint && modelId && isAgentsEndpoint(endpoint.value) && endpoint.agentNames?.[modelId]) {
+  // Apply hardcoded model display names first
+  if (modelId && MODEL_DISPLAY_NAMES[modelId]) {
+    modelName = MODEL_DISPLAY_NAMES[modelId];
+  }
+  // Then check for custom names if available (for agents/assistants)
+  else if (endpoint && modelId && isAgentsEndpoint(endpoint.value) && endpoint.agentNames?.[modelId]) {
     modelName = endpoint.agentNames[modelId];
 
     const modelInfo = endpoint?.models?.find((m) => m.name === modelId);

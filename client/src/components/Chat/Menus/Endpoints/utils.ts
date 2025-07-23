@@ -162,6 +162,26 @@ export function getSelectedIcon({
   return null;
 }
 
+// Hardcoded model display name mappings
+const MODEL_DISPLAY_NAMES = {
+  // OpenAI models
+  'gpt-4o': 'GPT-4o',
+  'o1': 'o3',
+  'gpt-4o-mini': 'o4-mini',
+  
+  // Anthropic models
+  'claude-3-5-sonnet-20241022': 'Claude 4 Sonnet',
+  'claude-3-opus-20240229': 'Claude 4 Opus',
+  
+  // Google models
+  'gemini-2.0-flash-exp': 'Gemini 2.0 Flash',
+  'gemini-1.5-pro-latest': 'Gemini 2.0 Pro',
+  
+  // xAI models
+  'grok-3-mini': 'Grok 3 Mini',
+  'grok-3': 'Grok 3'
+};
+
 export const getDisplayValue = ({
   localize,
   mappedEndpoints,
@@ -198,6 +218,11 @@ export const getDisplayValue = ({
       endpoint.assistantNames[selectedValues.model]
     ) {
       return endpoint.assistantNames[selectedValues.model];
+    }
+
+    // Apply hardcoded model display names
+    if (MODEL_DISPLAY_NAMES[selectedValues.model]) {
+      return MODEL_DISPLAY_NAMES[selectedValues.model];
     }
 
     return selectedValues.model;
