@@ -7,6 +7,7 @@ import { BirthdayIcon, TooltipAnchor, SplitText } from '~/components';
 import ConvoIcon from '~/components/Endpoints/ConvoIcon';
 import { useLocalize, useAuthContext } from '~/hooks';
 import { getIconEndpoint, getEntity } from '~/utils';
+import EchoLogoButton from './EchoLogoButton';
 
 const containerClassName =
   'shadow-stroke relative flex h-full items-center justify-center rounded-full bg-white dark:bg-presentation dark:text-white text-black dark:after:shadow-none ';
@@ -147,6 +148,11 @@ export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: 
     <div
       className={`flex h-full transform-gpu flex-col items-center justify-center pb-16 transition-all duration-200 ${centerFormOnLanding ? 'max-h-full sm:max-h-0' : 'max-h-full'} ${getDynamicMargin}`}
     >
+      {/* Echo Logo positioned above everything else */}
+      <div className="mb-8">
+        <EchoLogoButton />
+      </div>
+      
       <div ref={contentRef} className="flex flex-col items-center gap-0 p-2">
         <div
           className={`flex ${textHasMultipleLines ? 'flex-col' : 'flex-col md:flex-row'} items-center justify-center gap-2`}

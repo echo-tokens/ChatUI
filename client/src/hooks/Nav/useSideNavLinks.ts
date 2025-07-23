@@ -41,10 +41,6 @@ export default function useSideNavLinks({
     permissionType: PermissionTypes.PROMPTS,
     permission: Permissions.USE,
   });
-  const hasAccessToBookmarks = useHasAccess({
-    permissionType: PermissionTypes.BOOKMARKS,
-    permission: Permissions.USE,
-  });
   const hasAccessToMemories = useHasAccess({
     permissionType: PermissionTypes.MEMORIES,
     permission: Permissions.USE,
@@ -142,7 +138,8 @@ export default function useSideNavLinks({
       Component: FilesPanel,
     });
 
-    if (hasAccessToBookmarks) {
+    // BOOKMARKS PERMANENTLY DISABLED - MINIMAL INTERFACE
+    if (false) {
       links.push({
         title: 'com_sidepanel_conversation_tags',
         label: '',
@@ -186,7 +183,6 @@ export default function useSideNavLinks({
     hasAccessToPrompts,
     hasAccessToMemories,
     hasAccessToReadMemories,
-    hasAccessToBookmarks,
     hasAccessToCreateAgents,
     hidePanel,
     startupConfig,

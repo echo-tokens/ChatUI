@@ -1,27 +1,39 @@
 import { useContext } from 'react';
+import { useParams } from 'react-router-dom';
+import { Constants } from 'librechat-data-provider';
 import { ThemeContext } from '~/hooks';
+import { useChatContext } from '~/Providers';
 import EchoInfoModal from './EchoInfoModal';
 
 export default function EchoLogoButton() {
   const { theme } = useContext(ThemeContext);
+  const { conversationId } = useParams();
+  const { conversation } = useChatContext();
   
   // Determine which logo to use based on theme
   const isThemeDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const logoSrc = isThemeDark ? '/assets/logo_full_dark.png' : '/assets/logo_full_light.png';
 
+  // Only show on landing page (no conversation or new conversation with no messages)
+  const isLandingPage = 
+    (!conversation?.messages || conversation.messages.length === 0) &&
+    (conversationId === Constants.NEW_CONVO || !conversationId);
+
+  if (!isLandingPage) {
+    return null;
+  }
+
   return (
     <EchoInfoModal>
       <button
-        className="my-1 flex h-10 items-center justify-center gap-2 rounded-xl border border-border-light bg-surface-secondary px-3 py-2 text-sm text-text-primary hover:bg-surface-tertiary transition-colors"
+        className="flex items-center justify-center hover:opacity-80 transition-opacity"
         aria-label="Echo Information"
       >
-        <div className="flex flex-shrink-0 items-center justify-center overflow-hidden">
-          <img
-            src={logoSrc}
-            alt="echo"
-            className="h-6 w-auto object-contain"
-          />
-        </div>
+        <img
+          src={logoSrc}
+          alt="echo"
+          className="h-24 w-auto object-contain"
+        />
       </button>
     </EchoInfoModal>
   );

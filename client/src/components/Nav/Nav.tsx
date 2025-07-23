@@ -18,7 +18,6 @@ import NewChat from './NewChat';
 import { cn } from '~/utils';
 import store from '~/store';
 
-const BookmarkNav = lazy(() => import('./Bookmarks/BookmarkNav'));
 const AccountSettings = lazy(() => import('./AccountSettings'));
 
 const NAV_WIDTH_DESKTOP = '260px';
@@ -59,19 +58,12 @@ const Nav = memo(
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
     const [newUser, setNewUser] = useLocalStorage('newUser', true);
     const [showLoading, setShowLoading] = useState(false);
-    const [tags, setTags] = useState<string[]>([]);
-
-    const hasAccessToBookmarks = useHasAccess({
-      permissionType: PermissionTypes.BOOKMARKS,
-      permission: Permissions.USE,
-    });
 
     const search = useRecoilValue(store.search);
 
     const { data, fetchNextPage, isFetchingNextPage, isLoading, isFetching, refetch } =
       useConversationsInfiniteQuery(
         {
-          tags: tags.length === 0 ? undefined : tags,
           search: search.debouncedQuery || undefined,
         },
         {
@@ -139,7 +131,7 @@ const Nav = memo(
 
     useEffect(() => {
       refetch();
-    }, [tags, refetch]);
+    }, [refetch]);
 
     const loadMoreConversations = useCallback(() => {
       if (isFetchingNextPage || !computedHasNextPage) {
@@ -155,16 +147,15 @@ const Nav = memo(
     );
 
     const headerButtons = useMemo(
-      () =>
-        hasAccessToBookmarks && (
-          <>
-            <div className="mt-1.5" />
-            <Suspense fallback={null}>
-              <BookmarkNav tags={tags} setTags={setTags} isSmallScreen={isSmallScreen} />
-            </Suspense>
-          </>
-        ),
-      [hasAccessToBookmarks, tags, isSmallScreen],
+      () => false && (
+        <>
+          <div className="mt-1.5" />
+          <Suspense fallback={null}>
+            {/* BOOKMARKS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
+          </Suspense>
+        </>
+      ),
+      [],
     );
 
     const [isSearchLoading, setIsSearchLoading] = useState(

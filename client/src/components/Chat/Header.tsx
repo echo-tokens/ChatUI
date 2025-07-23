@@ -7,10 +7,8 @@ import { PresetsMenu, HeaderNewChat, OpenSidebar } from './Menus';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import { useMediaQuery, useHasAccess } from '~/hooks';
-import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
-import EchoLogoButton from './EchoLogoButton';
 
 const defaultInterface = getConfigDefaults().interface;
 
@@ -22,11 +20,6 @@ export default function Header() {
     [startupConfig],
   );
 
-  const hasAccessToBookmarks = useHasAccess({
-    permissionType: PermissionTypes.BOOKMARKS,
-    permission: Permissions.USE,
-  });
-
   const hasAccessToMultiConvo = useHasAccess({
     permissionType: PermissionTypes.MULTI_CONVO,
     permission: Permissions.USE,
@@ -35,7 +28,7 @@ export default function Header() {
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
   return (
-    <div className="sticky top-0 z-10 flex h-14 w-full items-center justify-between bg-white p-2 font-semibold text-text-primary dark:bg-gray-800">
+    <div className="relative sticky top-0 z-10 flex h-14 w-full items-center justify-between bg-white p-2 font-semibold text-text-primary dark:bg-gray-800">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
         <div className="mx-1 flex items-center gap-2">
           <div
@@ -56,10 +49,10 @@ export default function Header() {
             } ${!navVisible ? 'translate-x-0' : 'translate-x-[-100px]'}`}
           >
             <ModelSelector startupConfig={startupConfig} />
-            <EchoLogoButton />
             {/* PRESETS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
             {false && <PresetsMenu />}
-            {hasAccessToBookmarks === true && <BookmarkMenu />}
+            {/* BOOKMARKS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
+            {false && <div>BookmarkMenu</div>}
             {/* MULTI CONVERSATIONS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
             {false && <AddMultiConvo />}
             {isSmallScreen && (
