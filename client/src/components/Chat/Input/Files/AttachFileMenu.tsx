@@ -79,7 +79,8 @@ const AttachFileMenu = ({ disabled, conversationId, endpointFileConfig }: Attach
       });
     }
 
-    if (capabilities.codeEnabled) {
+    /* CODE INTERPRETER UPLOAD DISABLED - MINIMAL INTERFACE */
+    if (false && capabilities.codeEnabled) {
       items.push({
         label: localize('com_ui_upload_code_files'),
         onClick: () => {

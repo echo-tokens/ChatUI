@@ -365,9 +365,11 @@ function BadgeRow({
         {showEphemeralBadges === true && (
           <>
             <WebSearch />
-            <CodeInterpreter />
+            {/* CODE INTERPRETER DISABLED - MINIMAL INTERFACE */}
+            {false && <CodeInterpreter />}
             <FileSearch />
-            <Artifacts />
+            {/* ARTIFACTS DISABLED - MINIMAL INTERFACE */}
+            {false && <Artifacts />}
             <MCPSelect />
           </>
         )}
