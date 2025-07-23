@@ -75,7 +75,7 @@ function AuthLayout({
           {/* Echo Logo Section - 1.75x larger, moved down on signup */}
           <BlinkAnimation active={isFetching}>
             <div className="flex justify-center">
-              <div className="h-28 w-auto">
+              <div className="h-[196px] w-auto">
                 <img
                   src={logoSrc}
                   className="h-full w-auto object-contain"

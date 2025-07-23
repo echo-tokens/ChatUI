@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import React, { useContext, useState } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useOutletContext, useLocation } from 'react-router-dom';
 import { useRegisterUserMutation } from 'librechat-data-provider/react-query';
 import type { TRegisterUser, TError } from 'librechat-data-provider';
@@ -16,17 +17,16 @@ const Registration: React.FC = () => {
   const { startupConfig, startupConfigError, isFetching } = useOutletContext<TLoginLayoutContext>();
 
   const {
-    watch,
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<TRegisterUser>({ mode: 'onChange' });
-  const password = watch('password');
 
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState<number>(3);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -72,7 +72,7 @@ const Registration: React.FC = () => {
           autoComplete={id}
           aria-label={localize(label)}
           {...register(
-            id as 'name' | 'email' | 'username' | 'password' | 'confirm_password',
+            id as 'name' | 'email' | 'password',
             validation,
           )}
           aria-invalid={!!errors[id]}
@@ -90,6 +90,53 @@ const Registration: React.FC = () => {
       {errors[id] && (
         <span role="alert" className="mt-1 text-sm text-red-500">
           {String(errors[id]?.message) ?? ''}
+        </span>
+      )}
+    </div>
+  );
+
+  const renderPasswordInput = () => (
+    <div className="mb-4">
+      <div className="relative">
+        <input
+          id="password"
+          type={showPassword ? 'text' : 'password'}
+          autoComplete="password"
+          aria-label={localize('com_auth_password')}
+          {...register('password', {
+            required: localize('com_auth_password_required'),
+            minLength: {
+              value: 8,
+              message: localize('com_auth_password_min_length'),
+            },
+            maxLength: {
+              value: 128,
+              message: localize('com_auth_password_max_length'),
+            },
+          })}
+          aria-invalid={!!errors.password}
+          className="webkit-dark-styles transition-color peer w-full rounded-2xl border border-border-light bg-surface-primary px-3.5 pb-2.5 pt-3 pr-12 text-text-primary duration-200 focus:border-green-500 focus:outline-none"
+          placeholder=" "
+          data-testid="password"
+        />
+        <label
+          htmlFor="password"
+          className="absolute start-3 top-1.5 z-10 origin-[0] -translate-y-4 scale-75 transform bg-surface-primary px-2 text-sm text-text-secondary-alt duration-200 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100 peer-focus:top-1.5 peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:px-2 peer-focus:text-green-500 rtl:peer-focus:left-auto rtl:peer-focus:translate-x-1/4"
+        >
+          {localize('com_auth_password')}
+        </label>
+        <button
+          type="button"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
+          onClick={() => setShowPassword(!showPassword)}
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+        >
+          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+      </div>
+      {errors.password && (
+        <span role="alert" className="mt-1 text-sm text-red-500">
+          {String(errors.password?.message) ?? ''}
         </span>
       )}
     </div>
@@ -137,16 +184,6 @@ const Registration: React.FC = () => {
                 message: localize('com_auth_name_max_length'),
               },
             })}
-            {renderInput('username', 'com_auth_username', 'text', {
-              minLength: {
-                value: 2,
-                message: localize('com_auth_username_min_length'),
-              },
-              maxLength: {
-                value: 80,
-                message: localize('com_auth_username_max_length'),
-              },
-            })}
             {renderInput('email', 'com_auth_email', 'email', {
               required: localize('com_auth_email_required'),
               minLength: {
@@ -162,21 +199,7 @@ const Registration: React.FC = () => {
                 message: localize('com_auth_email_pattern'),
               },
             })}
-            {renderInput('password', 'com_auth_password', 'password', {
-              required: localize('com_auth_password_required'),
-              minLength: {
-                value: 8,
-                message: localize('com_auth_password_min_length'),
-              },
-              maxLength: {
-                value: 128,
-                message: localize('com_auth_password_max_length'),
-              },
-            })}
-            {renderInput('confirm_password', 'com_auth_password_confirm', 'password', {
-              validate: (value: string) =>
-                value === password || localize('com_auth_password_not_match'),
-            })}
+            {renderPasswordInput()}
 
             {startupConfig?.turnstile?.siteKey && (
               <div className="my-4 flex justify-center">
