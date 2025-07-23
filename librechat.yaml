@@ -1,77 +1,55 @@
 version: 1.2.1
 
-# Custom footer text (replaces LibreChat branding)
 customFooter: "echo - AI, democratized"
 
-# Hardcoded model specifications (easily changeable)
-modelSpecs:
-  enforce: true  # Force these models only
-  list:
-    - name: "OpenAI Models"
-      endpoint: "openAI"
-      models:
-        - "gpt-4o"
-        - "o1"
-        - "gpt-4o-mini"
-    - name: "Anthropic Models"
-      endpoint: "anthropic"
-      models:
-        - "claude-3-5-sonnet-20241022"
-        - "claude-3-opus-20240229"
-    - name: "Google Models" 
-      endpoint: "google"
-      models:
-        - "gemini-2.0-flash-exp"
-        - "gemini-1.5-pro-latest"
-    - name: "Grok Models"
-      endpoint: "xai"
-      models:
-        - "grok-3-mini"
-        - "grok-3"
-
-# Minimal interface - ChatGPT style with model selection
 interface:
-  # Core ChatGPT functionality
-  modelSelect: true           # Enable model selection dropdown (key requirement)
-  multiConvo: false          # Disable multiple conversations for simplicity
-  
-  # COMPLETELY DISABLE RIGHT SIDEBAR
-  sidePanel: false           # Hide right sidebar completely
-  
-  # Also disable all right sidebar features explicitly
-  parameters: false          # Hide technical parameters
-  presets: false             # No conversation presets
-  prompts: false             # No prompt library
-  bookmarks: false           # No bookmarks
-  agents: false              # No AI agents
-  memories: false            # No memory/personalization
-  temporaryChat: false       # No temporary chats
-  
-  # Enable core ChatGPT-like features
-  runCode: true              # Code execution (ChatGPT has this)
-  webSearch: true            # Web search (ChatGPT has this)
+  modelSelect: true
+  sidePanel: false
+  parameters: false
+  presets: false
+  prompts: false
+  bookmarks: false
+  agents: false
+  memories: false
+  temporaryChat: false
+  runCode: true
+  webSearch: true
 
-# Configure your 4 AI providers (models enforced by modelSpecs above)
 endpoints:
-  # OpenAI - Models controlled by modelSpecs
   openAI:
+    apiKey: "${OPENAI_API_KEY}"
+    models:
+      default: ["gpt-4o", "o1", "gpt-4o-mini"]
+      fetch: false
     titleConvo: true
     titleModel: "gpt-4o-mini"
 
-  # Anthropic - Models controlled by modelSpecs  
   anthropic:
+    apiKey: "${ANTHROPIC_API_KEY}"
+    models:
+      default: ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229"]
+      fetch: false
     titleConvo: true
     titleModel: "claude-3-5-sonnet-20241022"
 
-  # Google - Models controlled by modelSpecs
   google:
+    apiKey: "${GOOGLE_API_KEY}"
+    models:
+      default: ["gemini-2.0-flash-exp", "gemini-1.5-pro-latest"]
+      fetch: false
     titleConvo: true
     titleModel: "gemini-2.0-flash-exp"
 
-  # xAI (Grok) - Models controlled by modelSpecs
-  xai:
-    titleConvo: true
-    titleModel: "grok-3-mini"
+  custom:
+    - name: "xai"
+      apiKey: "${XAI_API_KEY}"
+      baseURL: "https://api.x.ai/v1"
+      models:
+        default: ["grok-3-mini", "grok-3"]
+        fetch: false
+      titleConvo: true
+      titleModel: "grok-3-mini"
+      modelDisplayLabel: "Grok"
 
 # Enable file uploads (ChatGPT functionality)
 fileConfig:
