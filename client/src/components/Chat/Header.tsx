@@ -3,11 +3,10 @@ import { useOutletContext } from 'react-router-dom';
 import { getConfigDefaults, PermissionTypes, Permissions } from 'librechat-data-provider';
 import type { ContextType } from '~/common';
 import ModelSelector from './Menus/Endpoints/ModelSelector';
-import { PresetsMenu, HeaderNewChat, OpenSidebar } from './Menus';
+import { PresetsMenu, HeaderNewChat, LogoButton, SidebarToggle } from './Menus';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import { useMediaQuery, useHasAccess } from '~/hooks';
-import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
 
@@ -20,11 +19,6 @@ export default function Header() {
     () => startupConfig?.interface ?? defaultInterface,
     [startupConfig],
   );
-
-  const hasAccessToBookmarks = useHasAccess({
-    permissionType: PermissionTypes.BOOKMARKS,
-    permission: Permissions.USE,
-  });
 
   const hasAccessToMultiConvo = useHasAccess({
     permissionType: PermissionTypes.MULTI_CONVO,
@@ -46,7 +40,7 @@ export default function Header() {
                 : 'pointer-events-none translate-x-[-100px] opacity-0'
             }`}
           >
-            <OpenSidebar setNavVisible={setNavVisible} />
+            <LogoButton />
             <HeaderNewChat />
           </div>
           <div
@@ -57,7 +51,8 @@ export default function Header() {
             <ModelSelector startupConfig={startupConfig} />
             {/* PRESETS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
             {false && <PresetsMenu />}
-            {hasAccessToBookmarks === true && <BookmarkMenu />}
+            {/* BOOKMARKS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
+            <SidebarToggle setNavVisible={setNavVisible} />
             {/* MULTI CONVERSATIONS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
             {false && <AddMultiConvo />}
             {isSmallScreen && (

@@ -95,11 +95,11 @@ function AccountSettings() {
         {startupConfig?.helpAndFaqURL !== '/' && (
           <Select.SelectItem
             value=""
-            onClick={() => window.open(startupConfig?.helpAndFaqURL, '_blank')}
+            onClick={() => window.open('https://account.echollm.io', '_blank')}
             className="select-item text-sm"
           >
             <LinkIcon aria-hidden="true" />
-            {localize('com_nav_help_faq')}
+            Account & Earnings
           </Select.SelectItem>
         )}
         <Select.SelectItem
