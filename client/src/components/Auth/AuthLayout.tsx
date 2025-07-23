@@ -70,12 +70,12 @@ function AuthLayout({
         <ThemeSelector />
       </div>
 
-      <div className="flex flex-grow items-center justify-center px-4">
+      <div className={`flex flex-grow items-center justify-center px-4 ${pathname.includes('register') ? 'pt-16' : ''}`}>
         <div className="w-full max-w-md space-y-8">
-          {/* Echo Logo Section - Moved down and centered */}
+          {/* Echo Logo Section - 1.75x larger, moved down on signup */}
           <BlinkAnimation active={isFetching}>
             <div className="flex justify-center">
-              <div className="h-16 w-auto">
+              <div className="h-28 w-auto">
                 <img
                   src={logoSrc}
                   className="h-full w-auto object-contain"
