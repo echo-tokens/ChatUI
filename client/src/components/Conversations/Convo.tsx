@@ -115,7 +115,7 @@ export default function Conversation({
     toggleNav();
 
     if (typeof title === 'string' && title.length > 0) {
-      document.title = title;
+      document.title = `echo - ${title}`;
     }
 
     navigateToConvo(conversation, {

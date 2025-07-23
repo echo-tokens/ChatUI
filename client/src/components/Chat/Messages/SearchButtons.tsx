@@ -38,7 +38,7 @@ export default function SearchButtons({ message }: { message: TMessage }) {
       title = cachedConvo?.title ?? '';
     }
 
-    document.title = title;
+    document.title = title ? `echo - ${title}` : 'echo';
     navigateToConvo(
       cachedConvo ??
         ({
