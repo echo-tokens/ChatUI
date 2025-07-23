@@ -1,0 +1,102 @@
+version: 1.2.1
+
+# Minimal interface - ChatGPT style with model selection
+interface:
+  # Core ChatGPT functionality
+  modelSelect: true           # Enable model selection dropdown (key requirement)
+  multiConvo: true           # Multiple conversations like ChatGPT
+  sidePanel: true            # Keep sidebar for conversation history
+  
+  # Enable ChatGPT-like features
+  runCode: true              # Code execution (ChatGPT has this)
+  webSearch: true            # Web search (ChatGPT has this)
+  
+  # Minimal - disable advanced features
+  endpointsMenu: false       # Hide endpoint menu (you only want 4 providers)
+  parameters: false          # Hide technical parameters
+  presets: false             # No conversation presets
+  prompts: false             # No prompt library
+  bookmarks: false           # No bookmarks
+  agents: false              # No AI agents
+  memories: false            # No memory/personalization
+  temporaryChat: false       # No temporary chats
+
+# Configure your 4 AI providers
+endpoints:
+  # OpenAI - GPT-4o, o1, GPT-4o-mini
+  openAI:
+    models:
+      default:
+        - "gpt-4o"
+        - "o1"
+        - "gpt-4o-mini"
+      fetch: false  # Use the specified models only
+    titleConvo: true
+    titleModel: "gpt-4o-mini"
+
+  # Anthropic - Claude 3.5 Sonnet, Claude 3 Opus
+  anthropic:
+    models:
+      default:
+        - "claude-3-5-sonnet-20241022"
+        - "claude-3-opus-20240229"
+      fetch: false
+    titleConvo: true
+    titleModel: "claude-3-5-sonnet-20241022"
+
+  # Google Gemini - 2.0 Flash Experimental, 1.5 Pro
+  google:
+    models:
+      default:
+        - "gemini-2.0-flash-exp"
+        - "gemini-1.5-pro-latest"
+      fetch: false
+    titleConvo: true
+    titleModel: "gemini-2.0-flash-exp"
+
+  # Grok (xAI) - Built-in endpoint
+  xai:
+    models:
+      default:
+        - "grok-3-mini"
+        - "grok-3"
+      fetch: false
+    titleConvo: true
+    titleModel: "grok-3-mini"
+
+# Enable file uploads (ChatGPT functionality)
+fileConfig:
+  endpoints:
+    openAI:
+      fileLimit: 10
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "application/pdf"
+        - "text/.*"
+        - "application/.*"
+    anthropic:
+      fileLimit: 5
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "application/pdf"
+        - "text/.*"
+    google:
+      fileLimit: 10
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "application/pdf"
+        - "text/.*"
+    xai:
+      fileLimit: 5
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "text/.*"
+ 
