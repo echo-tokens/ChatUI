@@ -34,13 +34,9 @@ export default function Footer({ className }: { className?: string }) {
     </a>
   );
 
+  /* HARDCODED FOOTER - BYPASS CONFIG */
   const mainContentParts = (
-    typeof config?.customFooter === 'string'
-      ? config.customFooter
-      : '[LibreChat ' +
-        Constants.VERSION +
-        '](https://librechat.ai) - ' +
-        localize('com_ui_latest_footer')
+    'echo - AI, democratized'
   ).split('|');
 
   useEffect(() => {
