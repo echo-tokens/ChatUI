@@ -1,7 +1,7 @@
 version: 1.2.1
 
 # Custom footer text (replaces LibreChat branding)
-customFooter: "Your Custom Chat Interface"
+customFooter: "echo - AI, democratized"
 
 # Minimal interface - ChatGPT style with model selection
 interface:
