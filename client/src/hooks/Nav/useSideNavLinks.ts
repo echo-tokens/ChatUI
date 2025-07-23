@@ -11,6 +11,7 @@ import {
 import type { TInterfaceConfig, TEndpointsConfig } from 'librechat-data-provider';
 import type { NavLink } from '~/common';
 import AgentPanelSwitch from '~/components/SidePanel/Agents/AgentPanelSwitch';
+import BookmarkPanel from '~/components/SidePanel/Bookmarks/BookmarkPanel';
 import MemoryViewer from '~/components/SidePanel/Memories/MemoryViewer';
 import PanelSwitch from '~/components/SidePanel/Builder/PanelSwitch';
 import PromptsAccordion from '~/components/Prompts/PromptsAccordion';
@@ -40,11 +41,10 @@ export default function useSideNavLinks({
     permissionType: PermissionTypes.PROMPTS,
     permission: Permissions.USE,
   });
-  // BOOKMARKS PERMANENTLY DISABLED - MINIMAL INTERFACE
-  // const hasAccessToBookmarks = useHasAccess({
-  //   permissionType: PermissionTypes.BOOKMARKS,
-  //   permission: Permissions.USE,
-  // });
+  const hasAccessToBookmarks = useHasAccess({
+    permissionType: PermissionTypes.BOOKMARKS,
+    permission: Permissions.USE,
+  });
   const hasAccessToMemories = useHasAccess({
     permissionType: PermissionTypes.MEMORIES,
     permission: Permissions.USE,
@@ -142,16 +142,15 @@ export default function useSideNavLinks({
       Component: FilesPanel,
     });
 
-    // BOOKMARKS PERMANENTLY DISABLED - MINIMAL INTERFACE
-    // if (hasAccessToBookmarks) {
-    //   links.push({
-    //     title: 'com_sidepanel_conversation_tags',
-    //     label: '',
-    //     icon: Bookmark,
-    //     id: 'bookmarks',
-    //     Component: BookmarkPanel,
-    //   });
-    // }
+    if (hasAccessToBookmarks) {
+      links.push({
+        title: 'com_sidepanel_conversation_tags',
+        label: '',
+        icon: Bookmark,
+        id: 'bookmarks',
+        Component: BookmarkPanel,
+      });
+    }
 
     if (
       startupConfig?.mcpServers &&
@@ -187,6 +186,7 @@ export default function useSideNavLinks({
     hasAccessToPrompts,
     hasAccessToMemories,
     hasAccessToReadMemories,
+    hasAccessToBookmarks,
     hasAccessToCreateAgents,
     hidePanel,
     startupConfig,

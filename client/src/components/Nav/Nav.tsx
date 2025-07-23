@@ -18,6 +18,7 @@ import NewChat from './NewChat';
 import { cn } from '~/utils';
 import store from '~/store';
 
+const BookmarkNav = lazy(() => import('./Bookmarks/BookmarkNav'));
 const AccountSettings = lazy(() => import('./AccountSettings'));
 
 const NAV_WIDTH_DESKTOP = '260px';
@@ -59,6 +60,11 @@ const Nav = memo(
     const [newUser, setNewUser] = useLocalStorage('newUser', true);
     const [showLoading, setShowLoading] = useState(false);
     const [tags, setTags] = useState<string[]>([]);
+
+    const hasAccessToBookmarks = useHasAccess({
+      permissionType: PermissionTypes.BOOKMARKS,
+      permission: Permissions.USE,
+    });
 
     const search = useRecoilValue(store.search);
 
@@ -148,57 +154,80 @@ const Nav = memo(
       [search.enabled, isSmallScreen],
     );
 
-    // BOOKMARKS PERMANENTLY DISABLED - MINIMAL INTERFACE
-    const headerButtons = null;
+    const headerButtons = useMemo(
+      () =>
+        hasAccessToBookmarks && (
+          <>
+            <div className="mt-1.5" />
+            <Suspense fallback={null}>
+              <BookmarkNav tags={tags} setTags={setTags} isSmallScreen={isSmallScreen} />
+            </Suspense>
+          </>
+        ),
+      [hasAccessToBookmarks, tags, isSmallScreen],
+    );
 
     const [isSearchLoading, setIsSearchLoading] = useState(
       !!search.query && (search.isTyping || isLoading || isFetching),
     );
 
     useEffect(() => {
-      setIsSearchLoading(!!search.query && (search.isTyping || isLoading || isFetching));
+      if (search.isTyping) {
+        setIsSearchLoading(true);
+      } else if (!isLoading && !isFetching) {
+        setIsSearchLoading(false);
+      } else if (!!search.query && (isLoading || isFetching)) {
+        setIsSearchLoading(true);
+      }
     }, [search.query, search.isTyping, isLoading, isFetching]);
 
     return (
       <>
         <div
-          className="transition-height nav relative z-40 flex h-full w-full flex-col bg-token-sidebar-surface-primary duration-200 ease-in-out max-md:fixed"
+          data-testid="nav"
+          className={cn(
+            'nav active max-w-[320px] flex-shrink-0 transform overflow-x-hidden bg-surface-primary-alt transition-all duration-200 ease-in-out',
+            'md:max-w-[260px]',
+          )}
           style={{
             width: navVisible ? navWidth : '0px',
-            visibility: navVisible ? 'visible' : 'hidden',
-            opacity: navVisible ? 1 : 0,
+            transform: navVisible ? 'translateX(0)' : 'translateX(-100%)',
           }}
         >
-          <div className="flex h-full min-h-0 flex-col ">
-            <div className="scrollbar-trigger flex h-full w-full flex-1 items-start border-white/20">
-              <nav
-                id="chat-history-nav"
-                aria-label={localize('com_ui_chat_history')}
-                className="flex h-full w-full flex-col gap-1 p-2"
+          <div className="h-full w-[320px] md:w-[260px]">
+            <div className="flex h-full flex-col">
+              <div
+                className={`flex h-full flex-col transition-opacity duration-200 ease-in-out ${navVisible ? 'opacity-100' : 'opacity-0'}`}
               >
                 <div className="flex h-full flex-col">
-                  <div className="flex flex-1 flex-col" ref={outerContainerRef}>
-                    <MemoNewChat
-                      subHeaders={subHeaders}
-                      toggleNav={toggleNavVisible}
-                      headerButtons={headerButtons}
-                      isSmallScreen={isSmallScreen}
-                    />
-                    <Conversations
-                      conversations={conversations}
-                      moveToTop={moveToTop}
-                      toggleNav={itemToggleNav}
-                      containerRef={listRef}
-                      loadMoreConversations={loadMoreConversations}
-                      isLoading={isFetchingNextPage || showLoading || isLoading}
-                      isSearchLoading={isSearchLoading}
-                    />
-                  </div>
-                  <Suspense fallback={null}>
-                    <AccountSettings />
-                  </Suspense>
+                  <nav
+                    id="chat-history-nav"
+                    aria-label={localize('com_ui_chat_history')}
+                    className="flex h-full flex-col px-2 pb-3.5 md:px-3"
+                  >
+                    <div className="flex flex-1 flex-col" ref={outerContainerRef}>
+                      <MemoNewChat
+                        subHeaders={subHeaders}
+                        toggleNav={toggleNavVisible}
+                        headerButtons={headerButtons}
+                        isSmallScreen={isSmallScreen}
+                      />
+                      <Conversations
+                        conversations={conversations}
+                        moveToTop={moveToTop}
+                        toggleNav={itemToggleNav}
+                        containerRef={listRef}
+                        loadMoreConversations={loadMoreConversations}
+                        isLoading={isFetchingNextPage || showLoading || isLoading}
+                        isSearchLoading={isSearchLoading}
+                      />
+                    </div>
+                    <Suspense fallback={null}>
+                      <AccountSettings />
+                    </Suspense>
+                  </nav>
                 </div>
-              </nav>
+              </div>
             </div>
           </div>
         </div>
