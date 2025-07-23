@@ -1,10 +1,13 @@
 version: 1.2.1
 
+# Custom footer text (replaces LibreChat branding)
+customFooter: "Your Custom Chat Interface"
+
 # Minimal interface - ChatGPT style with model selection
 interface:
   # Core ChatGPT functionality
   modelSelect: true           # Enable model selection dropdown (key requirement)
-  multiConvo: true           # Multiple conversations like ChatGPT
+  multiConvo: false          # Disable multiple conversations for simplicity
   
   # COMPLETELY DISABLE RIGHT SIDEBAR
   sidePanel: false           # Hide right sidebar completely
