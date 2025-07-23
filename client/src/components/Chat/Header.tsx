@@ -31,6 +31,8 @@ export default function Header() {
     <div className="sticky top-0 z-10 flex h-14 w-full items-center justify-between bg-white p-2 font-semibold text-text-primary dark:bg-gray-800">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
         <div className="mx-1 flex items-center gap-2">
+          {/* Logo Button - positioned where OpenSidebar was (outside animation) */}
+          <LogoButton />
           <div
             className={`flex items-center gap-2 ${
               !isSmallScreen ? 'transition-all duration-200 ease-in-out' : ''
@@ -40,7 +42,6 @@ export default function Header() {
                 : 'pointer-events-none translate-x-[-100px] opacity-0'
             }`}
           >
-            <LogoButton />
             <HeaderNewChat />
           </div>
           <div
@@ -51,7 +52,7 @@ export default function Header() {
             <ModelSelector startupConfig={startupConfig} />
             {/* PRESETS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
             {false && <PresetsMenu />}
-            {/* BOOKMARKS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
+            {/* SidebarToggle - positioned where BookmarkMenu was */}
             <SidebarToggle setNavVisible={setNavVisible} />
             {/* MULTI CONVERSATIONS PERMANENTLY DISABLED - MINIMAL INTERFACE */}
             {false && <AddMultiConvo />}

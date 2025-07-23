@@ -51,9 +51,17 @@ export default function EchoInfoModal({ children }: EchoInfoModalProps) {
         
         {/* Main Content */}
         <div className="px-6 py-4">
-          <p className="text-base leading-relaxed text-text-secondary mb-6">
-            Yesterday's internet ran on keyword roulette and cookie crumbs; the AI era can hear authentic intent. Echo channels that intelligence to swap blanket ads for precise introductions—only the products and services that truly advance your goal. Advertisers reward that relevance, letting us keep world-class chat perpetually free and share the value back to you.
-          </p>
+          <div className="space-y-4 text-center">
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              Yesterday's internet ran on keyword roulette and cookie crumbs; the AI era can hear authentic intent. 
+            </p>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              Echo channels that intelligence to swap blanket ads for precise introductions—only the products and services that truly advance your goal. 
+            </p>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              Advertisers reward that relevance, letting us keep world-class chat perpetually free and share the value back to you.
+            </p>
+          </div>
           
           {/* Payout Section */}
           <div className="flex items-center justify-center gap-6 rounded-lg bg-surface-secondary p-6">
