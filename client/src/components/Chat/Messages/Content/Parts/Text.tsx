@@ -3,6 +3,8 @@ import { useRecoilValue } from 'recoil';
 import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
 import Markdown from '~/components/Chat/Messages/Content/Markdown';
 import { useChatContext, useMessageContext } from '~/Providers';
+import { parseAdContent, containsAdTags } from '~/utils/adParser';
+import AdTile from './AdTile';
 import { cn } from '~/utils';
 import store from '~/store';
 
@@ -27,15 +29,54 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
     [messageId, latestMessage?.messageId],
   );
 
-  const content: ContentType = useMemo(() => {
-    if (!isCreatedByUser) {
-      return <Markdown content={text} isLatestMessage={isLatestMessage} />;
-    } else if (enableUserMsgMarkdown) {
-      return <MarkdownLite content={text} />;
-    } else {
-      return <>{text}</>;
+  // Parse ad content if present
+  const contentParts = useMemo(() => {
+    if (!containsAdTags(text)) {
+      // No ads, return single content part
+      if (!isCreatedByUser) {
+        return [<Markdown key="text" content={text} isLatestMessage={isLatestMessage} />];
+      } else if (enableUserMsgMarkdown) {
+        return [<MarkdownLite key="text" content={text} />];
+      } else {
+        return [<span key="text">{text}</span>];
+      }
     }
-  }, [isCreatedByUser, enableUserMsgMarkdown, text, isLatestMessage]);
+
+    // Has ads, parse and create multiple content parts
+    const parsedParts = parseAdContent(text);
+    let isLastPart = false;
+    
+    return parsedParts.map((part, index) => {
+      isLastPart = index === parsedParts.length - 1;
+      const partShowCursor = isLastPart && showCursor;
+      
+      if (part.type === 'text') {
+        const partText = typeof part.text === 'string' ? part.text : part.text?.value || '';
+        if (!isCreatedByUser) {
+          return (
+            <Markdown 
+              key={`text-${index}`} 
+              content={partText} 
+              isLatestMessage={isLatestMessage} 
+            />
+          );
+        } else if (enableUserMsgMarkdown) {
+          return <MarkdownLite key={`text-${index}`} content={partText} />;
+        } else {
+          return <span key={`text-${index}`}>{partText}</span>;
+        }
+      } else if (part.type === 'ad_tile') {
+        return (
+          <AdTile 
+            key={`ad-${index}`} 
+            content={part.ad_content} 
+            showCursor={partShowCursor} 
+          />
+        );
+      }
+      return null;
+    }).filter(Boolean);
+  }, [text, isCreatedByUser, enableUserMsgMarkdown, isLatestMessage, showCursor]);
 
   return (
     <div
@@ -47,7 +88,7 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
         isCreatedByUser ? 'dark:text-gray-20' : 'dark:text-gray-100',
       )}
     >
-      {content}
+      {contentParts}
     </div>
   );
 });

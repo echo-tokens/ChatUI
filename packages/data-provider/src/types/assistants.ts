@@ -452,6 +452,7 @@ export type TMessageContentParts =
   | { type: ContentTypes.ERROR; text?: string | (Text & PartMetadata); error?: string }
   | { type: ContentTypes.THINK; think: string | (Text & PartMetadata) }
   | { type: ContentTypes.TEXT; text: string | (Text & PartMetadata); tool_call_ids?: string[] }
+  | { type: ContentTypes.AD_TILE; ad_content: string }
   | {
       type: ContentTypes.TOOL_CALL;
       tool_call: (

@@ -7,6 +7,7 @@ export enum ContentTypes {
   IMAGE_URL = 'image_url',
   AGENT_UPDATE = 'agent_update',
   ERROR = 'error',
+  AD_TILE = 'ad_tile',
 }
 
 export enum StepTypes {

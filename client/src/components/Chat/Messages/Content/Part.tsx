@@ -7,7 +7,7 @@ import {
 } from 'librechat-data-provider';
 import { memo } from 'react';
 import type { TMessageContentParts, TAttachment } from 'librechat-data-provider';
-import { OpenAIImageGen, EmptyText, Reasoning, ExecuteCode, AgentUpdate, Text } from './Parts';
+import { OpenAIImageGen, EmptyText, Reasoning, ExecuteCode, AgentUpdate, Text, AdTile } from './Parts';
 import { ErrorMessage } from './MessageContent';
 import RetrievalCall from './RetrievalCall';
 import CodeAnalyze from './CodeAnalyze';
@@ -32,7 +32,15 @@ const Part = memo(
       return null;
     }
 
-    if (part.type === ContentTypes.ERROR) {
+    // Handle ad tile content type
+    if (part.type === ContentTypes.AD_TILE) {
+      const adContent = (part as any).ad_content || '';
+      return (
+        <Container>
+          <AdTile content={adContent} showCursor={showCursor} />
+        </Container>
+      );
+    } else if (part.type === ContentTypes.ERROR) {
       return (
         <ErrorMessage
           text={

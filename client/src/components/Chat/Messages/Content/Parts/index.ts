@@ -8,3 +8,4 @@ export { default as LogContent } from './LogContent';
 export { default as ExecuteCode } from './ExecuteCode';
 export { default as AgentUpdate } from './AgentUpdate';
 export { default as EditTextPart } from './EditTextPart';
+export { default as AdTile } from './AdTile';
