@@ -37,25 +37,28 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
     return () => clearInterval(streamInterval);
   }, [content, isVisible]);
 
-  // Parse ad content - expecting format like "Title\n\nDescription\n\nCTA"
+  // Parse ad content - expecting format like "Title\n\nDescription"
   const lines = displayContent.split('\n').filter(line => line.trim());
   const title = lines[0] || '';
-  const description = lines.slice(1, -1).join(' ') || '';
-  const cta = lines[lines.length - 1] || '';
+  const description = lines.slice(1).join(' ') || '';
 
   return (
     <div
       className={cn(
-        'mx-auto my-3 w-full max-w-[480px] overflow-hidden rounded-xl transition-all duration-150 ease-out',
-        'border border-brand-purple/30 bg-brand-purple/5 px-4 py-3 shadow-sm',
+        'my-2 w-full overflow-hidden rounded-lg transition-all duration-150 ease-out cursor-pointer',
+        'border border-brand-purple/30 bg-brand-purple/5 px-3 py-2',
         'dark:border-brand-purple/40 dark:bg-brand-purple/10',
+        // Hover effects with smooth transitions
+        'hover:bg-brand-purple/10 hover:border-brand-purple/50 hover:shadow-md',
+        'dark:hover:bg-brand-purple/20 dark:hover:border-brand-purple/60',
+        'transition-colors transition-shadow duration-200 ease-in-out',
         isVisible ? 'animate-fadeGrow opacity-100' : 'max-h-0 opacity-0'
       )}
       role="note"
       aria-label="Sponsored message"
     >
       {title && (
-        <p className="font-semibold text-brand-purple dark:text-brand-purple/90 text-sm mb-2">
+        <p className="font-semibold text-brand-purple dark:text-brand-purple/90 text-sm leading-tight">
           {title}
           {showCursor && displayContent === title && (
             <span className="animate-pulse">|</span>
@@ -64,31 +67,15 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
       )}
       
       {description && (
-        <p className="text-gray-700 dark:text-gray-300 text-sm mb-3 leading-relaxed">
+        <p className={cn(
+          "text-gray-700 dark:text-gray-300 text-sm leading-tight",
+          title ? "mt-1" : ""
+        )}>
           {description}
-          {showCursor && displayContent.endsWith(description) && !cta && (
+          {showCursor && displayContent.endsWith(description) && (
             <span className="animate-pulse">|</span>
           )}
         </p>
-      )}
-      
-      {cta && (
-        <button
-          className={cn(
-            'inline-block rounded-lg bg-brand-purple px-3 py-1.5 text-xs font-medium text-white',
-            'transition-colors hover:bg-brand-purple/90 focus:outline-none focus:ring-2',
-            'focus:ring-brand-purple/50 focus:ring-offset-1 dark:focus:ring-offset-gray-800'
-          )}
-          onClick={() => {
-            // TODO: Handle ad click - for now just log
-            console.log('Ad clicked:', { title, description, cta });
-          }}
-        >
-          {cta}
-          {showCursor && displayContent.endsWith(cta) && (
-            <span className="animate-pulse ml-1">|</span>
-          )}
-        </button>
       )}
     </div>
   );
