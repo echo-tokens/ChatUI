@@ -16,6 +16,26 @@ interface:
   webSearch: true
 
 endpoints:
+  # Railway Echo Stream Service - Add this custom endpoint
+  custom:
+    - name: "echo_stream"
+      baseURL: "${ECHO_STREAM_BASE_URL:-https://your-railway-app.railway.app}"
+      apiKey: "${ECHO_STREAM_API_KEY}"
+      models:
+        default: ["gpt-4o", "claude-3-5-sonnet", "gemini-2.0-flash", "grok-3"]
+        fetch: false
+      titleConvo: true
+      titleModel: "gpt-4o-mini"
+      modelDisplayLabel: "Echo Stream"
+      streamRate: 1
+      headers:
+        "X-Service-Type": "echo-proxy"
+        "User-Agent": "LibreChat/1.0"
+      addParams:
+        stream: true
+        include_ads: true
+      directEndpoint: true
+
   openAI:
     apiKey: "${OPENAI_API_KEY}"
     models:
@@ -24,7 +44,7 @@ endpoints:
     titleConvo: true
     titleModel: "gpt-4o-mini"
     modelDisplayLabel: "GPT"
-
+    
   anthropic:
     apiKey: "${ANTHROPIC_API_KEY}"
     models:
@@ -43,26 +63,25 @@ endpoints:
     titleModel: "gemini-2.0-flash-exp"
     modelDisplayLabel: "Gemini"
 
-  custom:
-    - name: "xai"
-      apiKey: "${XAI_API_KEY}"
-      baseURL: "https://api.x.ai/v1"
-      models:
-        default: ["grok-3-mini", "grok-3"]
-        fetch: false
-      titleConvo: true
-      titleModel: "grok-3-mini"
-      modelDisplayLabel: "Grok"
+  xai:
+    apiKey: "${XAI_API_KEY}"
+    baseURL: "https://api.xai.com/v1"
+    models:
+      default: ["grok-3-mini", "grok-3"]
+      fetch: false
+    titleConvo: true
+    titleModel: "grok-3-mini"
+    modelDisplayLabel: "Grok"
 
 modelSpecs:
   enforce: false
   prioritize: true
   list:
-    # OpenAI Models
-    - name: "gpt-4o"
-      label: "GPT-4o"
+    # Echo Stream models with ad integration
+    - name: "echo_stream_gpt4o"
+      label: "Echo GPT-4o"
       preset:
-        endpoint: "openAI"
+        endpoint: "echo_stream"
         model: "gpt-4o"
         temperature: 0.7
         top_p: 1
@@ -76,154 +95,142 @@ modelSpecs:
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "openAI"
-      description: "Most capable GPT-4 model for complex tasks"
+      description: "GPT-4o with smart ad integration"
+    
+    - name: "echo_stream_claude"
+      label: "Echo Claude"
+      preset:
+        endpoint: "echo_stream"
+        model: "claude-3-5-sonnet"
+        temperature: 0.7
+      order: 2
+      showIconInMenu: true
+      showIconInHeader: true
+      iconURL: "anthropic"
+      description: "Claude with smart ad integration"
+    
+    - name: "echo_stream_gemini"
+      label: "Echo Gemini"
+      preset:
+        endpoint: "echo_stream"
+        model: "gemini-2.0-flash"
+        temperature: 0.7
+      order: 3
+      showIconInMenu: true
+      showIconInHeader: true
+      iconURL: "google"
+      description: "Gemini with smart ad integration"
+    
+    - name: "echo_stream_grok"
+      label: "Echo Grok"
+      preset:
+        endpoint: "echo_stream"
+        model: "grok-3"
+        temperature: 0.7
+      order: 4
+      showIconInMenu: true
+      showIconInHeader: true
+      iconURL: "xai"
+      description: "Grok with smart ad integration"
 
+    # Existing models
+    - name: "gpt-4o"
+      label: "GPT-4o"
+      preset:
+        endpoint: "openAI"
+        model: "gpt-4o"
+        temperature: 0.7
+        top_p: 1
+        frequency_penalty: 0
+        presence_penalty: 0
+        resendFiles: true
+        imageDetail: "auto"
+        maxContextTokens: 128000
+      order: 5
+      showIconInMenu: true
+      showIconInHeader: true
+      iconURL: "openAI"
+      description: "Most capable GPT-4 model for complex tasks"
     - name: "o1"
       label: "o3"
       preset:
         endpoint: "openAI"
         model: "o1"
-        temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 128000
-      order: 2
+      order: 6
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "openAI"
-      description: "Advanced reasoning model"
-
+      description: "OpenAI's latest model"
     - name: "gpt-4o-mini"
       label: "o4-mini"
       preset:
         endpoint: "openAI"
         model: "gpt-4o-mini"
-        temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 128000
-      order: 3
+      order: 7
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "openAI"
-      description: "Fast and efficient GPT-4 model"
-
-    # Anthropic Models
+      description: "OpenAI's fastest and most affordable model"
     - name: "claude-3-5-sonnet-20241022"
       label: "Claude 4 Sonnet"
       preset:
         endpoint: "anthropic"
         model: "claude-3-5-sonnet-20241022"
-        temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 200000
-      order: 4
+      order: 8
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "anthropic"
-      description: "Most capable Claude model"
-
+      description: "Anthropic's latest Sonnet model"
     - name: "claude-3-opus-20240229"
       label: "Claude 4 Opus"
       preset:
         endpoint: "anthropic"
         model: "claude-3-opus-20240229"
-        temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 200000
-      order: 5
+      order: 9
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "anthropic"
-      description: "Advanced reasoning and analysis"
-
-    # Google Models
+      description: "Anthropic's most powerful model"
     - name: "gemini-2.0-flash-exp"
       label: "Gemini 2.0 Flash"
       preset:
         endpoint: "google"
         model: "gemini-2.0-flash-exp"
-        temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 1000000
-      order: 6
+      order: 10
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "google"
-      description: "Fast and efficient Gemini model"
-
+      description: "Google's fastest Gemini model"
     - name: "gemini-1.5-pro-latest"
       label: "Gemini 2.0 Pro"
       preset:
         endpoint: "google"
         model: "gemini-1.5-pro-latest"
-        temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 1000000
-      order: 7
+      order: 11
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "google"
-      description: "Most capable Gemini model"
-
-    # xAI Models
+      description: "Google's most capable Gemini model"
     - name: "grok-3-mini"
       label: "Grok 3 Mini"
       preset:
         endpoint: "xai"
         model: "grok-3-mini"
-        temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 128000
-      order: 8
+      order: 12
       showIconInMenu: true
       showIconInHeader: true
-      iconURL: "custom"
-      description: "Fast and efficient Grok model"
-
+      iconURL: "xai"
+      description: "xAI's latest Grok model"
     - name: "grok-3"
       label: "Grok 3"
       preset:
         endpoint: "xai"
         model: "grok-3"
-        temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 128000
-      order: 9
+      order: 13
       showIconInMenu: true
       showIconInHeader: true
-      iconURL: "custom"
-      description: "Most capable Grok model"
+      iconURL: "xai"
+      description: "xAI's most powerful Grok model"
 
 # Enable file uploads (ChatGPT functionality)
 fileConfig:

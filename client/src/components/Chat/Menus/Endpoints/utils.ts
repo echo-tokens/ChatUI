@@ -179,7 +179,13 @@ const MODEL_DISPLAY_NAMES = {
   
   // xAI models
   'grok-3-mini': 'Grok 3 Mini',
-  'grok-3': 'Grok 3'
+  'grok-3': 'Grok 3',
+
+  // Echo Stream models (Railway service)
+  'echo_stream_gpt4o': 'Echo GPT-4o',
+  'echo_stream_claude': 'Echo Claude',
+  'echo_stream_gemini': 'Echo Gemini',
+  'echo_stream_grok': 'Echo Grok'
 };
 
 export const getDisplayValue = ({

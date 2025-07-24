@@ -8,7 +8,8 @@ const ALLOWED_MODELS = {
   openAI: ['gpt-4o', 'o1', 'gpt-4o-mini'],
   anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'],
   google: ['gemini-2.0-flash-exp', 'gemini-1.5-pro-latest'],
-  xai: ['grok-3-mini', 'grok-3']
+  xai: ['grok-3-mini', 'grok-3'],
+  echo_stream: ['gpt-4o', 'claude-3-5-sonnet', 'gemini-2.0-flash', 'grok-3'] // Railway service models
 };
 
 /**
@@ -85,8 +86,15 @@ function applyModelRestrictions(modelConfig) {
     );
   }
 
+  // Apply echo_stream restrictions
+  if (restrictedConfig.echo_stream) {
+    restrictedConfig.echo_stream = restrictedConfig.echo_stream.filter(model => 
+      ALLOWED_MODELS.echo_stream.includes(model)
+    );
+  }
+
   // Remove any other endpoints that might exist
-  const allowedEndpoints = ['openAI', 'anthropic', 'google', 'xai', 'initial'];
+  const allowedEndpoints = ['openAI', 'anthropic', 'google', 'xai', 'echo_stream', 'initial'];
   Object.keys(restrictedConfig).forEach(endpoint => {
     if (!allowedEndpoints.includes(endpoint)) {
       delete restrictedConfig[endpoint];
