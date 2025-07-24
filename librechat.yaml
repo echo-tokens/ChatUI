@@ -39,7 +39,7 @@ endpoints:
   openAI:
     apiKey: "${OPENAI_API_KEY}"
     models:
-      default: ["gpt-4o", "o1", "gpt-4o-mini"]  # Removed echo-gpt-4o
+      default: ["o1", "gpt-4o-mini"]  # TEMP REMOVED: gpt-4o (for debugging)
       fetch: false
     titleConvo: true
     titleModel: "gpt-4o-mini"
