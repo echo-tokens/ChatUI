@@ -19,7 +19,7 @@ endpoints:
   # Railway Echo Stream Service - Add this custom endpoint
   custom:
     - name: "echo_stream"
-      baseURL: "${ECHO_STREAM_BASE_URL:-https://your-railway-app.railway.app}"
+      baseURL: "${ECHO_STREAM_BASE_URL:-https://streaming-service.railway.internal}"
       apiKey: "${ECHO_STREAM_API_KEY}"
       models:
         default: ["gpt-4o", "claude-3-5-sonnet", "gemini-2.0-flash", "grok-3"]
