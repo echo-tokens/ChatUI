@@ -135,3 +135,9 @@ helm/**/.values.yaml
 /.tabnine/
 /.codeium
 .vercel
+
+# Railway Integration Unit Tests (do not upload)
+/railway-integration-test/
+railway-test-*.js
+railway-test-*.json
+test-railway-*.js
