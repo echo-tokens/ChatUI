@@ -5,10 +5,10 @@ const { logger } = require('~/config');
 
 // Hardcoded model restrictions - only allow these specific models
 const ALLOWED_MODELS = {
-  openAI: ['gpt-4o', 'o1', 'gpt-4o-mini'],
-  anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'],
-  google: ['gemini-2.0-flash-exp', 'gemini-1.5-pro-latest'],
-  xai: ['grok-3-mini', 'grok-3'],
+  openAI: ['gpt-4o', 'o1', 'gpt-4o-mini', 'echo-gpt-4o'],
+  anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'echo-claude'],
+  google: ['gemini-2.0-flash-exp', 'gemini-1.5-pro-latest', 'echo-gemini'],
+  xai: ['grok-3-mini', 'grok-3', 'echo-grok'],
   echo_stream: ['gpt-4o', 'claude-3-5-sonnet', 'gemini-2.0-flash', 'grok-3'] // Railway service models
 };
 

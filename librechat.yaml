@@ -39,7 +39,7 @@ endpoints:
   openAI:
     apiKey: "${OPENAI_API_KEY}"
     models:
-      default: ["gpt-4o", "o1", "gpt-4o-mini"]
+      default: ["gpt-4o", "o1", "gpt-4o-mini", "echo-gpt-4o"]  # Added echo-gpt-4o
       fetch: false
     titleConvo: true
     titleModel: "gpt-4o-mini"
@@ -48,7 +48,7 @@ endpoints:
   anthropic:
     apiKey: "${ANTHROPIC_API_KEY}"
     models:
-      default: ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229"]
+      default: ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "echo-claude"]  # Added echo-claude
       fetch: false
     titleConvo: true
     titleModel: "claude-3-5-sonnet-20241022"
@@ -57,7 +57,7 @@ endpoints:
   google:
     apiKey: "${GOOGLE_API_KEY}"
     models:
-      default: ["gemini-2.0-flash-exp", "gemini-1.5-pro-latest"]
+      default: ["gemini-2.0-flash-exp", "gemini-1.5-pro-latest", "echo-gemini"]  # Added echo-gemini
       fetch: false
     titleConvo: true
     titleModel: "gemini-2.0-flash-exp"
@@ -67,7 +67,7 @@ endpoints:
     apiKey: "${XAI_API_KEY}"
     baseURL: "https://api.xai.com/v1"
     models:
-      default: ["grok-3-mini", "grok-3"]
+      default: ["grok-3-mini", "grok-3", "echo-grok"]  # Added echo-grok
       fetch: false
     titleConvo: true
     titleModel: "grok-3-mini"
@@ -77,19 +77,13 @@ modelSpecs:
   enforce: false
   prioritize: true
   list:
-    # Echo Stream models with ad integration
-    - name: "echo_stream_gpt4o"
+    # Echo models integrated into existing providers - These redirect to Railway service
+    - name: "echo-gpt-4o"
       label: "Echo GPT-4o"
       preset:
         endpoint: "echo_stream"
         model: "gpt-4o"
         temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 128000
       order: 1
       default: true
       showIconInMenu: true
@@ -97,7 +91,7 @@ modelSpecs:
       iconURL: "openAI"
       description: "GPT-4o with smart ad integration"
     
-    - name: "echo_stream_claude"
+    - name: "echo-claude"
       label: "Echo Claude"
       preset:
         endpoint: "echo_stream"
@@ -109,7 +103,7 @@ modelSpecs:
       iconURL: "anthropic"
       description: "Claude with smart ad integration"
     
-    - name: "echo_stream_gemini"
+    - name: "echo-gemini"
       label: "Echo Gemini"
       preset:
         endpoint: "echo_stream"
@@ -121,7 +115,7 @@ modelSpecs:
       iconURL: "google"
       description: "Gemini with smart ad integration"
     
-    - name: "echo_stream_grok"
+    - name: "echo-grok"
       label: "Echo Grok"
       preset:
         endpoint: "echo_stream"
@@ -133,11 +127,11 @@ modelSpecs:
       iconURL: "xai"
       description: "Grok with smart ad integration"
 
-    # Existing models
-    - name: "gpt-4o"
-      label: "GPT-4o"
+    # Original Echo Stream models (can be removed if the above works)
+    - name: "echo_stream_gpt4o"
+      label: "Echo GPT-4o (Legacy)"
       preset:
-        endpoint: "openAI"
+        endpoint: "echo_stream"
         model: "gpt-4o"
         temperature: 0.7
         top_p: 1
@@ -146,91 +140,11 @@ modelSpecs:
         resendFiles: true
         imageDetail: "auto"
         maxContextTokens: 128000
-      order: 5
-      showIconInMenu: true
-      showIconInHeader: true
+      order: 101
+      showIconInMenu: false
+      showIconInHeader: false
       iconURL: "openAI"
-      description: "Most capable GPT-4 model for complex tasks"
-    - name: "o1"
-      label: "o3"
-      preset:
-        endpoint: "openAI"
-        model: "o1"
-      order: 6
-      showIconInMenu: true
-      showIconInHeader: true
-      iconURL: "openAI"
-      description: "OpenAI's latest model"
-    - name: "gpt-4o-mini"
-      label: "o4-mini"
-      preset:
-        endpoint: "openAI"
-        model: "gpt-4o-mini"
-      order: 7
-      showIconInMenu: true
-      showIconInHeader: true
-      iconURL: "openAI"
-      description: "OpenAI's fastest and most affordable model"
-    - name: "claude-3-5-sonnet-20241022"
-      label: "Claude 4 Sonnet"
-      preset:
-        endpoint: "anthropic"
-        model: "claude-3-5-sonnet-20241022"
-      order: 8
-      showIconInMenu: true
-      showIconInHeader: true
-      iconURL: "anthropic"
-      description: "Anthropic's latest Sonnet model"
-    - name: "claude-3-opus-20240229"
-      label: "Claude 4 Opus"
-      preset:
-        endpoint: "anthropic"
-        model: "claude-3-opus-20240229"
-      order: 9
-      showIconInMenu: true
-      showIconInHeader: true
-      iconURL: "anthropic"
-      description: "Anthropic's most powerful model"
-    - name: "gemini-2.0-flash-exp"
-      label: "Gemini 2.0 Flash"
-      preset:
-        endpoint: "google"
-        model: "gemini-2.0-flash-exp"
-      order: 10
-      showIconInMenu: true
-      showIconInHeader: true
-      iconURL: "google"
-      description: "Google's fastest Gemini model"
-    - name: "gemini-1.5-pro-latest"
-      label: "Gemini 2.0 Pro"
-      preset:
-        endpoint: "google"
-        model: "gemini-1.5-pro-latest"
-      order: 11
-      showIconInMenu: true
-      showIconInHeader: true
-      iconURL: "google"
-      description: "Google's most capable Gemini model"
-    - name: "grok-3-mini"
-      label: "Grok 3 Mini"
-      preset:
-        endpoint: "xai"
-        model: "grok-3-mini"
-      order: 12
-      showIconInMenu: true
-      showIconInHeader: true
-      iconURL: "xai"
-      description: "xAI's latest Grok model"
-    - name: "grok-3"
-      label: "Grok 3"
-      preset:
-        endpoint: "xai"
-        model: "grok-3"
-      order: 13
-      showIconInMenu: true
-      showIconInHeader: true
-      iconURL: "xai"
-      description: "xAI's most powerful Grok model"
+      description: "GPT-4o with smart ad integration (Legacy)"
 
 # Enable file uploads (ChatGPT functionality)
 fileConfig:

@@ -168,18 +168,22 @@ const MODEL_DISPLAY_NAMES = {
   'gpt-4o': 'GPT-4o',
   'o1': 'o3',
   'gpt-4o-mini': 'o4-mini',
+  'echo-gpt-4o': 'Echo GPT-4o',
   
   // Anthropic models
   'claude-3-5-sonnet-20241022': 'Claude 4 Sonnet',
   'claude-3-opus-20240229': 'Claude 4 Opus',
+  'echo-claude': 'Echo Claude',
   
   // Google models
   'gemini-2.0-flash-exp': 'Gemini 2.0 Flash',
   'gemini-1.5-pro-latest': 'Gemini 2.0 Pro',
+  'echo-gemini': 'Echo Gemini',
   
   // xAI models
   'grok-3-mini': 'Grok 3 Mini',
   'grok-3': 'Grok 3',
+  'echo-grok': 'Echo Grok',
 
   // Echo Stream models (Railway service)
   'echo_stream_gpt4o': 'Echo GPT-4o',
