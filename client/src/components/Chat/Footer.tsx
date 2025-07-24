@@ -83,24 +83,33 @@ export default function Footer({ className }: { className?: string }) {
       <div
         className={
           className ??
-          'absolute bottom-0 left-0 right-0 hidden items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary sm:flex md:px-[60px]'
+          'absolute bottom-0 left-0 right-0 hidden items-center justify-between px-2 py-2 text-xs text-text-primary sm:flex md:px-[60px]'
         }
         role="contentinfo"
       >
-        {footerElements.map((contentRender, index) => {
-          const isLastElement = index === footerElements.length - 1;
-          return (
-            <React.Fragment key={`footer-element-${index}`}>
-              {contentRender}
-              {!isLastElement && (
-                <div
-                  key={`separator-${index}`}
-                  className="h-2 border-r-[1px] border-border-medium"
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
+        {/* Left side - main footer content */}
+        <div className="flex items-center justify-center gap-2">
+          {footerElements.map((contentRender, index) => {
+            const isLastElement = index === footerElements.length - 1;
+            return (
+              <React.Fragment key={`footer-element-${index}`}>
+                {contentRender}
+                {!isLastElement && (
+                  <div
+                    key={`separator-${index}`}
+                    className="h-2 border-r-[1px] border-border-medium"
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        {/* Right side - affiliate disclosure */}
+        <div className="text-right text-xs text-text-primary">
+          <div>Affiliate links earn us commission.</div>
+          <div>As an Amazon Associate I earn from qualifying purchases.</div>
+        </div>
       </div>
     </div>
   );
