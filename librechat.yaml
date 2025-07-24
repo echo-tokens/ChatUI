@@ -39,7 +39,7 @@ endpoints:
   openAI:
     apiKey: "${OPENAI_API_KEY}"
     models:
-      default: ["o1", "gpt-4o-mini"]  # TEMP REMOVED: gpt-4o (for debugging)
+      default: ["gpt-4o", "o1", "gpt-4o-mini"]
       fetch: false
     titleConvo: true
     titleModel: "gpt-4o-mini"
@@ -77,11 +77,11 @@ modelSpecs:
   enforce: false
   prioritize: true
   list:
-    # Echo models integrated into existing providers - These redirect to Railway service
+    # Echo models temporarily pointing to OpenAI (for testing)
     - name: "echo-gpt-4o"
       label: "Echo GPT-4o"
       preset:
-        endpoint: "echo_stream"
+        endpoint: "openAI"  # TEMP: pointing to OpenAI instead of echo_stream
         model: "gpt-4o"
         temperature: 0.7
       order: 1
@@ -89,45 +89,45 @@ modelSpecs:
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "openAI"
-      description: "GPT-4o with smart ad integration"
-    
+      description: "GPT-4o with smart ad integration (TESTING)"
+
     - name: "echo-claude"
       label: "Echo Claude"
       preset:
-        endpoint: "echo_stream"
-        model: "claude-3-5-sonnet"
+        endpoint: "openAI"  # TEMP: pointing to OpenAI instead of echo_stream
+        model: "gpt-4o"     # TEMP: using gpt-4o model
         temperature: 0.7
       order: 2
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "anthropic"
-      description: "Claude with smart ad integration"
-    
+      description: "Claude with smart ad integration (TESTING)"
+
     - name: "echo-gemini"
       label: "Echo Gemini"
       preset:
-        endpoint: "echo_stream"
-        model: "gemini-2.0-flash"
+        endpoint: "openAI"  # TEMP: pointing to OpenAI instead of echo_stream
+        model: "gpt-4o"     # TEMP: using gpt-4o model
         temperature: 0.7
       order: 3
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "google"
-      description: "Gemini with smart ad integration"
-    
+      description: "Gemini with smart ad integration (TESTING)"
+
     - name: "echo-grok"
       label: "Echo Grok"
       preset:
-        endpoint: "echo_stream"
-        model: "grok-3"
+        endpoint: "openAI"  # TEMP: pointing to OpenAI instead of echo_stream
+        model: "gpt-4o"     # TEMP: using gpt-4o model
         temperature: 0.7
       order: 4
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "xai"
-      description: "Grok with smart ad integration"
+      description: "Grok with smart ad integration (TESTING)"
 
-    # Original Echo Stream models (can be removed if the above works)
+    # Legacy model (keeping hidden)
     - name: "echo_stream_gpt4o"
       label: "Echo GPT-4o (Legacy)"
       preset:
