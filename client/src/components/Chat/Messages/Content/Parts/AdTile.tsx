@@ -8,9 +8,8 @@ interface AdTileProps {
 
 const AdTile = memo(({ content, showCursor }: AdTileProps) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [displayContent, setDisplayContent] = useState('');
 
-  // Animate the tile appearance
+  // Animate the tile appearance only for new content
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
@@ -18,32 +17,13 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Simulate character-by-character streaming of ad content
-  useEffect(() => {
-    if (!content || !isVisible) {
-      return;
-    }
-
-    let currentIndex = 0;
-    const streamInterval = setInterval(() => {
-      if (currentIndex < content.length) {
-        setDisplayContent(content.slice(0, currentIndex + 1));
-        currentIndex++;
-      } else {
-        clearInterval(streamInterval);
-      }
-    }, 20); // 20ms per character for smooth streaming effect
-
-    return () => clearInterval(streamInterval);
-  }, [content, isVisible]);
-
   // Parse ad content - expecting format like "Title\n\nDescription"
-  const lines = displayContent.split('\n').filter(line => line.trim());
+  const lines = content.split('\n').filter(line => line.trim());
   const title = lines[0] || '';
   const description = lines.slice(1).join(' ') || '';
 
   const handleClick = () => {
-    // Extract link from the original content (not displayContent to get full link even while streaming)
+    // Extract link from the content
     const linkMatch = content.match(/\[link\](.*?)\[\/link\]/);
     if (linkMatch && linkMatch[1]) {
       const url = linkMatch[1].trim();
@@ -57,11 +37,11 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
     <div
       className={cn(
         'my-1 w-fit overflow-hidden rounded-lg transition-all duration-150 ease-out cursor-pointer',
-        'border border-brand-purple/30 bg-brand-purple/15 px-3 py-1',
-        'dark:border-brand-purple/40 dark:bg-brand-purple/30',
-        // Hover effects with smooth transitions
-        'hover:bg-brand-purple/20 hover:border-brand-purple/50 hover:shadow-md',
-        'dark:hover:bg-brand-purple/40 dark:hover:border-brand-purple/60',
+        'border border-brand-purple/10 bg-brand-purple/[0.02] px-3 py-1',
+        'dark:border-brand-purple/15 dark:bg-brand-purple/[0.03]',
+        // Hover effects with subtle transitions
+        'hover:bg-brand-purple/[0.04] hover:border-brand-purple/20 hover:shadow-sm',
+        'dark:hover:bg-brand-purple/[0.06] dark:hover:border-brand-purple/25',
         'transition-colors transition-shadow duration-200 ease-in-out',
         isVisible ? 'animate-fadeGrow opacity-100' : 'max-h-0 opacity-0'
       )}
@@ -72,7 +52,7 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
       {title && (
         <p className="font-semibold text-brand-purple dark:text-brand-purple/90 text-sm leading-tight">
           {title}
-          {showCursor && displayContent === title && (
+          {showCursor && (
             <span className="animate-pulse">|</span>
           )}
         </p>
@@ -84,7 +64,7 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
           title ? "mt-0.5" : ""
         )}>
           {description}
-          {showCursor && displayContent.endsWith(description) && (
+          {showCursor && !title && (
             <span className="animate-pulse">|</span>
           )}
         </p>
