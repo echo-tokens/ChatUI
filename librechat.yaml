@@ -1,7 +1,5 @@
 version: 1.2.1
 
-customFooter: "AI, democratized"
-
 interface:
   modelSelect: true
   sidePanel: false
@@ -63,15 +61,7 @@ endpoints:
     titleModel: "gemini-2.0-flash-exp"
     modelDisplayLabel: "Gemini"
 
-  xai:
-    apiKey: "${XAI_API_KEY}"
-    baseURL: "https://api.xai.com/v1"
-    models:
-      default: ["grok-3-mini", "grok-3"]  # Removed echo-grok
-      fetch: false
-    titleConvo: true
-    titleModel: "grok-3-mini"
-    modelDisplayLabel: "Grok"
+  # REMOVED XAI ENDPOINT - Not yet supported in this LibreChat version
 
 modelSpecs:
   enforce: false
