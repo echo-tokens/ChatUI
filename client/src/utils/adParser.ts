@@ -9,20 +9,20 @@ interface ParsedContent {
 }
 
 /**
- * Parses text containing [ad]...[/ad] tags and returns an array of content parts
+ * Parses text containing [ad]...[/ad] tags followed by optional [link]...[/link] tags
  * @param text The raw text containing potential ad tags
- * @returns Array of TMessageContentParts with text and ad tiles
+ * @returns Array of content parts with text and ad tiles
  */
 export function parseAdContent(text: string): ParsedContent[] {
   const parts: ParsedContent[] = [];
   
-  // Regular expression to match [ad]...[/ad] blocks
-  const adRegex = /\[ad\]([\s\S]*?)\[\/ad\]/g;
+  // Regular expression to match [ad]...[/ad] blocks optionally followed by [link]...[/link]
+  const adRegex = /\[ad\]([\s\S]*?)\[\/ad\](\s*\[link\]([\s\S]*?)\[\/link\])?/g;
   let lastIndex = 0;
   let match;
 
   while ((match = adRegex.exec(text)) !== null) {
-    const [fullMatch, adContent] = match;
+    const [fullMatch, adContent, linkSection, linkUrl] = match;
     const beforeAdText = text.slice(lastIndex, match.index);
     
     // Add text content before the ad (if any)
@@ -33,11 +33,17 @@ export function parseAdContent(text: string): ParsedContent[] {
       });
     }
     
+    // Combine ad content with link for the tile
+    let tileContent = adContent.trim();
+    if (linkUrl) {
+      tileContent += `\n[link]${linkUrl.trim()}[/link]`;
+    }
+    
     // Add the ad content as a special ad tile part
-    if (adContent.trim()) {
+    if (tileContent) {
       parts.push({
         type: 'ad_tile',
-        ad_content: adContent.trim(),
+        ad_content: tileContent,
       });
     }
     
