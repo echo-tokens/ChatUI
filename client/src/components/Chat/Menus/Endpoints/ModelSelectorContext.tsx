@@ -53,6 +53,13 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
   const { data: endpointsConfig } = useGetEndpointsQuery();
   const { conversation, newConversation } = useChatContext();
   const modelSpecs = useMemo(() => startupConfig?.modelSpecs?.list ?? [], [startupConfig]);
+  
+  // DEBUG: Check what modelSpecs we have
+  console.log('🔍 DEBUG ModelSelectorContext:', {
+    modelSpecsCount: modelSpecs.length,
+    modelSpecs: modelSpecs.map(spec => ({ name: spec.name, label: spec.label, endpoint: spec.preset.endpoint })),
+  });
+
   const { mappedEndpoints, endpointRequiresUserKey } = useEndpoints({
     agentsMap,
     assistantsMap,
