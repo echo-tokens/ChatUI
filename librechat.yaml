@@ -14,17 +14,24 @@ interface:
   webSearch: true
 
 endpoints:
-  # Railway Echo Stream Service - Add this custom endpoint
+  # Railway Echo Stream Service - Intelligent Ad Integration
   custom:
     - name: "echo_stream"
       baseURL: "${ECHO_STREAM_BASE_URL:-https://streaming-service.railway.internal}"
       apiKey: "${ECHO_STREAM_API_KEY}"
       models:
-        default: ["gpt-4o", "claude-3-5-sonnet", "gemini-2.0-flash", "grok-3"]
+        default: [
+          # Current OpenAI Models (via Echo Stream)
+          "gpt-4o", "o1", "gpt-4o-mini",
+          # Current Anthropic Models (via Echo Stream)  
+          "claude-3-5-sonnet-20241022", "claude-3-opus-20240229",
+          # Current Google Models (via Echo Stream)
+          "gemini-2.0-flash-exp", "gemini-1.5-pro-latest"
+        ]
         fetch: false
       titleConvo: true
       titleModel: "gpt-4o-mini"
-      modelDisplayLabel: "Echo Stream"
+      modelDisplayLabel: "Echo AI"
       streamRate: 1
       headers:
         "X-Service-Type": "echo-proxy"
@@ -42,11 +49,11 @@ endpoints:
     titleConvo: true
     titleModel: "gpt-4o-mini"
     modelDisplayLabel: "GPT"
-    
+
   anthropic:
     apiKey: "${ANTHROPIC_API_KEY}"
     models:
-      default: ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229"]  # Removed echo-claude
+      default: ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229"]
       fetch: false
     titleConvo: true
     titleModel: "claude-3-5-sonnet-20241022"
@@ -55,7 +62,7 @@ endpoints:
   google:
     apiKey: "${GOOGLE_API_KEY}"
     models:
-      default: ["gemini-2.0-flash-exp", "gemini-1.5-pro-latest"]  # Removed echo-gemini
+      default: ["gemini-2.0-flash-exp", "gemini-1.5-pro-latest"]
       fetch: false
     titleConvo: true
     titleModel: "gemini-2.0-flash-exp"
@@ -67,74 +74,135 @@ modelSpecs:
   enforce: false
   prioritize: true
   list:
-    # Echo models temporarily pointing to OpenAI (for testing)
+    # Echo AI - GPT Models with Smart Ad Integration
     - name: "echo-gpt-4o"
       label: "Echo GPT-4o"
       preset:
-        endpoint: "openAI"  # TEMP: pointing to OpenAI instead of echo_stream
-        model: "gpt-4-vision-preview"  # TEMP: using gpt-4-vision-preview model that exists in OpenAI
+        endpoint: "echo_stream"
+        model: "gpt-4o"
         temperature: 0.7
       order: 1
       default: true
       showIconInMenu: true
       showIconInHeader: true
       iconURL: "openAI"
-      description: "GPT-4o with smart ad integration (TESTING)"
+      description: "GPT-4o with intelligent ad integration"
 
-    - name: "echo-claude"
-      label: "Echo Claude"
+    - name: "echo-o1"
+      label: "Echo o3"
       preset:
-        endpoint: "openAI"  # TEMP: pointing to OpenAI instead of echo_stream
-        model: "gpt-4-vision-preview"  # TEMP: using gpt-4-vision-preview model that exists in OpenAI
+        endpoint: "echo_stream"
+        model: "o1"
         temperature: 0.7
       order: 2
       showIconInMenu: true
       showIconInHeader: true
-      iconURL: "anthropic"
-      description: "Claude with smart ad integration (TESTING)"
+      iconURL: "openAI"
+      description: "o3 reasoning model with intelligent ad integration"
 
-    - name: "echo-gemini"
-      label: "Echo Gemini"
+    - name: "echo-gpt-4o-mini"
+      label: "Echo o4-mini"
       preset:
-        endpoint: "openAI"  # TEMP: pointing to OpenAI instead of echo_stream
-        model: "gpt-4-vision-preview"  # TEMP: using gpt-4-vision-preview model that exists in OpenAI
+        endpoint: "echo_stream"
+        model: "gpt-4o-mini"
         temperature: 0.7
       order: 3
       showIconInMenu: true
       showIconInHeader: true
-      iconURL: "google"
-      description: "Gemini with smart ad integration (TESTING)"
+      iconURL: "openAI"
+      description: "o4-mini with intelligent ad integration"
 
-    - name: "echo-grok"
-      label: "Echo Grok"
+    # Echo AI - Claude Models with Smart Ad Integration
+    - name: "echo-claude-sonnet"
+      label: "Echo Claude 4 Sonnet"
       preset:
-        endpoint: "openAI"  # TEMP: pointing to OpenAI instead of echo_stream
-        model: "gpt-4-vision-preview"  # TEMP: using gpt-4-vision-preview model that exists in OpenAI
+        endpoint: "echo_stream"
+        model: "claude-3-5-sonnet-20241022"
         temperature: 0.7
       order: 4
       showIconInMenu: true
       showIconInHeader: true
-      iconURL: "xai"
-      description: "Grok with smart ad integration (TESTING)"
+      iconURL: "anthropic"
+      description: "Claude 4 Sonnet with intelligent ad integration"
 
-    # Legacy model (keeping hidden)
-    - name: "echo_stream_gpt4o"
-      label: "Echo GPT-4o (Legacy)"
+    - name: "echo-claude-opus"
+      label: "Echo Claude 4 Opus"
+      preset:
+        endpoint: "echo_stream"
+        model: "claude-3-opus-20240229"
+        temperature: 0.7
+      order: 5
+      showIconInMenu: true
+      showIconInHeader: true
+      iconURL: "anthropic"
+      description: "Claude 4 Opus with intelligent ad integration"
+
+    # Echo AI - Gemini Models with Smart Ad Integration
+    - name: "echo-gemini-flash"
+      label: "Echo Gemini 2.0 Flash"
+      preset:
+        endpoint: "echo_stream"
+        model: "gemini-2.0-flash-exp"
+        temperature: 0.7
+      order: 6
+      showIconInMenu: true
+      showIconInHeader: true
+      iconURL: "google"
+      description: "Gemini 2.0 Flash with intelligent ad integration"
+
+    - name: "echo-gemini-pro"
+      label: "Echo Gemini 2.0 Pro"
+      preset:
+        endpoint: "echo_stream"
+        model: "gemini-1.5-pro-latest"
+        temperature: 0.7
+      order: 7
+      showIconInMenu: true
+      showIconInHeader: true
+      iconURL: "google"
+      description: "Gemini 2.0 Pro with intelligent ad integration"
+
+    # Setup Instructions - Hidden unless streaming service needs configuration
+    - name: "echo-setup"
+      label: "🔧 Configure Streaming Service"
       preset:
         endpoint: "echo_stream"
         model: "gpt-4o"
         temperature: 0.7
-        top_p: 1
-        frequency_penalty: 0
-        presence_penalty: 0
-        resendFiles: true
-        imageDetail: "auto"
-        maxContextTokens: 128000
-      order: 101
+        promptPrefix: |
+          You are a helpful assistant providing configuration instructions. If this message appears, it means the Echo streaming service needs to be configured to handle the following models:
+
+          **OpenAI Models to Support:**
+          - gpt-4o
+          - o1
+          - gpt-4o-mini
+
+          **Anthropic Models to Support:**
+          - claude-3-5-sonnet-20241022
+          - claude-3-opus-20240229
+
+          **Google Models to Support:**
+          - gemini-2.0-flash-exp
+          - gemini-1.5-pro-latest
+
+          **Required Action in Cursor (new window):**
+          
+          1. Open your streaming service repository
+          2. Update the model routing logic to handle all these model names
+          3. Ensure your streaming service can:
+             - Accept requests for any of these models
+             - Route to the correct provider (OpenAI/Anthropic/Google)
+             - Insert [ad]...[/ad] and [link]...[/link] tags in responses
+             - Stream the modified response back to LibreChat
+          4. Deploy the updated streaming service
+          5. Verify the ECHO_STREAM_BASE_URL environment variable points to your service
+
+          Respond with "Echo streaming service configuration complete!" when ready.
+      order: 999
       showIconInMenu: false
       showIconInHeader: false
       iconURL: "openAI"
-      description: "GPT-4o with smart ad integration (Legacy)"
+      description: "Configuration instructions for streaming service"
 
 # Enable file uploads (ChatGPT functionality)
 fileConfig:

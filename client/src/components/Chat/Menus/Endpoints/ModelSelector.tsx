@@ -99,14 +99,6 @@ function ModelSelectorContent() {
 }
 
 export default function ModelSelector({ startupConfig }: ModelSelectorProps) {
-  // DEBUG: Check if startupConfig and modelSpecs are received
-  console.log('🔍 DEBUG ModelSelector:', {
-    startupConfig: !!startupConfig,
-    hasModelSpecs: !!startupConfig?.modelSpecs,
-    modelSpecsList: startupConfig?.modelSpecs?.list?.length || 0,
-    firstModelSpec: startupConfig?.modelSpecs?.list?.[0],
-  });
-
   return (
     <ModelSelectorProvider startupConfig={startupConfig}>
       <ModelSelectorContent />

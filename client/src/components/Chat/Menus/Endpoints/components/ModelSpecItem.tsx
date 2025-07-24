@@ -63,18 +63,10 @@ export function ModelSpecItem({ spec, isSelected }: ModelSpecItemProps) {
 }
 
 export function renderModelSpecs(specs: TModelSpec[], selectedSpec: string) {
-  console.log('🔍 DEBUG renderModelSpecs called:', {
-    specsLength: specs?.length || 0,
-    specs: specs?.map(spec => ({ name: spec.name, label: spec.label, endpoint: spec.preset.endpoint })) || [],
-    selectedSpec,
-  });
-
   if (!specs || specs.length === 0) {
-    console.log('🔍 DEBUG renderModelSpecs: No specs to render - returning null');
     return null;
   }
 
-  console.log('🔍 DEBUG renderModelSpecs: Rendering', specs.length, 'specs');
   return specs.map((spec) => (
     <ModelSpecItem key={spec.name} spec={spec} isSelected={selectedSpec === spec.name} />
   ));
