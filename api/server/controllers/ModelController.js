@@ -5,7 +5,7 @@ const { logger } = require('~/config');
 
 // Hardcoded model restrictions - only allow these specific models
 const ALLOWED_MODELS = {
-  openAI: ['gpt-4o', 'o1', 'gpt-4o-mini'],
+  openAI: ['gpt-4o', 'o1', 'gpt-4o-mini', 'gpt-4-vision-preview'],  // Added gpt-4-vision-preview for testing
   anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'],
   google: ['gemini-2.0-flash-exp', 'gemini-1.5-pro-latest'],
   xai: ['grok-3-mini', 'grok-3'],
