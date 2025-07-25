@@ -108,7 +108,6 @@ https://www.librechat.ai/docs/configuration/stt_tts`);
 
     return null;
   } else {
-    console.log(JSON.stringify(customConfig, null, 2));
     logger.info('Custom config file loaded:');
     logger.info(JSON.stringify(customConfig, null, 2));
     logger.debug('Custom config:', customConfig);

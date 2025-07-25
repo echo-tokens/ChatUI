@@ -65,8 +65,6 @@ export function getEnabledEndpoints() {
   ];
 
   const endpointsEnv = process.env.ENDPOINTS ?? '';
-  console.log('🔍 [getEnabledEndpoints] ENDPOINTS env var:', `"${endpointsEnv}"`);
-  
   let enabledEndpoints = defaultEndpoints;
   if (endpointsEnv) {
     enabledEndpoints = endpointsEnv
@@ -74,8 +72,6 @@ export function getEnabledEndpoints() {
       .filter((endpoint) => endpoint.trim())
       .map((endpoint) => endpoint.trim());
   }
-  
-  console.log('✅ [getEnabledEndpoints] Final enabled endpoints:', enabledEndpoints);
   return enabledEndpoints;
 }
 
