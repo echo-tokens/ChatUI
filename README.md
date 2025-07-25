@@ -114,6 +114,18 @@ ChatUI/
 └── README.md          # This file
 ```
 
+## 🤖 Echo AI Configuration
+
+This instance includes a custom Echo AI streaming service for intelligent ad integration. For detailed information about how the model configuration works, debugging, and streaming service integration, see:
+
+**📖 [Echo AI Configuration Guide](docs/ECHO_AI_CONFIGURATION.md)**
+
+Key features:
+- Custom model endpoints routing through streaming service
+- Intelligent ad tile integration mid-stream
+- Dual frontend/backend model restrictions
+- Railway deployment with internal service communication
+
 ### Development Tips
 
 **Fast Iteration:**
