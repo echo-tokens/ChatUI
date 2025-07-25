@@ -75,13 +75,16 @@ pkill -f "vite"
 **Option C: Docker**
 This option does not dynamically update; image must be rebuilt for every change. This simulates how Railway deploys the code. If Railway deployment fails, then this option might be the best option for debugging.
 ```bash
+ # stop containers running image, if existing
+docker rm $(docker stop $(docker ps -a -q --filter ancestor=echo-ai-chat))
+ # delete image, if existing
+docker rmi echo-ai-chat
+# build image
 docker build -t echo-ai-chat .
+# run image
 docker run -d \
-  --name echo-ai-chat \
-  -p 3080:3080 \
-  -v $(pwd)/.env:/app/.env \
-  -v $(pwd)/librechat.yaml:/app/librechat.yaml \
-  echo-ai-chat
+  --name echo-ai-chat -p 3080:3080 -v $(pwd)/.env:/app/.env \
+  -v $(pwd)/librechat.yaml:/app/librechat.yaml echo-ai-chat
   ```
 
 ### 5. Access Application

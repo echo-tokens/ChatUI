@@ -265,7 +265,7 @@ export const googleSettings = {
     default: 40 as const,
   },
   thinking: {
-    default: true as const,
+    default: false as const,
   },
   thinkingBudget: {
     min: -1 as const,
@@ -274,7 +274,7 @@ export const googleSettings = {
     /** `-1` = Dynamic Thinking, meaning the model will adjust
      * the budget based on the complexity of the request.
      */
-    default: -1 as const,
+    default: 0 as const,
   },
 };
 

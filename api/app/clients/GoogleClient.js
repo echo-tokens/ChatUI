@@ -176,6 +176,9 @@ class GoogleClient extends BaseClient {
     delete this.modelOptions.thinking;
     delete this.modelOptions.thinkingBudget;
 
+    // Just delete thinking altogether
+    delete this.modelOptions.thinkingConfig;
+
     this.sender =
       this.options.sender ??
       getResponseSender({
