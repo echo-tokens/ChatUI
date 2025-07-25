@@ -72,6 +72,18 @@ pkill -f "node api/server/index.js"
 pkill -f "vite"
 ```
 
+**Option C: Docker**
+This option does not dynamically update; image must be rebuilt for every change. This simulates how Railway deploys the code. If Railway deployment fails, then this option might be the best option for debugging.
+```bash
+docker build -t echo-ai-chat .
+docker run -d \
+  --name echo-ai-chat \
+  -p 3080:3080 \
+  -v $(pwd)/.env:/app/.env \
+  -v $(pwd)/librechat.yaml:/app/librechat.yaml \
+  echo-ai-chat
+  ```
+
 ### 5. Access Application
 - **Frontend**: http://localhost:3091 (or check console for port)
 - **Backend**: http://localhost:3080
