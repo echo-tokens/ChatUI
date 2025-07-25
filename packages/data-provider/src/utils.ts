@@ -23,7 +23,9 @@ export function extractEnvVariable(value: string) {
   const singleMatch = trimmed.match(envVarRegex);
   if (singleMatch) {
     const varName = singleMatch[1];
-    return process.env[varName] || trimmed;
+    const result = process.env[varName] || trimmed;
+    console.log(`Extracted env variable ${varName} from ${value} to ${result}`);
+    return result;
   }
 
   // For multiple variables, process them using a regex loop
