@@ -1,6 +1,21 @@
 require('dotenv').config();
+
+console.warn('=== RAILWAY FILESYSTEM DEBUG ===');                  
+console.warn('Current working directory:', process.cwd());    
+console.warn('__dirname:', __dirname);  
+
+
 const fs = require('fs');
 const path = require('path');
+
+try {
+  console.warn('Files in cwd:', fs.readdirSync(process.cwd()));
+  console.warn('Files in /:', fs.readdirSync('/'));
+  console.warn('Files in /app:', fs.readdirSync('/app').catch(() => '/app does not exist'));
+} catch(e) {
+  console.warn('Error reading directories:', e.message);
+}
+
 require('module-alias')({ base: path.resolve(__dirname, '..') });
 const cors = require('cors');
 const axios = require('axios');
