@@ -10,8 +10,6 @@ const { getCustomConfig } = require('./getCustomConfig');
 async function loadConfigEndpoints(req) {
   const customConfig = await getCustomConfig();
 
-  console.log(req);
-
   if (!customConfig) {
     return {};
   }
