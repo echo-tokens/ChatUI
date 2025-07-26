@@ -87,6 +87,34 @@ docker run -d \
   -v $(pwd)/librechat.yaml:/app/librechat.yaml echo-ai-chat
   ```
 
+This is a useful command to add to your `.bashrc` that does all this and immediately opens the Docker logs (anything that gets printed with `console.log`, which is NOT printed to the normal browser console output):
+```bash
+function run_echo_ai_chat() {
+  # Stop and remove any existing containers using the same image
+  docker rm $(docker stop $(docker ps -a -q --filter ancestor=echo-ai-chat)) 2>/dev/null
+
+  # Remove existing image
+  docker rmi echo-ai-chat 2>/dev/null
+
+  # Build the Docker image
+  docker build -t echo-ai-chat .
+
+  # Run the container
+  container_id=$(docker run -d \
+    --name echo-ai-chat \
+    -p 3080:3080 \
+    -v "$(pwd)/.env:/app/.env" \
+    -v "$(pwd)/librechat.yaml:/app/librechat.yaml" \
+    echo-ai-chat)
+
+  echo "Container started: $container_id"
+  echo "Tailing logs..."
+  docker logs -f "$container_id"
+}
+
+```
+
+
 ### 5. Access Application
 - **Frontend**: http://localhost:3091 (or check console for port)
 - **Backend**: http://localhost:3080

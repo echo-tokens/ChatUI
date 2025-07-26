@@ -75,8 +75,22 @@ async function buildEndpointOption(req, res, next) {
   }
 
   try {
-    const isAgents =
-      isAgentsEndpoint(endpoint) || req.baseUrl.startsWith(EndpointURLs[EModelEndpoint.agents]);
+    // Special handling for echo_stream - always route to custom, never agents
+    const isEchoStream = endpoint === 'echo_stream';
+    const isAgents = !isEchoStream && isAgentsEndpoint(endpoint);
+    
+    console.log('DEBUG: BUILDENDPOINTOPTION - Routing decision:', {
+      endpoint,
+      endpointType,
+      isEchoStream,
+      isAgentsCheck: isAgentsEndpoint(endpoint),
+      isAgents,
+      routingTo: isAgents ? 'agents' : (endpointType ?? endpoint),
+      reqBaseUrl: req.baseUrl,
+      reqUrl: req.url,
+      reqPath: req.path
+    });
+    
     const builder = isAgents
       ? (...args) => buildFunction[EModelEndpoint.agents](req, ...args)
       : buildFunction[endpointType ?? endpoint];

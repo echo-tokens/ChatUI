@@ -62,6 +62,54 @@ const initializeClient = async ({ req, res, endpointOption }) => {
     collectedUsage,
   });
 
+  // Check if this is actually an agents endpoint
+  const { isAgentsEndpoint } = require('librechat-data-provider');
+  const isActualAgentsEndpoint = isAgentsEndpoint(endpointOption.endpoint);
+  
+  console.log('DEBUG: AGENTS/INITIALIZE - Endpoint check:', {
+    endpoint: endpointOption.endpoint,
+    isActualAgentsEndpoint,
+    hasAgentPromise: !!endpointOption.agent
+  });
+
+  if (!isActualAgentsEndpoint) {
+    // This is a normal endpoint (like OpenAI) being routed through agents
+    // Route to the proper endpoint initialization function
+    console.log('DEBUG: AGENTS/INITIALIZE - Creating regular client for non-agents endpoint:', endpointOption.endpoint);
+    
+    const endpoint = endpointOption.endpoint;
+    let initializeRegularClient;
+    
+    switch (endpoint) {
+      case 'openAI':
+      case 'azureOpenAI':
+        initializeRegularClient = require('~/server/services/Endpoints/openAI/initialize');
+        break;
+      case 'google':
+        initializeRegularClient = require('~/server/services/Endpoints/google/initialize');
+        break;
+      case 'anthropic':
+        initializeRegularClient = require('~/server/services/Endpoints/anthropic/initialize');
+        break;
+      case 'bedrock':
+        initializeRegularClient = require('~/server/services/Endpoints/bedrock/initialize');
+        break;
+      case 'assistants':
+        initializeRegularClient = require('~/server/services/Endpoints/assistants/initalize');
+        break;
+      case 'azureAssistants':
+        initializeRegularClient = require('~/server/services/Endpoints/azureAssistants/initialize');
+        break;
+      default:
+        // For custom endpoints like echo_stream
+        initializeRegularClient = require('~/server/services/Endpoints/custom/initialize');
+        break;
+    }
+    
+    console.log('DEBUG: AGENTS/INITIALIZE - Using initialize function for endpoint:', endpoint);
+    return await initializeRegularClient({ req, res, endpointOption });
+  }
+
   if (!endpointOption.agent) {
     throw new Error('No agent promise provided');
   }
@@ -92,6 +140,12 @@ const initializeClient = async ({ req, res, endpointOption }) => {
     endpointOption,
     allowedProviders,
     isInitialAgent: true,
+  });
+
+  console.log('DEBUG: AGENTS/INITIALIZE - Primary config after initializeAgent:', {
+    endpoint: primaryConfig.endpoint,
+    provider: primaryConfig.provider,
+    model: primaryConfig.model_parameters?.model
   });
 
   const agent_ids = primaryConfig.agent_ids;
@@ -136,6 +190,43 @@ const initializeClient = async ({ req, res, endpointOption }) => {
       modelLabel: endpointOption.model_parameters.modelLabel,
     });
 
+  console.log('DEBUG: AGENTS/INITIALIZE - Creating AgentClient with primaryConfig:', {
+    agentModel: primaryConfig?.model_parameters?.model,
+    endpoint: primaryConfig?.endpoint,
+    provider: primaryConfig?.provider
+  });
+
+  // For custom endpoints (like echo_stream), we need to get the actual client
+  let customClient = null;
+  console.log('DEBUG: AGENTS/INITIALIZE - Checking if we need custom client. Endpoint:', primaryConfig.endpoint, 'vs agents:', EModelEndpoint.agents);
+  
+  if (primaryConfig.endpoint && primaryConfig.endpoint !== EModelEndpoint.agents) {
+    console.log('DEBUG: AGENTS/INITIALIZE - Detected custom endpoint, getting custom client');
+    try {
+      const customInitialize = require('~/server/services/Endpoints/custom/initialize');
+      const customResult = await customInitialize({
+        req,
+        res,
+        endpointOption,
+        optionsOnly: false,
+        overrideEndpoint: primaryConfig.endpoint
+      });
+      
+      console.log('DEBUG: AGENTS/INITIALIZE - Custom initialize result:', {
+        hasResult: !!customResult,
+        hasClient: !!customResult?.client,
+        clientType: customResult?.client?.constructor?.name
+      });
+      
+      if (customResult && customResult.client) {
+        customClient = customResult.client;
+        console.log('DEBUG: AGENTS/INITIALIZE - Got custom client:', customClient.constructor.name);
+      }
+    } catch (error) {
+      console.log('DEBUG: AGENTS/INITIALIZE - Error getting custom client:', error.message);
+    }
+  }
+
   const client = new AgentClient({
     req,
     res,
@@ -147,6 +238,7 @@ const initializeClient = async ({ req, res, endpointOption }) => {
     aggregateContent,
     artifactPromises,
     agent: primaryConfig,
+    client: customClient, // Pass the custom client
     spec: endpointOption.spec,
     iconURL: endpointOption.iconURL,
     attachments: primaryConfig.attachments,

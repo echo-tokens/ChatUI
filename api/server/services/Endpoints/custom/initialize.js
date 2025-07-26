@@ -20,32 +20,36 @@ const getLogStores = require('~/cache/getLogStores');
 const { PROXY } = process.env;
 
 /**
- * Determines which client to use based on the model name and endpoint
+ * Determines which client to use based on the endpoint name first, then model name
  * @param {string} model - The model name
  * @param {string} endpoint - The endpoint name
  * @returns {string} - The client type ('openai', 'anthropic', 'google', 'echo_stream')
  */
 function getClientType(model, endpoint) {
-  if (!model) return 'openai';
-  
-  // Echo Stream endpoint always uses echo_stream client
+  // FORCE echo_stream client for echo_stream endpoint - no exceptions
   if (endpoint === 'echo_stream') {
+    console.log(`DEBUG: Forcing echo_stream client for endpoint: ${endpoint}, model: ${model}`);
     return 'echo_stream';
   }
   
+  if (!model) return 'openai';
+  
   const modelLower = model.toLowerCase();
   
-  // Anthropic models
+  // Anthropic models (only for non-echo_stream endpoints)
   if (modelLower.includes('claude')) {
+    console.log(`DEBUG: Using anthropic client for model: ${model}, endpoint: ${endpoint}`);
     return 'anthropic';
   }
   
-  // Google models
+  // Google models (only for non-echo_stream endpoints)
   if (modelLower.includes('gemini')) {
+    console.log(`DEBUG: Using google client for model: ${model}, endpoint: ${endpoint}`);
     return 'google';
   }
   
   // OpenAI models (default)
+  console.log(`DEBUG: Using openai client for model: ${model}, endpoint: ${endpoint}`);
   return 'openai';
 }
 
@@ -66,6 +70,14 @@ function supportsThinking(model) {
 const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrideEndpoint }) => {
   const { key: expiresAt } = req.body;
   const endpoint = overrideEndpoint ?? req.body.endpoint;
+  
+  console.log('DEBUG: Custom initialize called with:', {
+    endpoint,
+    overrideEndpoint,
+    reqBodyEndpoint: req.body.endpoint,
+    optionsOnly,
+    model: endpointOption?.model_parameters?.model
+  });
 
   const endpointConfig = await getCustomEndpointConfig(endpoint);
   if (!endpointConfig) {
@@ -178,34 +190,36 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
   // Determine which client to use based on the model and endpoint
   const model = endpointOption?.model_parameters?.model;
   const clientType = getClientType(model, endpoint);
+  
+  console.log('DEBUG: After getClientType - clientType:', clientType, 'optionsOnly:', optionsOnly);
 
-  if (optionsOnly) {
+  // For echo_stream, we bypass optionsOnly to force actual client creation
+  if (optionsOnly && clientType === 'echo_stream') {
+    console.log('DEBUG: Bypassing optionsOnly for echo_stream - will create actual client instead');
+  }
+
+  if (optionsOnly && clientType !== 'echo_stream') {
+    // Skip optionsOnly for echo_stream to force actual client creation
+    console.log('DEBUG: optionsOnly path - processing for clientType:', clientType);
     const modelOptions = endpointOption?.model_parameters ?? {};
-    
-    if (endpoint !== Providers.OLLAMA) {
-      clientOptions = Object.assign(
-        {
-          modelOptions,
-        },
-        clientOptions,
-      );
-      clientOptions.modelOptions.user = req.user.id;
       
-      // Use appropriate config function based on client type
-      let options;
-      if (clientType === 'echo_stream') {
-        // EchoStreamClient doesn't use LLM config pattern
-        options = {
-          useLegacyContent: true,
-          llmConfig: {
-            model,
-            ...modelOptions,
-          }
-        };
-      } else if (clientType === 'anthropic') {
-        const { getLLMConfig } = require('~/server/services/Endpoints/anthropic/llm');
-        options = getLLMConfig(apiKey, clientOptions);
-      } else if (clientType === 'google') {
+      if (endpoint !== Providers.OLLAMA) {
+        clientOptions = Object.assign(
+          {
+            modelOptions,
+          },
+          clientOptions,
+        );
+        clientOptions.modelOptions.user = req.user.id;
+        
+        // Use appropriate config function based on client type
+        let options;
+        console.log('DEBUG: optionsOnly path - clientType:', clientType);
+        if (clientType === 'anthropic') {
+          const { getLLMConfig } = require('~/server/services/Endpoints/anthropic/llm');
+          options = getLLMConfig(apiKey, clientOptions);
+        } else if (clientType === 'google') {
+        console.log('DEBUG: optionsOnly - USING GOOGLE CLIENT (this should NOT happen for echo_stream!)');
         // Google client expects credentials object
         const credentials = JSON.stringify({
           GOOGLE_API_KEY: apiKey,
@@ -232,6 +246,7 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
       }
       
       if (!customOptions.streamRate) {
+        console.log('DEBUG: optionsOnly - returning options:', JSON.stringify(options, null, 2));
         return options;
       }
       
@@ -262,11 +277,16 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
   let client;
   let clientApiKey = apiKey;
   
+  console.log('DEBUG: Creating client - clientType:', clientType);
+  
   if (clientType === 'echo_stream') {
+    console.log('DEBUG: Creating EchoStreamClient');
     client = new EchoStreamClient(apiKey, clientOptions);
   } else if (clientType === 'anthropic') {
+    console.log('DEBUG: Creating AnthropicClient (this should NOT happen for echo_stream!)');
     client = new AnthropicClient(apiKey, clientOptions);
   } else if (clientType === 'google') {
+    console.log('DEBUG: Creating GoogleClient (this should NOT happen for echo_stream!)');
     // Google client expects credentials object
     clientApiKey = JSON.stringify({
       GOOGLE_API_KEY: apiKey,
@@ -289,10 +309,14 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
     client = new OpenAIClient(apiKey, clientOptions);
   }
 
-  return {
+  const result = {
     client,
     clientApiKey: clientApiKey,
   };
+  
+  console.log('DEBUG: Final result of initializeClient - client type:', client.constructor.name, 'clientApiKey exists:', !!clientApiKey);
+  
+  return result;
 };
 
 module.exports = initializeClient;

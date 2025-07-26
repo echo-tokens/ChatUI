@@ -1560,6 +1560,14 @@ ${convo}
       }
     }
   }
+
+  async getCompletion(payload, options = {}) {
+    return await this.chatCompletion({
+      payload,
+      onProgress: options?.onProgress,
+      abortController: options?.abortController
+    });
+  }
 }
 
 module.exports = OpenAIClient;

@@ -906,6 +906,12 @@ class BaseClient {
       throw new Error('User mismatch.');
     }
 
+    // Safety check for message parameter
+    if (!message) {
+      console.log('DEBUG: BaseClient.saveMessageToDatabase - message is undefined, cannot save');
+      throw new Error('Cannot save undefined message to database');
+    }
+
     const savedMessage = await saveMessage(
       this.options?.req,
       {
@@ -922,7 +928,7 @@ class BaseClient {
     }
 
     const fieldsToKeep = {
-      conversationId: message.conversationId,
+      conversationId: message.conversationId || 'unknown',
       endpoint: this.options.endpoint,
       endpointType: this.options.endpointType,
       ...endpointOptions,
@@ -931,7 +937,7 @@ class BaseClient {
     const existingConvo =
       this.fetchedConvo === true
         ? null
-        : await getConvo(this.options?.req?.user?.id, message.conversationId);
+        : await getConvo(this.options?.req?.user?.id, message.conversationId || 'unknown');
 
     const unsetFields = {};
     const exceptions = new Set(['spec', 'iconURL']);

@@ -240,8 +240,27 @@ const createAbortController = (req, res, getAbortData, getReqData) => {
     }
 
     // Get abort data using stored function
-    const { conversationId, userMessage, userMessagePromise, promptTokens, ...responseData } =
-      ctrlData.getAbortDataFn();
+    console.log('DEBUG: abortCompletion - About to call getAbortDataFn');
+    const abortData = ctrlData.getAbortDataFn();
+    console.log('DEBUG: abortCompletion - getAbortDataFn returned:', {
+      hasAbortData: !!abortData,
+      abortDataType: typeof abortData,
+      abortDataKeys: abortData ? Object.keys(abortData) : 'no data',
+      conversationId: abortData?.conversationId
+    });
+    
+    let conversationId, userMessage, userMessagePromise, promptTokens, responseData;
+    
+    if (!abortData || typeof abortData !== 'object') {
+      console.log('DEBUG: abortCompletion - Invalid abort data, using fallback');
+      conversationId = null;
+      userMessage = null;
+      userMessagePromise = null;
+      promptTokens = 0;
+      responseData = {};
+    } else {
+      ({ conversationId, userMessage, userMessagePromise, promptTokens, ...responseData } = abortData);
+    }
 
     const completionTokens = await countTokens(responseData?.text ?? '');
     const user = ctrlData.userId;
@@ -278,8 +297,13 @@ const createAbortController = (req, res, getAbortData, getReqData) => {
       resolved.conversation = null;
     }
 
-    if (!conversation) {
+    if (!conversation && conversationId) {
       conversation = await getConvo(user, conversationId);
+    }
+    
+    // Fallback for missing conversation
+    if (!conversation) {
+      conversation = { id: null, title: 'New Chat' };
     }
 
     return {
@@ -311,6 +335,20 @@ const handleAbortError = async (res, req, error, data) => {
   } else {
     logger.error('[handleAbortError] AI response error; aborting request:', error);
   }
+  
+  // Add safety check for data parameter
+  console.log('DEBUG: handleAbortError called with data:', {
+    hasData: !!data,
+    dataType: typeof data,
+    dataKeys: data ? Object.keys(data) : 'no data',
+    conversationId: data?.conversationId
+  });
+  
+  if (!data || typeof data !== 'object') {
+    console.log('DEBUG: handleAbortError - Invalid data parameter, using fallback');
+    data = {};
+  }
+  
   const { sender, conversationId, messageId, parentMessageId, userMessageId, partialText } = data;
 
   if (error.stack && error.stack.includes('google')) {
@@ -349,7 +387,15 @@ const handleAbortError = async (res, req, error, data) => {
       modelLabel: endpointOption?.modelLabel,
       shouldSaveMessage: userMessageId != null,
       model: endpointOption?.modelOptions?.model || req.body?.model,
+      error: false, // Always set to false so conversation data is sent to frontend
     };
+
+    console.log('DEBUG: handleAbortError respondWithError - options:', {
+      conversationId: options.conversationId,
+      hasConversationId: !!options.conversationId,
+      error: options.error,
+      hasPartialText: !!partialText
+    });
 
     if (req.body?.agent_id) {
       options.agent_id = req.body.agent_id;
@@ -358,7 +404,6 @@ const handleAbortError = async (res, req, error, data) => {
     if (partialText) {
       options = {
         ...options,
-        error: false,
         unfinished: true,
         text: partialText,
       };

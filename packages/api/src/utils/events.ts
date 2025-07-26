@@ -12,6 +12,14 @@ export function sendEvent(res: ServerResponse, event: ServerSentEvent): void {
   if (typeof event.data === 'string' && event.data.length === 0) {
     return;
   }
+  
+  // Add minimal debugging to track conversationId data flow
+  console.log('DEBUG: sendEvent - Sending SSE with conversationId:', {
+    hasConversation: !!(event as any).conversation,
+    conversationId: (event as any).conversation?.id,
+    final: (event as any).final
+  });
+  
   res.write(`event: message\ndata: ${JSON.stringify(event)}\n\n`);
 }
 

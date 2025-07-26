@@ -125,10 +125,51 @@ class AgentClient extends BaseClient {
     this.collectedUsage = collectedUsage;
     /** @type {ArtifactPromises} */
     this.artifactPromises = artifactPromises;
+    console.log('DEBUG: AGENTCLIENT CONSTRUCTOR - Starting with options:', {
+      endpoint: options.endpoint,
+      agentModel: options.agent?.model_parameters?.model,
+      clientOptionsModel: clientOptions?.model,
+      clientOptionsEndpoint: clientOptions?.endpoint,
+      hasActualClient: !!options.client,
+      actualClientType: options.client?.constructor?.name
+    });
+
     /** @type {AgentClientOptions} */
     this.options = Object.assign({ endpoint: options.endpoint }, clientOptions);
+    
+    console.log('DEBUG: CONSTRUCTOR - Agent client options:', {
+      endpoint: options.endpoint,
+      agentModel: this.options.agent?.model_parameters?.model,
+      clientOptionsModel: clientOptions.model,
+      endpointOptionModel: clientOptions.endpointOption?.model_parameters?.model
+    });
+    
     /** @type {string} */
-    this.model = this.options.agent.model_parameters.model;
+    // Fix: Safely access model_parameters.model to avoid undefined.match error
+    this.model = this.options.agent?.model_parameters?.model;
+    
+    // Fix: If agent model is undefined, try to get it from other sources
+    if (!this.model) {
+      this.model = clientOptions.model || 
+                   clientOptions.endpointOption?.model_parameters?.model ||
+                   clientOptions.modelOptions?.model;
+      console.log('DEBUG: CONSTRUCTOR - Model was undefined, set to:', this.model);
+      
+      // Also update the agent's model_parameters if it exists
+      if (this.options.agent && !this.options.agent.model_parameters) {
+        this.options.agent.model_parameters = {};
+      }
+      if (this.options.agent && this.model) {
+        this.options.agent.model_parameters.model = this.model;
+        console.log('DEBUG: CONSTRUCTOR - Updated agent.model_parameters.model to:', this.model);
+      }
+    }
+
+    // If there's a custom client provided (like EchoStreamClient), store it
+    if (options.client) {
+      this.client = options.client;
+      console.log('DEBUG: CONSTRUCTOR - Set client to:', this.client.constructor.name);
+    }
     /** The key for the usage object's input tokens
      * @type {string} */
     this.inputTokensKey = 'input_tokens';
@@ -489,7 +530,13 @@ class AgentClient extends BaseClient {
 
     const userId = this.options.req.user.id + '';
     const messageId = this.responseMessageId + '';
-    const conversationId = this.conversationId + '';
+    const conversationId = (this.conversationId || 'unknown') + '';
+    
+    console.log('DEBUG: MEMORY PROCESSOR - conversationId values:', {
+      thisConversationId: this.conversationId,
+      stringifiedConversationId: conversationId,
+      hasConversationId: !!this.conversationId
+    });
     const [withoutKeys, processMemory] = await createMemoryProcessor({
       userId,
       config,
@@ -545,6 +592,13 @@ class AgentClient extends BaseClient {
 
   /** @type {sendCompletion} */
   async sendCompletion(payload, opts = {}) {
+    console.log('DEBUG: SENDCOMPLETION - Starting with:', {
+      thisModel: this.model,
+      clientType: this.client?.constructor?.name,
+      payloadModel: payload?.model,
+      hasClient: !!this.client
+    });
+    
     await this.chatCompletion({
       payload,
       onProgress: opts.onProgress,
@@ -581,7 +635,7 @@ class AgentClient extends BaseClient {
 
       const txMetadata = {
         context,
-        conversationId: this.conversationId,
+        conversationId: this.conversationId || 'unknown',
         user: this.user ?? this.options.req.user?.id,
         endpointTokenConfig: this.options.endpointTokenConfig,
         model: usage.model ?? model ?? this.model ?? this.options.agent.model_parameters.model,
@@ -681,6 +735,13 @@ class AgentClient extends BaseClient {
   }
 
   async chatCompletion({ payload, abortController = null }) {
+    console.log('DEBUG: CHATCOMPLETION - Starting with:', {
+      thisModel: this.model,
+      clientType: this.client?.constructor?.name,
+      payloadModel: payload?.model,
+      hasClient: !!this.client
+    });
+    
     /** @type {Partial<GraphRunnableConfig>} */
     let config;
     /** @type {ReturnType<createRun>} */
@@ -697,7 +758,7 @@ class AgentClient extends BaseClient {
 
       config = {
         configurable: {
-          thread_id: this.conversationId,
+          thread_id: this.conversationId || 'unknown',
           last_agent_index: this.agentConfigs?.size ?? 0,
           user_id: this.user ?? this.options.req.user?.id,
           hide_sequential_outputs: this.options.agent.hide_sequential_outputs,
@@ -742,8 +803,32 @@ class AgentClient extends BaseClient {
         config.configurable.agent_id = agent.id;
         config.configurable.name = agent.name;
         config.configurable.agent_index = i;
+        console.log('DEBUG: STEP 1 - Agent model_parameters before fix:', {
+          hasModelParams: !!agent.model_parameters,
+          model: agent.model_parameters?.model,
+          agentId: agent.id,
+          agentName: agent.name,
+          thisModel: this.model,
+          clientType: this.client?.constructor?.name
+        });
+        
+        // Fix for echo_stream models: ensure model is set from this.model if agent.model_parameters.model is undefined
+        if (!agent.model_parameters?.model && this.model) {
+          console.log('DEBUG: STEP 2 - Setting missing agent model from this.model:', this.model);
+          if (!agent.model_parameters) {
+            agent.model_parameters = {};
+          }
+          agent.model_parameters.model = this.model;
+          console.log('DEBUG: STEP 3 - Agent model after fix:', agent.model_parameters.model);
+        }
+        
+        console.log('DEBUG: STEP 4 - Final agent model_parameters:', {
+          model: agent.model_parameters?.model,
+          hasModel: !!agent.model_parameters?.model
+        });
+        
         const noSystemMessages = noSystemModelRegex.some((regex) =>
-          agent.model_parameters.model.match(regex),
+          agent.model_parameters?.model?.match(regex),
         );
 
         const systemMessage = Object.values(agent.toolContextMap ?? {})
@@ -1150,7 +1235,7 @@ class AgentClient extends BaseClient {
         {
           model,
           context,
-          conversationId: this.conversationId,
+          conversationId: this.conversationId || 'unknown',
           user: this.user ?? this.options.req.user?.id,
           endpointTokenConfig: this.options.endpointTokenConfig,
         },
@@ -1167,7 +1252,7 @@ class AgentClient extends BaseClient {
           {
             model,
             context: 'reasoning',
-            conversationId: this.conversationId,
+            conversationId: this.conversationId || 'unknown',
             user: this.user ?? this.options.req.user?.id,
             endpointTokenConfig: this.options.endpointTokenConfig,
           },
@@ -1194,6 +1279,146 @@ class AgentClient extends BaseClient {
   getTokenCount(text) {
     const encoding = this.getEncoding();
     return Tokenizer.getTokenCount(text, encoding);
+  }
+
+  /**
+   * sendMessage method - delegates to custom client if available, otherwise uses agent chatCompletion
+   * @param {string} text - The message text
+   * @param {object} messageOptions - The message options
+   * @returns {Promise<object>} The response
+   */
+  async sendMessage(text, messageOptions = {}) {
+    console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Called with client type:', this.client?.constructor?.name);
+    console.log('DEBUG: AGENTCLIENT SENDMESSAGE - messageOptions keys:', Object.keys(messageOptions));
+    
+    // Set conversationId from messageOptions to ensure this.conversationId is available
+    if (messageOptions.conversationId && !this.conversationId) {
+      console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Setting this.conversationId from messageOptions:', messageOptions.conversationId);
+      this.conversationId = messageOptions.conversationId;
+    }
+    
+    // If we have a custom client (like EchoStreamClient), delegate to it
+    if (this.client && typeof this.client.sendMessage === 'function') {
+      console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Delegating to custom client');
+      
+      // For custom clients, we need to build the conversation context properly
+      // Get conversation history if available
+      let conversationMessages = [];
+      
+      if (messageOptions.conversationId && this.options?.req) {
+        console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Need to fetch conversation history for:', messageOptions.conversationId);
+        
+        try {
+          // Import the message retrieval function
+          const { getMessages } = require('~/models/Message');
+          
+          // Get recent messages from the conversation
+          const messages = await getMessages({ conversationId: messageOptions.conversationId }, '-createdAt');
+          
+          console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Raw messages from DB:', messages ? messages.length : 'null', 'messages');
+          if (messages && messages.length > 0) {
+            console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Sample message:', {
+              role: messages[0].role,
+              hasText: !!messages[0].text,
+              textPreview: messages[0].text?.substring(0, 50)
+            });
+          }
+          
+          if (messages && messages.length > 0) {
+            // Convert database messages to chat format
+            conversationMessages = messages
+              .filter(msg => msg.text && (msg.role === 'user' || msg.role === 'assistant'))
+              .slice(-10) // Limit to last 10 messages to avoid token limits
+              .reverse() // Reverse to get chronological order (oldest first)
+              .map(msg => ({
+                role: msg.role === 'user' ? 'user' : 'assistant',
+                content: msg.text
+              }));
+            
+            console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Retrieved', conversationMessages.length, 'historical messages');
+            console.log('DEBUG: AGENTCLIENT SENDMESSAGE - History preview:', conversationMessages.map((m, i) => `${i}: ${m.role} - ${m.content.substring(0, 30)}...`));
+          }
+        } catch (error) {
+          console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Error fetching conversation history:', error.message);
+        }
+      } else {
+        console.log('DEBUG: AGENTCLIENT SENDMESSAGE - No conversation ID available for history retrieval:', {
+          hasConversationId: !!messageOptions.conversationId,
+          conversationId: messageOptions.conversationId,
+          hasReq: !!this.options?.req
+        });
+      }
+      
+      // Add the current user message
+      conversationMessages.push({
+        role: 'user',
+        content: text
+      });
+      
+      // Pass conversation history to custom client
+      const enhancedMessageOptions = {
+        ...messageOptions,
+        messages: conversationMessages
+      };
+      
+      try {
+        const result = await this.client.sendMessage(text, enhancedMessageOptions);
+        console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Custom client result:', result);
+        return result;
+      } catch (error) {
+        console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Custom client error:', error.message);
+        throw error;
+      }
+    }
+    
+    // Fallback to regular agent behavior using chatCompletion
+    console.log('DEBUG: AGENTCLIENT SENDMESSAGE - No custom client, using default agent chatCompletion');
+    
+    // Build payload for chatCompletion 
+    const payload = {
+      model: this.model,
+      messages: [{ role: 'user', content: text }]
+    };
+    
+    await this.chatCompletion({
+      payload,
+      onProgress: messageOptions.onProgress,
+      abortController: messageOptions.abortController,
+    });
+    
+    // Return the content parts which is what the normal agent flow produces
+    const crypto = require('crypto');
+    const responseMessageId = crypto.randomUUID();
+    
+    const response = { 
+      text: this.contentParts.map(part => part.text || '').join(''),
+      contentParts: this.contentParts,
+      messageId: responseMessageId,
+      conversationId: messageOptions.conversationId,
+      endpoint: messageOptions.endpoint || this.options.endpoint,
+      isCreatedByUser: false,
+      error: false,
+      // Add databasePromise to match expected format
+      databasePromise: Promise.resolve({
+        conversation: messageOptions.conversationId ? {
+          id: messageOptions.conversationId,
+          title: null
+        } : {}
+      })
+    };
+    
+    console.log('DEBUG: AGENTCLIENT SENDMESSAGE - Normal agent response:', {
+      hasText: !!response.text,
+      textLength: response.text?.length,
+      hasContentParts: !!response.contentParts,
+      contentPartsLength: response.contentParts?.length,
+      hasDbPromise: !!response.databasePromise,
+      messageId: response.messageId,
+      conversationId: response.conversationId,
+      endpoint: response.endpoint
+    });
+    
+    return response;
   }
 }
 

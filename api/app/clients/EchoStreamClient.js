@@ -4,11 +4,19 @@ const { logger } = require('~/config');
 
 class EchoStreamClient extends BaseClient {
   constructor(apiKey, options = {}) {
+    console.log('DEBUG: EchoStreamClient constructor called with:', {
+      apiKey: apiKey ? '***MASKED***' : 'null',
+      baseURL: options.reverseProxyUrl,
+      options: Object.keys(options)
+    });
+    
     super(apiKey, options);
     
     const baseURL = options.reverseProxyUrl || 'https://streaming-service.railway.internal';
     // Add your specific endpoint path here
     this.baseURL = `${baseURL}/api/chat/stream`;
+    
+    console.log('DEBUG: EchoStreamClient final URL:', this.baseURL);
     this.headers = {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
@@ -29,6 +37,13 @@ class EchoStreamClient extends BaseClient {
       ...this.addParams
     };
 
+    console.log('DEBUG: EchoStreamClient chatCompletion called with payload:', JSON.stringify(payload, null, 2));
+    console.log('DEBUG: EchoStreamClient: Full request details:', {
+      url: this.baseURL,
+      method: 'POST',
+      headers: this.headers,
+      payload: requestPayload
+    });
     logger.info('EchoStreamClient: Sending request to', this.baseURL);
     logger.debug('EchoStreamClient: Request payload', requestPayload);
 
@@ -43,13 +58,50 @@ class EchoStreamClient extends BaseClient {
         signal: abortController?.signal
       });
 
-      return this.handleStreamResponse(response.data, onProgress);
+      console.log('DEBUG: EchoStreamClient: Got response status:', response.status);
+      console.log('DEBUG: EchoStreamClient: Response headers:', response.headers);
+
+      const result = await this.handleStreamResponse(response.data, onProgress);
+      console.log('DEBUG: EchoStreamClient returning result:', result);
+      return result;
     } catch (error) {
+      console.log('DEBUG: EchoStreamClient error:', error.message);
+      console.log('DEBUG: EchoStreamClient error stack:', error.stack);
+      console.log('DEBUG: EchoStreamClient error name:', error.name);
+      console.log('DEBUG: EchoStreamClient error details:', {
+        code: error.code,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        responseHeaders: error.response?.headers,
+        hasResponseData: !!error.response?.data
+      });
+      
       logger.error('EchoStreamClient: Request failed', error);
       
       if (error.response) {
         logger.error('EchoStreamClient: Response status', error.response.status);
         logger.error('EchoStreamClient: Response data', error.response.data);
+        
+        // Try to read response data if it's a stream
+        if (error.response.data && typeof error.response.data.read === 'function') {
+          console.log('DEBUG: Attempting to read error response stream...');
+          try {
+            const chunks = [];
+            error.response.data.on('data', chunk => chunks.push(chunk));
+            error.response.data.on('end', () => {
+              const responseText = Buffer.concat(chunks).toString();
+              console.log('DEBUG: Error response body:', responseText);
+            });
+          } catch (streamError) {
+            console.log('DEBUG: Failed to read error stream:', streamError.message);
+          }
+        }
+      }
+      
+      // Check if this is the conversationId error we're looking for
+      if (error.message && error.message.includes("Cannot read properties of undefined (reading 'conversationId')")) {
+        console.log('DEBUG: This is the conversationId error! Error came from axios/streaming');
+        console.log('DEBUG: Full error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
       }
       
       throw new Error(`Echo Stream API error: ${error.message}`);
@@ -62,22 +114,44 @@ class EchoStreamClient extends BaseClient {
       let buffer = '';
 
       stream.on('data', (chunk) => {
-        buffer += chunk.toString();
+        const chunkStr = chunk.toString();
+        console.log(`DEBUG: Received chunk (${chunkStr.length} chars):`, chunkStr.substring(0, 200) + (chunkStr.length > 200 ? '...' : ''));
+        
+        buffer += chunkStr;
         const lines = buffer.split('\n');
         buffer = lines.pop(); // Keep incomplete line in buffer
 
+        console.log(`DEBUG: Processing ${lines.length} lines from chunk`);
+        
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6);
             
             if (data === '[DONE]') {
-              resolve({ text: fullResponse });
+              console.log('DEBUG: Received [DONE], ending stream');
+              resolve({ text: fullResponse || 'No response received' });
               return;
             }
 
             try {
               const parsed = JSON.parse(data);
+              console.log('DEBUG: Raw parsed object:', JSON.stringify(parsed, null, 2));
               const content = parsed.choices?.[0]?.delta?.content;
+              
+              // Check if this parsed object has any conversationId reference that might be undefined
+              if (parsed && typeof parsed === 'object') {
+                Object.keys(parsed).forEach(key => {
+                  if (key.includes('conversation') || key.includes('Conversation')) {
+                    console.log(`DEBUG: Found conversation-related key: ${key}:`, parsed[key]);
+                  }
+                });
+              }
+              
+              console.log('DEBUG: Parsed SSE data:', { 
+                content: content ? `"${content}"` : 'undefined',
+                hasChoices: !!parsed.choices,
+                parsedKeys: Object.keys(parsed)
+              });
               
               if (content) {
                 fullResponse += content;
@@ -88,6 +162,7 @@ class EchoStreamClient extends BaseClient {
                 }
               }
             } catch (parseError) {
+              console.log('DEBUG: Failed to parse SSE data:', data, 'Error:', parseError.message);
               logger.warn('EchoStreamClient: Failed to parse SSE data', parseError);
             }
           }
@@ -95,12 +170,24 @@ class EchoStreamClient extends BaseClient {
       });
 
       stream.on('end', () => {
-        resolve({ text: fullResponse });
+        console.log('DEBUG: Stream ended, fullResponse length:', fullResponse.length);
+        console.log('DEBUG: Buffer remaining:', buffer);
+        const result = { text: fullResponse || 'Stream ended with no content' };
+        console.log('DEBUG: Resolving with result:', result);
+        resolve(result);
       });
 
       stream.on('error', (error) => {
+        console.log('DEBUG: Stream error:', error.message);
+        console.log('DEBUG: Stream error stack:', error.stack);
+        console.log('DEBUG: Stream error name:', error.name);
+        console.log('DEBUG: Stream error full object:', error);
         logger.error('EchoStreamClient: Stream error', error);
         reject(error);
+      });
+      
+      stream.on('close', () => {
+        console.log('DEBUG: Stream closed, fullResponse length:', fullResponse.length);
       });
     });
   }
@@ -117,6 +204,102 @@ class EchoStreamClient extends BaseClient {
       encode: (text) => text.split(''),
       decode: (tokens) => tokens.join('')
     };
+  }
+
+  async sendMessage(text, messageOptions = {}) {
+    console.log('DEBUG: EchoStreamClient sendMessage called with:', {
+      text: text?.substring(0, 100) + '...',
+      hasMessageOptions: !!messageOptions,
+      optionsKeys: Object.keys(messageOptions)
+    });
+
+    // For agents flow, we need to get conversation history
+    // The text parameter is often just the current user input
+    // We need to build the full conversation
+    let messages;
+    
+    // Check if we have conversation data in messageOptions
+    if (messageOptions.messages && Array.isArray(messageOptions.messages)) {
+      // Use provided messages array (this should contain the full conversation)
+      messages = messageOptions.messages;
+      console.log('DEBUG: Using provided messages array:', messages.length, 'messages');
+      console.log('DEBUG: Message history preview:', messages.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
+    } else {
+      // Fallback to single message if no conversation history provided
+      console.log('DEBUG: No conversation history available, using single message');
+      messages = [
+        {
+          role: 'user',
+          content: text
+        }
+      ];
+    }
+
+    // Create a payload in the expected format
+    const payload = {
+      messages: messages,
+      model: this.modelOptions?.model || 'gpt-4o-mini', // fallback model
+      ...this.modelOptions
+    };
+
+    console.log('DEBUG: EchoStreamClient calling chatCompletion with payload:', payload);
+
+    // Call the chatCompletion method
+    const result = await this.chatCompletion({
+      payload,
+      onProgress: messageOptions.onProgress,
+      abortController: messageOptions.abortController
+    });
+
+    console.log('DEBUG: EchoStreamClient sendMessage result:', result);
+    console.log('DEBUG: EchoStreamClient messageOptions details:', {
+      conversationId: messageOptions.conversationId,
+      responseMessageId: messageOptions.responseMessageId,
+      hasConversationId: !!messageOptions.conversationId,
+      messageOptionsKeys: Object.keys(messageOptions)
+    });
+
+    // Generate a messageId if not provided (frontend needs this for proper routing)
+    const responseMessageId = messageOptions.responseMessageId || require('crypto').randomUUID();
+    
+    // Ensure conversationId is always valid - generate one if missing
+    const conversationId = messageOptions.conversationId || require('crypto').randomUUID();
+    
+    console.log('DEBUG: EchoStreamClient - Final response ID handling:', {
+      providedMessageId: messageOptions.responseMessageId,
+      generatedMessageId: responseMessageId,
+      willUseGeneratedMessageId: !messageOptions.responseMessageId,
+      providedConversationId: messageOptions.conversationId,
+      finalConversationId: conversationId,
+      conversationIdWasGenerated: !messageOptions.conversationId
+    });
+
+    // Return in the format expected by agents/request.js
+    const response = {
+      text: result.text,
+      messageId: responseMessageId,
+      conversationId: conversationId,
+      endpoint: 'echo_stream',
+      isCreatedByUser: false,
+      error: false,
+      // Add databasePromise to prevent handleAbortError issues
+      databasePromise: Promise.resolve({
+        conversation: {
+          id: conversationId,
+          title: null
+        }
+      })
+    };
+
+    console.log('DEBUG: EchoStreamClient final response:', {
+      hasText: !!response.text,
+      textLength: response.text?.length,
+      messageId: response.messageId,
+      conversationId: response.conversationId,
+      hasDbPromise: !!response.databasePromise
+    });
+
+    return response;
   }
 
   getSaveOptions() {
