@@ -13,18 +13,25 @@ const { fetchModels } = require('~/server/services/ModelService');
 const OpenAIClient = require('~/app/clients/OpenAIClient');
 const AnthropicClient = require('~/app/clients/AnthropicClient');
 const GoogleClient = require('~/app/clients/GoogleClient');
+const EchoStreamClient = require('~/app/clients/EchoStreamClient');
 const { isUserProvided } = require('~/server/utils');
 const getLogStores = require('~/cache/getLogStores');
 
 const { PROXY } = process.env;
 
 /**
- * Determines which client to use based on the model name
+ * Determines which client to use based on the model name and endpoint
  * @param {string} model - The model name
- * @returns {string} - The client type ('openai', 'anthropic', 'google')
+ * @param {string} endpoint - The endpoint name
+ * @returns {string} - The client type ('openai', 'anthropic', 'google', 'echo_stream')
  */
-function getClientType(model) {
+function getClientType(model, endpoint) {
   if (!model) return 'openai';
+  
+  // Echo Stream endpoint always uses echo_stream client
+  if (endpoint === 'echo_stream') {
+    return 'echo_stream';
+  }
   
   const modelLower = model.toLowerCase();
   
@@ -168,9 +175,9 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
     ...endpointOption,
   };
 
-  // Determine which client to use based on the model
+  // Determine which client to use based on the model and endpoint
   const model = endpointOption?.model_parameters?.model;
-  const clientType = getClientType(model);
+  const clientType = getClientType(model, endpoint);
 
   if (optionsOnly) {
     const modelOptions = endpointOption?.model_parameters ?? {};
@@ -186,7 +193,16 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
       
       // Use appropriate config function based on client type
       let options;
-      if (clientType === 'anthropic') {
+      if (clientType === 'echo_stream') {
+        // EchoStreamClient doesn't use LLM config pattern
+        options = {
+          useLegacyContent: true,
+          llmConfig: {
+            model,
+            ...modelOptions,
+          }
+        };
+      } else if (clientType === 'anthropic') {
         const { getLLMConfig } = require('~/server/services/Endpoints/anthropic/llm');
         options = getLLMConfig(apiKey, clientOptions);
       } else if (clientType === 'google') {
@@ -246,7 +262,9 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
   let client;
   let clientApiKey = apiKey;
   
-  if (clientType === 'anthropic') {
+  if (clientType === 'echo_stream') {
+    client = new EchoStreamClient(apiKey, clientOptions);
+  } else if (clientType === 'anthropic') {
     client = new AnthropicClient(apiKey, clientOptions);
   } else if (clientType === 'google') {
     // Google client expects credentials object
