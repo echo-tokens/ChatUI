@@ -73,9 +73,12 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
   const generatedUserMessageId = crypto.randomUUID();
   
   // Create the user message object early in the process
+  // For new conversations, use Constants.NO_PARENT instead of null for proper threading
+  const userMessageParentId = newConvo ? Constants.NO_PARENT : parentMessageId;
+  
   const createdUserMessage = {
     messageId: generatedUserMessageId,
-    parentMessageId: parentMessageId,
+    parentMessageId: userMessageParentId,
     conversationId: conversationId,
     sender: req.user?.name || 'User',
     text: text,
@@ -84,6 +87,13 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     createdAt: new Date(),
     user: userId
   };
+  
+  console.log('DEBUG: AGENTS/REQUEST - User message parentMessageId handling:', {
+    isNewConvo: newConvo,
+    originalParentMessageId: parentMessageId,
+    finalUserMessageParentId: userMessageParentId,
+    constantsNoParent: Constants.NO_PARENT
+  });
   
   // Set userMessage early so it's available even if onStart doesn't get called
   userMessage = createdUserMessage;
@@ -291,6 +301,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       editedContent,
       conversationId: conversationId, // Use the potentially generated conversationId
       parentMessageId,
+      userMessageId: userMessage?.messageId, // Add user message ID for response threading
       abortController,
       overrideParentMessageId,
       isEdited: !!editedContent,
@@ -300,6 +311,12 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
         res,
       },
     };
+    
+    console.log('DEBUG: AGENTS/REQUEST - messageOptions with userMessageId:', {
+      parentMessageId: messageOptions.parentMessageId,
+      userMessageId: messageOptions.userMessageId,
+      conversationId: messageOptions.conversationId
+    });
 
     console.log('DEBUG: AGENTS/REQUEST - Final messageOptions conversationId:', {
       conversationId: messageOptions.conversationId,
@@ -345,6 +362,34 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     const messageId = response.messageId;
     const endpoint = endpointOption.endpoint;
     response.endpoint = endpoint;
+    
+    // Ensure response message has correct parentMessageId (should be current user message ID)
+    console.log('DEBUG: AGENTS/REQUEST - ParentMessageId assignment check:', {
+      hasResponseParentMessageId: !!response.parentMessageId,
+      currentResponseParentMessageId: response.parentMessageId,
+      hasUserMessage: !!userMessage,
+      userMessageId: userMessage?.messageId,
+      generatedUserMessageId: generatedUserMessageId,
+      isNewConvo: newConvo,
+      originalParentMessageId: parentMessageId
+    });
+    
+    if (!response.parentMessageId && userMessage && userMessage.messageId) {
+      response.parentMessageId = userMessage.messageId;
+      console.log('DEBUG: AGENTS/REQUEST - Set response parentMessageId to user message ID:', userMessage.messageId);
+      console.log('DEBUG: AGENTS/REQUEST - Final parentMessageId relationship:', {
+        userMessageId: userMessage.messageId,
+        userParentMessageId: userMessage.parentMessageId,
+        responseMessageId: response.messageId,
+        responseParentMessageId: response.parentMessageId
+      });
+    } else {
+      console.log('DEBUG: AGENTS/REQUEST - Did NOT set response parentMessageId. Reason:', {
+        alreadyHasParentMessageId: !!response.parentMessageId,
+        noUserMessage: !userMessage,
+        noUserMessageId: !userMessage?.messageId
+      });
+    }
 
     console.log('DEBUG: AGENTS/REQUEST - After processing response:', {
       responseConversationId: response.conversationId,
@@ -361,11 +406,11 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       hasDatabasePromise: !!databasePromise
     });
 
-    // Resolve database-related data with safety check
+    // Resolve database-related data with safety check (match EditController pattern)
     let convoData = {};
     if (databasePromise) {
-      const dbResult = await databasePromise;
-      convoData = dbResult?.conversation || {};
+      const { conversation: dbConvoData = {} } = await databasePromise;
+      convoData = dbConvoData;
     } else {
       console.log('DEBUG: AGENTS/REQUEST - No databasePromise, creating fallback conversation data');
       convoData = conversationId ? { id: conversationId, title: null } : {};
@@ -441,15 +486,30 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
         requestMessageStructure: eventData.requestMessage ? {
           conversationId: eventData.requestMessage.conversationId,
           messageId: eventData.requestMessage.messageId,
+          parentMessageId: eventData.requestMessage.parentMessageId,
+          isCreatedByUser: eventData.requestMessage.isCreatedByUser,
           requestKeys: Object.keys(eventData.requestMessage)
         } : 'null',
         hasResponseMessage: !!eventData.responseMessage,
         responseMessageStructure: eventData.responseMessage ? {
           conversationId: eventData.responseMessage.conversationId,
           messageId: eventData.responseMessage.messageId,
+          parentMessageId: eventData.responseMessage.parentMessageId,
+          isCreatedByUser: eventData.responseMessage.isCreatedByUser,
           responseKeys: Object.keys(eventData.responseMessage)
         } : 'null',
         topLevelKeys: Object.keys(eventData)
+      });
+      
+      console.log('DEBUG: AGENTS/REQUEST - CRITICAL THREADING ANALYSIS:', {
+        userMessageId: eventData.requestMessage?.messageId,
+        userParentMessageId: eventData.requestMessage?.parentMessageId,
+        responseMessageId: eventData.responseMessage?.messageId,
+        responseParentMessageId: eventData.responseMessage?.parentMessageId,
+        isNewConversation: newConvo,
+        originalParentMessageId: parentMessageId,
+        threadingExpected: `User(${eventData.requestMessage?.messageId}) -> Response(${eventData.responseMessage?.messageId})`,
+        threadingActual: `User parent: ${eventData.requestMessage?.parentMessageId}, Response parent: ${eventData.responseMessage?.parentMessageId}`
       });
 
       console.log('DEBUG: AGENTS/REQUEST - About to call sendEvent with this exact data structure');
@@ -515,13 +575,15 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
 
     console.log('DEBUG: AGENTS/REQUEST - Completed all message saving, checking for title generation');
 
-    // Add title if needed - extract minimal data
+    // Add title if needed - extract minimal data and preserve client reference
     if (addTitle && parentMessageId === Constants.NO_PARENT && newConvo) {
       console.log('DEBUG: AGENTS/REQUEST - Starting title generation');
+      // Preserve client reference before cleanup for title generation
+      const preservedClient = client;
       addTitle(req, {
         text,
         response: { ...response },
-        client,
+        client: preservedClient,
       })
         .then(() => {
           console.log('DEBUG: AGENTS/REQUEST - Title generation completed successfully');

@@ -1,4 +1,4 @@
-import { TFile, TMessage } from 'librechat-data-provider';
+import { TFile, TMessage, Constants } from 'librechat-data-provider';
 
 type ParentMessage = TMessage & { children: TMessage[]; depth: number };
 export default function buildTree({
@@ -12,12 +12,20 @@ export default function buildTree({
     return null;
   }
 
+  console.log('DEBUG: buildTree input messages order:', messages.map(m => ({
+    id: m.messageId?.substring(0, 8),
+    isUser: m.isCreatedByUser,
+    parent: m.parentMessageId?.substring(0, 8) || m.parentMessageId,
+    createdAt: m.createdAt
+  })));
+
   const messageMap: Record<string, ParentMessage> = {};
   const rootMessages: TMessage[] = [];
   const childrenCount: Record<string, number> = {};
 
+  // First pass: Create all messages in the map to handle any processing order
   messages.forEach((message) => {
-    const parentId = message.parentMessageId ?? '';
+    const parentId = message.parentMessageId === Constants.NO_PARENT ? '' : (message.parentMessageId ?? '');
     childrenCount[parentId] = (childrenCount[parentId] || 0) + 1;
 
     const extendedMessage: ParentMessage = {
@@ -32,14 +40,41 @@ export default function buildTree({
     }
 
     messageMap[message.messageId] = extendedMessage;
+  });
 
+  // Second pass: Build parent-child relationships now that all messages are in the map
+  messages.forEach((message) => {
+    const parentId = message.parentMessageId === Constants.NO_PARENT ? '' : (message.parentMessageId ?? '');
+    const extendedMessage = messageMap[message.messageId];
     const parentMessage = messageMap[parentId];
+    
+    console.log('DEBUG: buildTree processing message:', {
+      messageId: message.messageId?.substring(0, 8),
+      originalParentId: message.parentMessageId,
+      processedParentId: parentId,
+      isCreatedByUser: message.isCreatedByUser,
+      willBeRootMessage: !parentMessage,
+      hasParentInMap: !!parentMessage,
+      constantsNoParent: Constants.NO_PARENT
+    });
+    
     if (parentMessage) {
       parentMessage.children.push(extendedMessage);
       extendedMessage.depth = parentMessage.depth + 1;
     } else {
       rootMessages.push(extendedMessage);
     }
+  });
+
+  console.log('DEBUG: buildTree final result:', {
+    rootMessagesCount: rootMessages.length,
+    rootMessages: rootMessages.map(m => ({
+      id: m.messageId?.substring(0, 8),
+      isUser: m.isCreatedByUser,
+      parent: m.parentMessageId,
+      childrenCount: m.children?.length || 0,
+      text: m.text?.substring(0, 30) + '...'
+    }))
   });
 
   return rootMessages;

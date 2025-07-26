@@ -27,6 +27,106 @@ class EchoStreamClient extends BaseClient {
     
     this.addParams = options.addParams || {};
     this.sender = options.sender || 'Echo AI';
+    
+    // Call setOptions like normal endpoints do to set up this.options properly
+    this.setOptions(options);
+  }
+
+  setOptions(options) {
+    if (this.options && !this.options.replaceOptions) {
+      this.options = {
+        ...this.options,
+        ...options,
+      };
+    } else {
+      this.options = options;
+    }
+    
+    // Set up modelOptions like normal endpoints
+    this.modelOptions = this.options.modelOptions || {};
+    
+    return this;
+  }
+
+  async buildMessages(messages, parentMessageId, buildOptions, messageOptions) {
+    // Simple buildMessages implementation for custom endpoint with extensive debugging
+    console.log('DEBUG: EchoStreamClient buildMessages called with:', {
+      messagesCount: messages?.length || 0,
+      messages: messages,
+      parentMessageId: parentMessageId,
+      buildOptions: buildOptions,
+      hasMessageOptions: !!messageOptions,
+      messageOptionsKeys: messageOptions ? Object.keys(messageOptions) : 'null',
+      conversationId: messageOptions?.conversationId
+    });
+    
+    if (!messages || !Array.isArray(messages)) {
+      console.log('DEBUG: EchoStreamClient buildMessages - Invalid messages input:', messages);
+      return { payload: [] };
+    }
+    
+    // Check if we need to get conversation history from database
+    if (messageOptions?.conversationId && messageOptions.conversationId !== 'new') {
+      try {
+        console.log('DEBUG: EchoStreamClient buildMessages - Getting conversation history for:', messageOptions.conversationId);
+        
+        // Try to get conversation history like normal endpoints do
+        const { getMessages } = require('~/models');
+        const conversationMessages = await getMessages({ 
+          conversationId: messageOptions.conversationId 
+        });
+        
+        console.log('DEBUG: EchoStreamClient buildMessages - Retrieved conversation messages:', {
+          count: conversationMessages?.length || 0,
+          messages: conversationMessages?.map(m => ({
+            id: m.messageId,
+            isUser: m.isCreatedByUser,
+            text: m.text?.substring(0, 50) + '...'
+          }))
+        });
+        
+        if (conversationMessages && conversationMessages.length > 0) {
+          // Build full conversation history
+          const historyMessages = conversationMessages.map(msg => ({
+            role: msg.isCreatedByUser ? 'user' : 'assistant',
+            content: msg.text || msg.content
+          }));
+          
+          // Add current message to history
+          const currentMessages = messages.map(msg => ({
+            role: msg.isCreatedByUser ? 'user' : 'assistant',
+            content: msg.text || msg.content
+          }));
+          
+          const fullMessages = [...historyMessages, ...currentMessages];
+          
+          console.log('DEBUG: EchoStreamClient buildMessages - Built full conversation:', {
+            historyCount: historyMessages.length,
+            currentCount: currentMessages.length,
+            totalCount: fullMessages.length,
+            preview: fullMessages.map(m => `${m.role}: ${m.content?.substring(0, 30)}...`)
+          });
+          
+          return { payload: fullMessages };
+        }
+      } catch (error) {
+        console.log('DEBUG: EchoStreamClient buildMessages - Error getting conversation history:', error.message);
+      }
+    }
+    
+    // Fallback to just current messages
+    const apiMessages = messages.map(msg => ({
+      role: msg.isCreatedByUser ? 'user' : 'assistant',
+      content: msg.text || msg.content
+    }));
+    
+    console.log('DEBUG: EchoStreamClient buildMessages - Using current messages only:', {
+      inputCount: messages.length,
+      outputCount: apiMessages.length,
+      preview: apiMessages.map(m => `${m.role}: ${m.content?.substring(0, 30)}...`)
+    });
+    
+    return { payload: apiMessages };
   }
 
   async chatCompletion({ payload, onProgress, abortController = null }) {
@@ -213,26 +313,32 @@ class EchoStreamClient extends BaseClient {
       optionsKeys: Object.keys(messageOptions)
     });
 
-    // For agents flow, we need to get conversation history
-    // The text parameter is often just the current user input
-    // We need to build the full conversation
+    // Follow BaseClient pattern - use buildMessages to get conversation history
     let messages;
-    
-    // Check if we have conversation data in messageOptions
-    if (messageOptions.messages && Array.isArray(messageOptions.messages)) {
-      // Use provided messages array (this should contain the full conversation)
-      messages = messageOptions.messages;
-      console.log('DEBUG: Using provided messages array:', messages.length, 'messages');
-      console.log('DEBUG: Message history preview:', messages.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
-    } else {
-      // Fallback to single message if no conversation history provided
-      console.log('DEBUG: No conversation history available, using single message');
-      messages = [
-        {
-          role: 'user',
-          content: text
-        }
-      ];
+    try {
+      // Create a user message for the current input
+      const userMessage = {
+        text: text,
+        isCreatedByUser: true,
+        messageId: require('crypto').randomUUID(),
+        conversationId: messageOptions.conversationId,
+        parentMessageId: messageOptions.parentMessageId
+      };
+
+      // Get conversation messages following BaseClient pattern
+      const { payload } = await this.buildMessages(
+        [userMessage], // Current message
+        messageOptions.parentMessageId,
+        {}, 
+        messageOptions
+      );
+      
+      messages = payload;
+      console.log('DEBUG: EchoStreamClient - Built messages using buildMessages:', messages?.length || 0, 'messages');
+    } catch (error) {
+      console.log('DEBUG: EchoStreamClient - Error with buildMessages, falling back to simple message:', error.message);
+      // Fallback to simple message format
+      messages = [{ role: 'user', content: text }];
     }
 
     // Create a payload in the expected format
@@ -271,25 +377,56 @@ class EchoStreamClient extends BaseClient {
       willUseGeneratedMessageId: !messageOptions.responseMessageId,
       providedConversationId: messageOptions.conversationId,
       finalConversationId: conversationId,
-      conversationIdWasGenerated: !messageOptions.conversationId
+      conversationIdWasGenerated: !messageOptions.conversationId,
+      userMessageParentMessageId: messageOptions.parentMessageId
     });
 
-    // Return in the format expected by agents/request.js
-    const response = {
+    // Create response message like BaseClient does
+    // Set parentMessageId to user message ID for proper threading in database
+    const responseMessage = {
       text: result.text,
       messageId: responseMessageId,
       conversationId: conversationId,
       endpoint: 'echo_stream',
       isCreatedByUser: false,
       error: false,
-      // Add databasePromise to prevent handleAbortError issues
-      databasePromise: Promise.resolve({
-        conversation: {
-          id: conversationId,
-          title: null
-        }
-      })
+      model: this.modelOptions?.model || 'echo-stream',
+      sender: this.sender,
+      parentMessageId: messageOptions.userMessageId // Use user message ID as parent
     };
+    
+    console.log('DEBUG: EchoStreamClient - Response message parentMessageId set to userMessageId:', {
+      responseParentMessageId: responseMessage.parentMessageId,
+      providedUserMessageId: messageOptions.userMessageId,
+      originalParentMessageId: messageOptions.parentMessageId
+    });
+
+    console.log('DEBUG: EchoStreamClient - About to save response message to database:', {
+      messageId: responseMessage.messageId,
+      conversationId: responseMessage.conversationId,
+      hasText: !!responseMessage.text,
+      endpoint: responseMessage.endpoint
+    });
+
+    // Create databasePromise like BaseClient does - save response message to database
+    const saveOptions = this.getSaveOptions();
+    const user = messageOptions.user;
+    
+    console.log('DEBUG: EchoStreamClient - Creating databasePromise to save response message');
+    
+    responseMessage.databasePromise = this.saveMessageToDatabase(
+      responseMessage,
+      saveOptions,
+      user
+    );
+    
+    // Add to saved message IDs like BaseClient does
+    if (!this.savedMessageIds) {
+      this.savedMessageIds = new Set();
+    }
+    this.savedMessageIds.add(responseMessage.messageId);
+
+    const response = responseMessage;
 
     console.log('DEBUG: EchoStreamClient final response:', {
       hasText: !!response.text,
@@ -300,6 +437,11 @@ class EchoStreamClient extends BaseClient {
     });
 
     return response;
+  }
+
+  async titleConvo({ text, responseText = '' }) {
+    // Simple title generation for echo_stream - just return default title
+    return 'Echo Stream Chat';
   }
 
   getSaveOptions() {
