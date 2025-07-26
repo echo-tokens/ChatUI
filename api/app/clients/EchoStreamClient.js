@@ -21,31 +21,29 @@ class EchoStreamClient extends BaseClient {
     this.sender = options.sender || 'Echo AI';
   }
 
-  async sendMessage(text, parentMessageId = null, conversationId = null) {
-    const messages = await this.buildMessages(text, parentMessageId, conversationId);
-    
-    const payload = {
-      messages,
+  async chatCompletion({ payload, onProgress, abortController = null }) {
+    const requestPayload = {
+      ...payload,
       stream: true,
       include_ads: true,
-      ...this.addParams,
-      ...this.modelOptions
+      ...this.addParams
     };
 
     logger.info('EchoStreamClient: Sending request to', this.baseURL);
-    logger.debug('EchoStreamClient: Request payload', payload);
+    logger.debug('EchoStreamClient: Request payload', requestPayload);
 
     try {
       const response = await axios({
         method: 'POST',
         url: this.baseURL,
         headers: this.headers,
-        data: payload,
+        data: requestPayload,
         timeout: 120000,
-        responseType: 'stream'
+        responseType: 'stream',
+        signal: abortController?.signal
       });
 
-      return this.handleStreamResponse(response.data);
+      return this.handleStreamResponse(response.data, onProgress);
     } catch (error) {
       logger.error('EchoStreamClient: Request failed', error);
       
@@ -58,7 +56,7 @@ class EchoStreamClient extends BaseClient {
     }
   }
 
-  async handleStreamResponse(stream) {
+  async handleStreamResponse(stream, onProgress) {
     return new Promise((resolve, reject) => {
       let fullResponse = '';
       let buffer = '';
@@ -73,7 +71,7 @@ class EchoStreamClient extends BaseClient {
             const data = line.slice(6);
             
             if (data === '[DONE]') {
-              resolve(fullResponse);
+              resolve({ text: fullResponse });
               return;
             }
 
@@ -84,9 +82,9 @@ class EchoStreamClient extends BaseClient {
               if (content) {
                 fullResponse += content;
                 
-                // Emit streaming data if callback exists
-                if (this.onProgress) {
-                  this.onProgress(content);
+                // Call onProgress callback if provided
+                if (onProgress) {
+                  onProgress(content, { type: 'stream' });
                 }
               }
             } catch (parseError) {
@@ -97,7 +95,7 @@ class EchoStreamClient extends BaseClient {
       });
 
       stream.on('end', () => {
-        resolve(fullResponse);
+        resolve({ text: fullResponse });
       });
 
       stream.on('error', (error) => {
@@ -107,37 +105,6 @@ class EchoStreamClient extends BaseClient {
     });
   }
 
-  async buildMessages(text, parentMessageId, conversationId) {
-    const messages = [];
-    
-    // Get conversation history if available
-    if (conversationId && parentMessageId) {
-      try {
-        const conversation = await this.getConvo(conversationId);
-        const previousMessages = await this.getMessages({ conversationId });
-        
-        // Convert to OpenAI format
-        for (const msg of previousMessages) {
-          if (msg.text) {
-            messages.push({
-              role: msg.isCreatedByUser ? 'user' : 'assistant',
-              content: msg.text
-            });
-          }
-        }
-      } catch (error) {
-        logger.warn('EchoStreamClient: Failed to load conversation history', error);
-      }
-    }
-
-    // Add current message
-    messages.push({
-      role: 'user',
-      content: text
-    });
-
-    return messages;
-  }
 
   // Implement required BaseClient methods
   async getTokenCount(text) {

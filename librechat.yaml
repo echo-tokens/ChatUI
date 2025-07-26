@@ -17,7 +17,6 @@ endpoints:
   # Railway Echo Stream Service - Intelligent Ad Integration
   custom:
     - name: "echo_stream"
-      directEndpoint: true
       baseURL: "${ECHO_STREAM_BASE_URL}"
       apiKey: "${ECHO_STREAM_API_KEY}"
       models:
