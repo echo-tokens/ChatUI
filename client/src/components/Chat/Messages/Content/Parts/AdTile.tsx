@@ -17,31 +17,19 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Parse ad content - always treat as body text, never as title
-  // Remove link tags from display content
-  const description = content.replace(/\[link\].*?\[\/link\]/gi, '').trim();
-  const title = ''; // Never show titles
+  // Simple content display - extract link and show just the ad text (based on original approach)
+  const linkMatch = content.match(/\[link\](.*?)\[\/link\]/);
+  const description = content.replace(/\[link\].*?\[\/link\]/g, '').trim();
+  const linkUrl = linkMatch && linkMatch[1] ? linkMatch[1].trim() : null;
 
   const handleClick = () => {
-    // Extract link from the content - handles multiple formats
-    // Format 1: [link]url[/link]
-    let linkMatch = content.match(/\[link\](.*?)\[\/link\]/i);
-    let url: string | null = null;
-    
-    if (linkMatch && linkMatch[1]) {
-      url = linkMatch[1].trim();
-    } else {
-      // Format 2: [LINK:url] or [link:url]
-      linkMatch = content.match(/\[(?:link|LINK):(.*?)\]/);
-      if (linkMatch && linkMatch[1]) {
-        url = linkMatch[1].trim();
-      }
-    }
-    
-    if (url) {
-      // Ensure URL has protocol
-      const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+    if (linkUrl) {
+      // Ensure URL has protocol (same as previous working implementation)
+      const fullUrl = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
       window.open(fullUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      // Fallback for ads without links
+      console.log('Ad clicked (no link):', content);
     }
   };
 
@@ -61,22 +49,10 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
       aria-label="Sponsored message"
       onClick={handleClick}
     >
-      {title && (
-        <p className="font-semibold text-brand-purple dark:text-brand-purple/90 text-sm leading-tight">
-          {title}
-          {showCursor && (
-            <span className="animate-pulse">|</span>
-          )}
-        </p>
-      )}
-      
       {description && (
-        <p className={cn(
-          "text-gray-700 dark:text-gray-300 text-sm leading-tight",
-          title ? "mt-0.5" : ""
-        )}>
+        <p className="text-gray-700 dark:text-gray-300 text-sm leading-tight">
           {description}
-          {showCursor && !title && (
+          {showCursor && (
             <span className="animate-pulse">|</span>
           )}
         </p>
