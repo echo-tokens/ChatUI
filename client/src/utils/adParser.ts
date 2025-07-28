@@ -9,21 +9,34 @@ interface ParsedContent {
 }
 
 /**
- * Parses text containing [ad]...[/ad] tags followed by optional [link]...[/link] tags
+ * Filters out debugging tags from text content
+ * @param text The text to filter
+ * @returns Text with debugging tags removed
+ */
+export function filterDebuggingTags(text: string): string {
+  // Remove [streaming-service debugging] and similar debugging tags
+  return text.replace(/\[[\w\s-]*debugging[\w\s-]*\]\s*/gi, '');
+}
+
+/**
+ * Parses text containing [ad]...[/ad] or [AD]...[/AD] tags with various link formats
  * @param text The raw text containing potential ad tags
  * @returns Array of content parts with text and ad tiles
  */
 export function parseAdContent(text: string): ParsedContent[] {
   const parts: ParsedContent[] = [];
   
-  // Regular expression to match [ad]...[/ad] blocks optionally followed by [link]...[/link]
-  const adRegex = /\[ad\]([\s\S]*?)\[\/ad\](\s*\[link\]([\s\S]*?)\[\/link\])?/g;
+  // Filter out debugging tags first
+  const cleanText = filterDebuggingTags(text);
+  
+  // Regular expression to match [ad]...[/ad] or [AD]...[/AD] blocks (case insensitive)
+  const adRegex = /\[(?:ad|AD)\]([\s\S]*?)\[\/(?:ad|AD)\]/g;
   let lastIndex = 0;
   let match;
 
-  while ((match = adRegex.exec(text)) !== null) {
-    const [fullMatch, adContent, linkSection, linkUrl] = match;
-    const beforeAdText = text.slice(lastIndex, match.index);
+  while ((match = adRegex.exec(cleanText)) !== null) {
+    const [fullMatch, adContent] = match;
+    const beforeAdText = cleanText.slice(lastIndex, match.index);
     
     // Add text content before the ad (if any)
     if (beforeAdText.trim()) {
@@ -33,10 +46,17 @@ export function parseAdContent(text: string): ParsedContent[] {
       });
     }
     
-    // Combine ad content with link for the tile
+    // Extract and process link from within the ad content
     let tileContent = adContent.trim();
-    if (linkUrl) {
-      tileContent += `\n[link]${linkUrl.trim()}[/link]`;
+    let linkUrl = null;
+    
+    // Look for [LINK:url] or [link:url] format within the ad content
+    const linkMatch = tileContent.match(/\[(?:link|LINK):([^\]]+)\]/);
+    if (linkMatch && linkMatch[1]) {
+      linkUrl = linkMatch[1].trim();
+      // Remove the original link format and add normalized format
+      tileContent = tileContent.replace(/\[(?:link|LINK):[^\]]+\]/, '').trim();
+      tileContent += `\n[link]${linkUrl}[/link]`;
     }
     
     // Add the ad content as a special ad tile part
@@ -51,7 +71,7 @@ export function parseAdContent(text: string): ParsedContent[] {
   }
   
   // Add remaining text after the last ad (if any)
-  const remainingText = text.slice(lastIndex);
+  const remainingText = cleanText.slice(lastIndex);
   if (remainingText.trim()) {
     parts.push({
       type: 'text',
@@ -59,11 +79,11 @@ export function parseAdContent(text: string): ParsedContent[] {
     });
   }
   
-  // If no ads were found, return the original text as a single part
-  if (parts.length === 0 && text.trim()) {
+  // If no ads were found, return the original text as a single part (after filtering debugging tags)
+  if (parts.length === 0 && cleanText.trim()) {
     parts.push({
       type: 'text',
-      text: text,
+      text: cleanText,
     });
   }
   
@@ -71,10 +91,10 @@ export function parseAdContent(text: string): ParsedContent[] {
 }
 
 /**
- * Checks if a text contains ad tags
+ * Checks if a text contains ad tags (case insensitive)
  * @param text The text to check
  * @returns boolean indicating if ad tags are present
  */
 export function containsAdTags(text: string): boolean {
-  return /\[ad\][\s\S]*?\[\/ad\]/g.test(text);
+  return /\[(?:ad|AD)\][\s\S]*?\[\/(?:ad|AD)\]/g.test(text);
 } 

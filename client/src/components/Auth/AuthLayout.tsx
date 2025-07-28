@@ -87,19 +87,19 @@ function AuthLayout({
 
           {/* Main Auth Card */}
           <div className="overflow-hidden bg-white px-6 py-8 dark:bg-gray-900 sm:rounded-lg sm:shadow-lg">
-            {!hasStartupConfigError && !isFetching && (
-              <h1
+          {!hasStartupConfigError && !isFetching && (
+            <h1
                 className="mb-6 text-center text-3xl font-semibold text-black dark:text-white"
-                style={{ userSelect: 'none' }}
-              >
-                {header}
-              </h1>
+              style={{ userSelect: 'none' }}
+            >
+              {header}
+            </h1>
+          )}
+          {children}
+          {!pathname.includes('2fa') &&
+            (pathname.includes('login') || pathname.includes('register')) && (
+              <SocialLoginRender startupConfig={startupConfig} />
             )}
-            {children}
-            {!pathname.includes('2fa') &&
-              (pathname.includes('login') || pathname.includes('register')) && (
-                <SocialLoginRender startupConfig={startupConfig} />
-              )}
           </div>
         </div>
       </div>
