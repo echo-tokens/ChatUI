@@ -17,16 +17,28 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Parse ad content - expecting format like "Title\n\nDescription"
-  const lines = content.split('\n').filter(line => line.trim());
-  const title = lines[0] || '';
-  const description = lines.slice(1).join(' ') || '';
+  // Parse ad content - always treat as body text, never as title
+  // Remove link tags from display content
+  const description = content.replace(/\[link\].*?\[\/link\]/gi, '').trim();
+  const title = ''; // Never show titles
 
   const handleClick = () => {
-    // Extract link from the content
-    const linkMatch = content.match(/\[link\](.*?)\[\/link\]/);
+    // Extract link from the content - handles multiple formats
+    // Format 1: [link]url[/link]
+    let linkMatch = content.match(/\[link\](.*?)\[\/link\]/i);
+    let url: string | null = null;
+    
     if (linkMatch && linkMatch[1]) {
-      const url = linkMatch[1].trim();
+      url = linkMatch[1].trim();
+    } else {
+      // Format 2: [LINK:url] or [link:url]
+      linkMatch = content.match(/\[(?:link|LINK):(.*?)\]/);
+      if (linkMatch && linkMatch[1]) {
+        url = linkMatch[1].trim();
+      }
+    }
+    
+    if (url) {
       // Ensure URL has protocol
       const fullUrl = url.startsWith('http') ? url : `https://${url}`;
       window.open(fullUrl, '_blank', 'noopener,noreferrer');
