@@ -8,6 +8,7 @@ import { DelayedRender } from '~/components/ui';
 import { useChatContext } from '~/Providers';
 import MarkdownLite from './MarkdownLite';
 import EditMessage from './EditMessage';
+import TextPart from './Parts/Text';
 import { useLocalize } from '~/hooks';
 import Container from './Container';
 import Markdown from './Markdown';
@@ -70,39 +71,9 @@ export const ErrorMessage = ({
 };
 
 const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplayProps) => {
-  const { isSubmitting, latestMessage } = useChatContext();
-  const enableUserMsgMarkdown = useRecoilValue(store.enableUserMsgMarkdown);
-  const showCursorState = useMemo(
-    () => showCursor === true && isSubmitting,
-    [showCursor, isSubmitting],
-  );
-  const isLatestMessage = useMemo(
-    () => message.messageId === latestMessage?.messageId,
-    [message.messageId, latestMessage?.messageId],
-  );
-
-  let content: React.ReactElement;
-  if (!isCreatedByUser) {
-    content = <Markdown content={text} isLatestMessage={isLatestMessage} />;
-  } else if (enableUserMsgMarkdown) {
-    content = <MarkdownLite content={text} />;
-  } else {
-    content = <>{text}</>;
-  }
-
   return (
     <Container message={message}>
-      <div
-        className={cn(
-          isSubmitting ? 'submitting' : '',
-          showCursorState && !!text.length ? 'result-streaming' : '',
-          'markdown prose message-content dark:prose-invert light w-full break-words',
-          isCreatedByUser && !enableUserMsgMarkdown && 'whitespace-pre-wrap',
-          isCreatedByUser ? 'dark:text-gray-20' : 'dark:text-gray-100',
-        )}
-      >
-        {content}
-      </div>
+      <TextPart text={text} isCreatedByUser={isCreatedByUser} showCursor={showCursor} />
     </Container>
   );
 };
