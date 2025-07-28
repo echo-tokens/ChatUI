@@ -21,6 +21,8 @@ npm install
 npm run build:data-provider
 npm run build:api
 npm run build:data-schemas
+cd client
+npm run build
 ```
 
 ### 3. Environment Setup
