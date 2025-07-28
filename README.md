@@ -23,6 +23,7 @@ npm run build:api
 npm run build:data-schemas
 cd client
 npm run build
+cd ..
 ```
 
 ### 3. Environment Setup
