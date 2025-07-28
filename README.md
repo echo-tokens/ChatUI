@@ -20,6 +20,7 @@ npm install
 ```bash
 npm run build:data-provider
 npm run build:api
+npm run build:data-schemas
 ```
 
 ### 3. Environment Setup
