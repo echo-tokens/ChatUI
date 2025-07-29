@@ -5,6 +5,41 @@ export interface PopulationMetrics {
   rho_pop: number;        // population conversion rate
 }
 
+// Base User type for R2 system
+export interface User {
+  id: string;
+  email: string;
+  stripe_account_id?: string;
+  trust_level: number;
+  kyc_status: 'none' | 'pending' | 'verified' | 'rejected';
+  created_at: string;
+  updated_at: string;
+}
+
+// Ledger entry for transaction history
+export interface LedgerEntry {
+  id: string;
+  user_id: string;
+  amount_usd: number;
+  direction: 'credit' | 'debit';
+  state: 'pending' | 'confirmed' | 'paid' | 'reversed';
+  risk_hold_pct: number;
+  ref_type: 'conversion' | 'referral' | 'payout' | 'adjustment';
+  ref_id?: string;
+  created_at: string;
+  confirmed_at?: string;
+  paid_at?: string;
+  description?: string;
+}
+
+// Payout request structure
+export interface PayoutRequest {
+  amount: number;
+  rail: 'ach_standard' | 'instant';
+  fee: number;
+  net_amount: number;
+}
+
 export interface UserDensityMetrics {
   density_coeff: number;  // κ = rho_user / rho_pop
   kappa_24h: number;      // 24-hour density spike

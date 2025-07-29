@@ -1,18 +1,17 @@
 import React from 'react';
 import { useAuthContext } from '~/hooks/AuthContext';
-import { EarningsDashboardR2 } from '~/components/Earnings';
+import StreamlinedEarningsDashboard from '~/components/Earnings/StreamlinedEarningsDashboard';
 import type { User } from '~/types/trust-r2';
 
 export default function EarningsPage() {
   const { user: authUser, isAuthenticated } = useAuthContext();
 
   if (!isAuthenticated) {
-    // Redirect to login if not authenticated
     window.location.href = '/login';
     return null;
   }
 
-  // Convert auth user to R2 earnings user format
+  // Convert auth user to earnings user format
   const user: User | undefined = authUser ? {
     id: authUser.id,
     email: authUser.email || '',
@@ -23,11 +22,5 @@ export default function EarningsPage() {
     updated_at: authUser.updatedAt || new Date().toISOString(),
   } : undefined;
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto">
-        <EarningsDashboardR2 user={user} />
-      </div>
-    </div>
-  );
+  return <StreamlinedEarningsDashboard user={user} />;
 } 
