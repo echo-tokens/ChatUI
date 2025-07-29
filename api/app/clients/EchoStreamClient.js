@@ -1,10 +1,11 @@
 const axios = require('axios');
 const BaseClient = require('./BaseClient');
 const { logger } = require('~/config');
+const { debug, debugGroups } = require('~/server/utils/debug');
 
 class EchoStreamClient extends BaseClient {
   constructor(apiKey, options = {}) {
-    console.log('DEBUG: EchoStreamClient constructor called with:', {
+    debug(debugGroups.GENERAL, 'EchoStreamClient constructor called with:', {
       apiKey: apiKey ? '***MASKED***' : 'null',
       baseURL: options.reverseProxyUrl,
       options: Object.keys(options)
@@ -16,7 +17,7 @@ class EchoStreamClient extends BaseClient {
     // Add your specific endpoint path here
     this.baseURL = `${baseURL}/api/chat/stream`;
     
-    console.log('DEBUG: EchoStreamClient final URL:', this.baseURL);
+    debug(debugGroups.GENERAL, 'EchoStreamClient final URL:', this.baseURL);
     this.headers = {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
@@ -26,7 +27,7 @@ class EchoStreamClient extends BaseClient {
     };
     
     this.addParams = options.addParams || {};
-    this.sender = options.sender || 'Echo AI';
+    this.sender = options.sender || 'Echo';
     
     // Call setOptions like normal endpoints do to set up this.options properly
     this.setOptions(options);
@@ -50,7 +51,7 @@ class EchoStreamClient extends BaseClient {
 
   async buildMessages(messages, parentMessageId, buildOptions, messageOptions) {
     // Simple buildMessages implementation for custom endpoint with extensive debugging
-    console.log('DEBUG: EchoStreamClient buildMessages called with:', {
+    debug(debugGroups.GENERAL, 'buildMessages called with:', {
       messagesCount: messages?.length || 0,
       messages: messages,
       parentMessageId: parentMessageId,
@@ -61,14 +62,14 @@ class EchoStreamClient extends BaseClient {
     });
     
     if (!messages || !Array.isArray(messages)) {
-      console.log('DEBUG: EchoStreamClient buildMessages - Invalid messages input:', messages);
+      debug(debugGroups.GENERAL, 'buildMessages - Invalid messages input:', messages);
       return { payload: [] };
     }
     
     // Check if we need to get conversation history from database
     if (messageOptions?.conversationId && messageOptions.conversationId !== 'new') {
       try {
-        console.log('DEBUG: EchoStreamClient buildMessages - Getting conversation history for:', messageOptions.conversationId);
+        debug(debugGroups.GENERAL, 'buildMessages - Getting conversation history for:', messageOptions.conversationId);
         
         // Try to get conversation history like normal endpoints do
         const { getMessages } = require('~/models');
@@ -76,7 +77,7 @@ class EchoStreamClient extends BaseClient {
           conversationId: messageOptions.conversationId 
         });
         
-        console.log('DEBUG: EchoStreamClient buildMessages - Retrieved conversation messages:', {
+        debug(debugGroups.GENERAL, 'buildMessages - Retrieved conversation messages:', {
           count: conversationMessages?.length || 0,
           messages: conversationMessages?.map(m => ({
             id: m.messageId,
@@ -100,7 +101,7 @@ class EchoStreamClient extends BaseClient {
           
           const fullMessages = [...historyMessages, ...currentMessages];
           
-          console.log('DEBUG: EchoStreamClient buildMessages - Built full conversation:', {
+          debug(debugGroups.GENERAL, 'buildMessages - Built full conversation:', {
             historyCount: historyMessages.length,
             currentCount: currentMessages.length,
             totalCount: fullMessages.length,
@@ -110,7 +111,7 @@ class EchoStreamClient extends BaseClient {
           return { payload: fullMessages };
         }
       } catch (error) {
-        console.log('DEBUG: EchoStreamClient buildMessages - Error getting conversation history:', error.message);
+        debug(debugGroups.GENERAL, 'buildMessages - Error getting conversation history:', error.message);
       }
     }
     
@@ -120,7 +121,7 @@ class EchoStreamClient extends BaseClient {
       content: msg.text || msg.content
     }));
     
-    console.log('DEBUG: EchoStreamClient buildMessages - Using current messages only:', {
+    debug(debugGroups.GENERAL, 'buildMessages - Using current messages only:', {
       inputCount: messages.length,
       outputCount: apiMessages.length,
       preview: apiMessages.map(m => `${m.role}: ${m.content?.substring(0, 30)}...`)
@@ -137,8 +138,8 @@ class EchoStreamClient extends BaseClient {
       ...this.addParams
     };
 
-    console.log('DEBUG: EchoStreamClient chatCompletion called with payload:', JSON.stringify(payload, null, 2));
-    console.log('DEBUG: EchoStreamClient: Full request details:', {
+    debug(debugGroups.STREAMING, 'chatCompletion called with payload:', JSON.stringify(payload, null, 2));
+    debug(debugGroups.STREAMING, 'Full request details:', {
       url: this.baseURL,
       method: 'POST',
       headers: this.headers,
@@ -158,17 +159,16 @@ class EchoStreamClient extends BaseClient {
         signal: abortController?.signal
       });
 
-      console.log('DEBUG: EchoStreamClient: Got response status:', response.status);
-      console.log('DEBUG: EchoStreamClient: Response headers:', response.headers);
+      debug(debugGroups.STREAMING, 'Got response status:', response.status);
 
       const result = await this.handleStreamResponse(response.data, onProgress);
-      console.log('DEBUG: EchoStreamClient returning result:', result);
+      debug(debugGroups.STREAMING, 'Returning result:', result);
       return result;
     } catch (error) {
-      console.log('DEBUG: EchoStreamClient error:', error.message);
-      console.log('DEBUG: EchoStreamClient error stack:', error.stack);
-      console.log('DEBUG: EchoStreamClient error name:', error.name);
-      console.log('DEBUG: EchoStreamClient error details:', {
+      debug(debugGroups.STREAMING, 'EchoStreamClient error:', error.message);
+      debug(debugGroups.STREAMING, 'EchoStreamClient error stack:', error.stack);
+      debug(debugGroups.STREAMING, 'EchoStreamClient error name:', error.name);
+      debug(debugGroups.STREAMING, 'EchoStreamClient error details:', {
         code: error.code,
         status: error.response?.status,
         statusText: error.response?.statusText,
@@ -184,24 +184,24 @@ class EchoStreamClient extends BaseClient {
         
         // Try to read response data if it's a stream
         if (error.response.data && typeof error.response.data.read === 'function') {
-          console.log('DEBUG: Attempting to read error response stream...');
+          debug(debugGroups.STREAMING, 'Attempting to read error response stream...');
           try {
             const chunks = [];
             error.response.data.on('data', chunk => chunks.push(chunk));
             error.response.data.on('end', () => {
               const responseText = Buffer.concat(chunks).toString();
-              console.log('DEBUG: Error response body:', responseText);
+              debug(debugGroups.STREAMING, 'Error response body:', responseText);
             });
           } catch (streamError) {
-            console.log('DEBUG: Failed to read error stream:', streamError.message);
+            debug(debugGroups.STREAMING, 'Failed to read error stream:', streamError.message);
           }
         }
       }
       
       // Check if this is the conversationId error we're looking for
       if (error.message && error.message.includes("Cannot read properties of undefined (reading 'conversationId')")) {
-        console.log('DEBUG: This is the conversationId error! Error came from axios/streaming');
-        console.log('DEBUG: Full error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+        debug(debugGroups.STREAMING, 'This is the conversationId error! Error came from axios/streaming');
+        debug(debugGroups.STREAMING, 'Full error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
       }
       
       throw new Error(`Echo Stream API error: ${error.message}`);
@@ -212,42 +212,48 @@ class EchoStreamClient extends BaseClient {
     return new Promise((resolve, reject) => {
       let fullResponse = '';
       let buffer = '';
+      let chunkCount = 0;
+      let totalBytesReceived = 0;
 
       stream.on('data', (chunk) => {
+        chunkCount++;
+        totalBytesReceived += chunk.length;
         const chunkStr = chunk.toString();
-        console.log(`DEBUG: Received chunk (${chunkStr.length} chars):`, chunkStr.substring(0, 200) + (chunkStr.length > 200 ? '...' : ''));
+        const timestamp = new Date().toISOString();
+        
+        debug(debugGroups.STREAMING, `CHUNK #${chunkCount} received (${chunkStr.length} chars, ${chunk.length} bytes total: ${totalBytesReceived})`);
         
         buffer += chunkStr;
+        
         const lines = buffer.split('\n');
         buffer = lines.pop(); // Keep incomplete line in buffer
-
-        console.log(`DEBUG: Processing ${lines.length} lines from chunk`);
+        
         
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6);
+            debug(debugGroups.SSE, `Extracted SSE data: "${data}"`);
             
             if (data === '[DONE]') {
-              console.log('DEBUG: Received [DONE], ending stream');
+              debug(debugGroups.STREAMING, 'Received [DONE], ending stream');
               resolve({ text: fullResponse || 'No response received' });
               return;
             }
 
             try {
               const parsed = JSON.parse(data);
-              console.log('DEBUG: Raw parsed object:', JSON.stringify(parsed, null, 2));
               const content = parsed.choices?.[0]?.delta?.content;
               
               // Check if this parsed object has any conversationId reference that might be undefined
               if (parsed && typeof parsed === 'object') {
                 Object.keys(parsed).forEach(key => {
                   if (key.includes('conversation') || key.includes('Conversation')) {
-                    console.log(`DEBUG: Found conversation-related key: ${key}:`, parsed[key]);
+                    debug(debugGroups.GENERAL, `Found conversation-related key: ${key}:`, parsed[key]);
                   }
                 });
               }
               
-              console.log('DEBUG: Parsed SSE data:', { 
+              debug(debugGroups.SSE, 'Parsed SSE data:', { 
                 content: content ? `"${content}"` : 'undefined',
                 hasChoices: !!parsed.choices,
                 parsedKeys: Object.keys(parsed)
@@ -255,39 +261,95 @@ class EchoStreamClient extends BaseClient {
               
               if (content) {
                 fullResponse += content;
+                debug(debugGroups.STREAMING, `Received streaming content: "${content}" (${content.length} chars, total so far: ${fullResponse.length} chars)`);
                 
                 // Call onProgress callback if provided
                 if (onProgress) {
-                  onProgress(content, { type: 'stream' });
+                  // Check if onProgress is already configured or needs configuration
+                  if (typeof onProgress === 'function' && onProgress.length === 1) {
+                    // This is a raw progressCallback that needs configuration
+                    // We need to configure it with the proper parameters
+                    const { progressOptions } = this.currentMessageOptions || {};
+                    if (progressOptions && progressOptions.res && this.responseMessageId && this.conversationId) {
+                      debug(debugGroups.MESSAGE_FLOW, 'Configuring and calling onProgress callback for streaming');
+                      debug(debugGroups.MESSAGE_FLOW, 'IDs being used:', {
+                        responseMessageId: this.responseMessageId,
+                        conversationId: this.conversationId,
+                        messageOptionsConversationId: this.currentMessageOptions?.conversationId
+                      });
+                      const configuredCallback = onProgress({
+                        res: progressOptions.res,
+                        messageId: this.responseMessageId,
+                        conversationId: this.conversationId,
+                        conversation: { id: this.conversationId },
+                        type: 'stream'
+                      });
+                      debug(debugGroups.MESSAGE_FLOW, 'About to call configuredCallback with content:', JSON.stringify(content));
+                      configuredCallback(content);
+                      debug(debugGroups.MESSAGE_FLOW, 'Called configuredCallback, checking if SSE was sent');
+                      
+                      // Check if response is still writable
+                      debug(debugGroups.SSE, 'Response writable?', !progressOptions.res.destroyed && progressOptions.res.writable);
+                    } else {
+                      debug(debugGroups.MESSAGE_FLOW, 'Missing required data for onProgress configuration:', {
+                        hasProgressOptions: !!progressOptions,
+                        hasRes: !!(progressOptions && progressOptions.res),
+                        hasResponseMessageId: !!this.responseMessageId,
+                        hasConversationId: !!this.conversationId
+                      });
+                    }
+                  } else {
+                    // Already configured, just call it
+                    debug(debugGroups.MESSAGE_FLOW, 'Calling pre-configured onProgress callback');
+                    onProgress(content, { type: 'stream' });
+                  }
+                } else {
+                  debug(debugGroups.MESSAGE_FLOW, 'No onProgress callback provided, accumulating content only');
                 }
               }
             } catch (parseError) {
-              console.log('DEBUG: Failed to parse SSE data:', data, 'Error:', parseError.message);
+              debug(debugGroups.SSE, 'Failed to parse SSE data:', data, 'Error:', parseError.message);
               logger.warn('EchoStreamClient: Failed to parse SSE data', parseError);
             }
+          } else if (line.trim() !== '') {
+            debug(debugGroups.SSE, `Non-SSE line (ignored): "${line}"`);
           }
         }
       });
 
       stream.on('end', () => {
-        console.log('DEBUG: Stream ended, fullResponse length:', fullResponse.length);
-        console.log('DEBUG: Buffer remaining:', buffer);
+        const timestamp = new Date().toISOString();
+        debug(debugGroups.STREAMING, 'Stream ended');
+        debug(debugGroups.STREAMING, 'Final stats:', {
+          totalChunks: chunkCount,
+          totalBytes: totalBytesReceived,
+          fullResponseLength: fullResponse.length,
+          bufferRemaining: buffer.length
+        });
+        debug(debugGroups.STREAMING, 'Buffer remaining:', JSON.stringify(buffer));
         const result = { text: fullResponse || 'Stream ended with no content' };
-        console.log('DEBUG: Resolving with result:', result);
+        debug(debugGroups.STREAMING, 'Resolving with result:', result);
         resolve(result);
       });
 
       stream.on('error', (error) => {
-        console.log('DEBUG: Stream error:', error.message);
-        console.log('DEBUG: Stream error stack:', error.stack);
-        console.log('DEBUG: Stream error name:', error.name);
-        console.log('DEBUG: Stream error full object:', error);
+        const timestamp = new Date().toISOString();
+        debug(debugGroups.STREAMING, 'Stream error:', error.message);
+        debug(debugGroups.STREAMING, 'Stream error stack:', error.stack);
+        debug(debugGroups.STREAMING, 'Stream error name:', error.name);
+        debug(debugGroups.STREAMING, 'Stream error full object:', error);
         logger.error('EchoStreamClient: Stream error', error);
         reject(error);
       });
       
       stream.on('close', () => {
-        console.log('DEBUG: Stream closed, fullResponse length:', fullResponse.length);
+        const timestamp = new Date().toISOString();
+        debug(debugGroups.STREAMING, 'Stream closed');
+        debug(debugGroups.STREAMING, 'Final close stats:', {
+          totalChunks: chunkCount,
+          totalBytes: totalBytesReceived,
+          fullResponseLength: fullResponse.length
+        });
       });
     });
   }
@@ -307,11 +369,14 @@ class EchoStreamClient extends BaseClient {
   }
 
   async sendMessage(text, messageOptions = {}) {
-    console.log('DEBUG: EchoStreamClient sendMessage called with:', {
+    debug(debugGroups.GENERAL, 'sendMessage called with:', {
       text: text?.substring(0, 100) + '...',
       hasMessageOptions: !!messageOptions,
       optionsKeys: Object.keys(messageOptions)
     });
+
+    // Store messageOptions for use in streaming
+    this.currentMessageOptions = messageOptions;
 
     // Follow BaseClient pattern - use buildMessages to get conversation history
     let messages;
@@ -334,9 +399,9 @@ class EchoStreamClient extends BaseClient {
       );
       
       messages = payload;
-      console.log('DEBUG: EchoStreamClient - Built messages using buildMessages:', messages?.length || 0, 'messages');
+      debug(debugGroups.GENERAL, 'Built messages using buildMessages:', messages?.length || 0, 'messages');
     } catch (error) {
-      console.log('DEBUG: EchoStreamClient - Error with buildMessages, falling back to simple message:', error.message);
+      debug(debugGroups.GENERAL, 'Error with buildMessages, falling back to simple message:', error.message);
       // Fallback to simple message format
       messages = [{ role: 'user', content: text }];
     }
@@ -348,7 +413,22 @@ class EchoStreamClient extends BaseClient {
       ...this.modelOptions
     };
 
-    console.log('DEBUG: EchoStreamClient calling chatCompletion with payload:', payload);
+    debug(debugGroups.STREAMING, 'calling chatCompletion with payload:', payload);
+
+    // Store the response message ID and conversation ID for streaming
+    this.responseMessageId = messageOptions.responseMessageId || require('crypto').randomUUID();
+    this.conversationId = messageOptions.conversationId || require('crypto').randomUUID();
+    
+    debug(debugGroups.MESSAGE_FLOW, 'EchoStreamClient IDs set:', {
+      responseMessageId: this.responseMessageId,
+      conversationId: this.conversationId,
+      providedResponseMessageId: messageOptions.responseMessageId,
+      providedConversationId: messageOptions.conversationId,
+      generatedNew: {
+        responseMessageId: !messageOptions.responseMessageId,
+        conversationId: !messageOptions.conversationId
+      }
+    });
 
     // Call the chatCompletion method
     const result = await this.chatCompletion({
@@ -357,21 +437,19 @@ class EchoStreamClient extends BaseClient {
       abortController: messageOptions.abortController
     });
 
-    console.log('DEBUG: EchoStreamClient sendMessage result:', result);
-    console.log('DEBUG: EchoStreamClient messageOptions details:', {
+    debug(debugGroups.STREAMING, 'sendMessage result:', result);
+    debug(debugGroups.MESSAGE_FLOW, 'messageOptions details:', {
       conversationId: messageOptions.conversationId,
       responseMessageId: messageOptions.responseMessageId,
       hasConversationId: !!messageOptions.conversationId,
       messageOptionsKeys: Object.keys(messageOptions)
     });
 
-    // Generate a messageId if not provided (frontend needs this for proper routing)
-    const responseMessageId = messageOptions.responseMessageId || require('crypto').randomUUID();
+    // Use the stored IDs that were set in sendMessage
+    const responseMessageId = this.responseMessageId;
+    const conversationId = this.conversationId;
     
-    // Ensure conversationId is always valid - generate one if missing
-    const conversationId = messageOptions.conversationId || require('crypto').randomUUID();
-    
-    console.log('DEBUG: EchoStreamClient - Final response ID handling:', {
+    debug(debugGroups.MESSAGE_FLOW, 'Final response ID handling:', {
       providedMessageId: messageOptions.responseMessageId,
       generatedMessageId: responseMessageId,
       willUseGeneratedMessageId: !messageOptions.responseMessageId,
@@ -395,13 +473,22 @@ class EchoStreamClient extends BaseClient {
       parentMessageId: messageOptions.userMessageId // Use user message ID as parent
     };
     
-    console.log('DEBUG: EchoStreamClient - Response message parentMessageId set to userMessageId:', {
+    debug(debugGroups.MESSAGE_FLOW, 'Created final responseMessage:', {
+      messageId: responseMessage.messageId,
+      conversationId: responseMessage.conversationId,
+      sender: responseMessage.sender,
+      textLength: responseMessage.text?.length,
+      parentMessageId: responseMessage.parentMessageId,
+      endpoint: responseMessage.endpoint
+    });
+    
+    debug(debugGroups.MESSAGE_FLOW, 'Response message parentMessageId set to userMessageId:', {
       responseParentMessageId: responseMessage.parentMessageId,
       providedUserMessageId: messageOptions.userMessageId,
       originalParentMessageId: messageOptions.parentMessageId
     });
 
-    console.log('DEBUG: EchoStreamClient - About to save response message to database:', {
+    debug(debugGroups.GENERAL, 'About to save response message to database:', {
       messageId: responseMessage.messageId,
       conversationId: responseMessage.conversationId,
       hasText: !!responseMessage.text,
@@ -412,7 +499,7 @@ class EchoStreamClient extends BaseClient {
     const saveOptions = this.getSaveOptions();
     const user = messageOptions.user;
     
-    console.log('DEBUG: EchoStreamClient - Creating databasePromise to save response message');
+    debug(debugGroups.GENERAL, 'Creating databasePromise to save response message');
     
     responseMessage.databasePromise = this.saveMessageToDatabase(
       responseMessage,
@@ -428,7 +515,7 @@ class EchoStreamClient extends BaseClient {
 
     const response = responseMessage;
 
-    console.log('DEBUG: EchoStreamClient final response:', {
+    debug(debugGroups.MESSAGE_FLOW, 'final response:', {
       hasText: !!response.text,
       textLength: response.text?.length,
       messageId: response.messageId,

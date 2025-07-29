@@ -1,6 +1,6 @@
 const { sendEvent } = require('@librechat/api');
 const { logger } = require('@librechat/data-schemas');
-const { Constants } = require('librechat-data-provider');
+const { Constants, progress } = require('librechat-data-provider');
 const {
   handleAbortError,
   createAbortController,
@@ -9,6 +9,7 @@ const {
 const { disposeClient, clientRegistry, requestDataMap } = require('~/server/cleanup');
 const { createOnProgress } = require('~/server/utils');
 const { saveMessage } = require('~/models');
+const { debug, debugGroups } = require('~/server/utils/debug');
 
 const AgentController = async (req, res, next, initializeClient, addTitle) => {
   let {
@@ -23,7 +24,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     responseMessageId: editedResponseMessageId = null,
   } = req.body;
 
-  console.log('DEBUG: AGENTS/REQUEST - Initial request body:', {
+  debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Initial request body:', {
     hasConversationId: !!conversationId,
     conversationId: conversationId,
     hasParentMessageId: !!parentMessageId,
@@ -50,7 +51,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
   const newConvo = !conversationId;
   const userId = req.user.id;
 
-  console.log('DEBUG: AGENTS/REQUEST - Conversation state:', {
+  debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Conversation state:', {
     newConvo: newConvo,
     hasConversationId: !!conversationId,
     conversationId: conversationId,
@@ -61,7 +62,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
   if (newConvo) {
     const { v4: uuidv4 } = require('uuid');
     conversationId = uuidv4();
-    console.log('DEBUG: AGENTS/REQUEST - Generated new conversationId for endpoint', endpointOption?.endpoint + ':', conversationId);
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Generated new conversationId for endpoint', endpointOption?.endpoint + ':', conversationId);
     
     // Update the request body to include the new conversationId
     req.body.conversationId = conversationId;
@@ -88,7 +89,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     user: userId
   };
   
-  console.log('DEBUG: AGENTS/REQUEST - User message parentMessageId handling:', {
+  debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - User message parentMessageId handling:', {
     isNewConvo: newConvo,
     originalParentMessageId: parentMessageId,
     finalUserMessageParentId: userMessageParentId,
@@ -98,7 +99,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
   // Set userMessage early so it's available even if onStart doesn't get called
   userMessage = createdUserMessage;
   
-  console.log('DEBUG: AGENTS/REQUEST - Created userMessage early:', {
+  debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Created userMessage early:', {
     messageId: userMessage.messageId,
     conversationId: userMessage.conversationId,
     hasText: !!userMessage.text,
@@ -111,7 +112,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       if (key === 'userMessage') {
         // Only update userMessage if a new one is provided and it's different
         if (data[key] && data[key] !== userMessage) {
-          console.log('DEBUG: AGENTS/REQUEST - Updating userMessage from getReqData');
+          debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Updating userMessage from getReqData');
           userMessage = data[key];
           userMessageId = data[key].messageId;
         }
@@ -182,7 +183,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     const result = await initializeClient({ req, res, endpointOption });
     client = result.client;
 
-    console.log('DEBUG: AGENTS/REQUEST - After initializeClient:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - After initializeClient:', {
       clientType: client?.constructor?.name,
       hasClient: !!client,
       clientModel: client?.model,
@@ -202,9 +203,9 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
 
     // Minimize closure scope - only capture small primitives and WeakRef
     getAbortData = () => {
-      console.log('DEBUG: AGENTS/REQUEST - getAbortData called at:', new Date().toISOString());
-      console.log('DEBUG: AGENTS/REQUEST - getAbortData call stack:', new Error().stack);
-      console.log('DEBUG: AGENTS/REQUEST - getAbortData called, closure variables:', {
+      debug(debugGroups.GENERAL, 'AGENTS/REQUEST - getAbortData called at:', new Date().toISOString());
+      debug(debugGroups.GENERAL, 'AGENTS/REQUEST - getAbortData call stack:', new Error().stack);
+      debug(debugGroups.GENERAL, 'AGENTS/REQUEST - getAbortData called, closure variables:', {
         hasSender: !!sender,
         sender: sender,
         hasUserMessage: !!userMessage,
@@ -233,7 +234,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
         parentMessageId: overrideParentMessageId ?? userMessageId ?? null,
       };
       
-      console.log('DEBUG: AGENTS/REQUEST - getAbortData returning:', {
+      debug(debugGroups.GENERAL, 'AGENTS/REQUEST - getAbortData returning:', {
         hasConversationId: !!abortData.conversationId,
         conversationId: abortData.conversationId,
         hasUserMessage: !!abortData.userMessage,
@@ -244,38 +245,38 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       return abortData;
     };
 
-    console.log('DEBUG: AGENTS/REQUEST - About to create abort controller with getAbortData');
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - About to create abort controller with getAbortData');
     
     const { abortController, onStart } = createAbortController(req, res, getAbortData, getReqData);
     
-    console.log('DEBUG: AGENTS/REQUEST - Created abort controller:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Created abort controller:', {
       hasAbortController: !!abortController,
       hasOnStart: !!onStart
     });
 
     // Simple handler to avoid capturing scope
     const closeHandler = () => {
-      console.log('DEBUG: AGENTS/REQUEST - closeHandler triggered');
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - closeHandler triggered');
       logger.debug('[AgentController] Request closed');
       
-      console.log('DEBUG: AGENTS/REQUEST - closeHandler state check:', {
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - closeHandler state check:', {
         hasAbortController: !!abortController,
         isAlreadyAborted: abortController?.signal?.aborted,
         requestCompleted: abortController?.requestCompleted
       });
       
       if (!abortController) {
-        console.log('DEBUG: AGENTS/REQUEST - closeHandler: no abortController, returning');
+        debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - closeHandler: no abortController, returning');
         return;
       } else if (abortController.signal.aborted) {
-        console.log('DEBUG: AGENTS/REQUEST - closeHandler: already aborted, returning');
+        debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - closeHandler: already aborted, returning');
         return;
       } else if (abortController.requestCompleted) {
-        console.log('DEBUG: AGENTS/REQUEST - closeHandler: request completed, returning');
+        debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - closeHandler: request completed, returning');
         return;
       }
 
-      console.log('DEBUG: AGENTS/REQUEST - closeHandler: calling abortController.abort()');
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - closeHandler: calling abortController.abort()');
       abortController.abort();
       logger.debug('[AgentController] Request aborted on close');
     };
@@ -312,25 +313,25 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       },
     };
     
-    console.log('DEBUG: AGENTS/REQUEST - messageOptions with userMessageId:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - messageOptions with userMessageId:', {
       parentMessageId: messageOptions.parentMessageId,
       userMessageId: messageOptions.userMessageId,
       conversationId: messageOptions.conversationId
     });
 
-    console.log('DEBUG: AGENTS/REQUEST - Final messageOptions conversationId:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Final messageOptions conversationId:', {
       conversationId: messageOptions.conversationId,
       hasConversationId: !!messageOptions.conversationId
     });
 
-    console.log('DEBUG: AGENTS/REQUEST - About to call client.sendMessage:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - About to call client.sendMessage:', {
       clientType: client?.constructor?.name,
       hasText: !!text,
       textLength: text?.length,
       hasSendMessage: typeof client?.sendMessage === 'function'
     });
 
-    console.log('DEBUG: AGENTS/REQUEST - messageOptions:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - messageOptions:', {
       hasConversationId: !!messageOptions.conversationId,
       conversationId: messageOptions.conversationId,
       hasParentMessageId: !!messageOptions.parentMessageId,
@@ -343,7 +344,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     try {
       response = await client.sendMessage(text, messageOptions);
     } catch (sendMessageError) {
-      console.log('DEBUG: AGENTS/REQUEST - Error in client.sendMessage:', {
+      debug(debugGroups.GENERAL, 'AGENTS/REQUEST - Error in client.sendMessage:', {
         errorMessage: sendMessageError.message,
         errorType: sendMessageError.constructor.name,
         hasStack: !!sendMessageError.stack
@@ -351,7 +352,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       throw sendMessageError; // Re-throw to be handled by outer catch
     }
 
-    console.log('DEBUG: AGENTS/REQUEST - sendMessage response:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - sendMessage response:', {
       hasResponse: !!response,
       responseKeys: response ? Object.keys(response) : 'no response',
       conversationId: response?.conversationId,
@@ -364,7 +365,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     response.endpoint = endpoint;
     
     // Ensure response message has correct parentMessageId (should be current user message ID)
-    console.log('DEBUG: AGENTS/REQUEST - ParentMessageId assignment check:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - ParentMessageId assignment check:', {
       hasResponseParentMessageId: !!response.parentMessageId,
       currentResponseParentMessageId: response.parentMessageId,
       hasUserMessage: !!userMessage,
@@ -376,22 +377,22 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     
     if (!response.parentMessageId && userMessage && userMessage.messageId) {
       response.parentMessageId = userMessage.messageId;
-      console.log('DEBUG: AGENTS/REQUEST - Set response parentMessageId to user message ID:', userMessage.messageId);
-      console.log('DEBUG: AGENTS/REQUEST - Final parentMessageId relationship:', {
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Set response parentMessageId to user message ID:', userMessage.messageId);
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Final parentMessageId relationship:', {
         userMessageId: userMessage.messageId,
         userParentMessageId: userMessage.parentMessageId,
         responseMessageId: response.messageId,
         responseParentMessageId: response.parentMessageId
       });
     } else {
-      console.log('DEBUG: AGENTS/REQUEST - Did NOT set response parentMessageId. Reason:', {
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Did NOT set response parentMessageId. Reason:', {
         alreadyHasParentMessageId: !!response.parentMessageId,
         noUserMessage: !userMessage,
         noUserMessageId: !userMessage?.messageId
       });
     }
 
-    console.log('DEBUG: AGENTS/REQUEST - After processing response:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - After processing response:', {
       responseConversationId: response.conversationId,
       messageOptionsConversationId: messageOptions.conversationId,
       originalConversationId: conversationId,
@@ -402,7 +403,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     const databasePromise = response.databasePromise;
     delete response.databasePromise;
 
-    console.log('DEBUG: AGENTS/REQUEST - About to resolve databasePromise:', {
+    debug(debugGroups.GENERAL, 'AGENTS/REQUEST - About to resolve databasePromise:', {
       hasDatabasePromise: !!databasePromise
     });
 
@@ -412,10 +413,10 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       const { conversation: dbConvoData = {} } = await databasePromise;
       convoData = dbConvoData;
     } else {
-      console.log('DEBUG: AGENTS/REQUEST - No databasePromise, creating fallback conversation data');
+      debug(debugGroups.GENERAL, 'AGENTS/REQUEST - No databasePromise, creating fallback conversation data');
       convoData = conversationId ? { id: conversationId, title: null } : {};
     }
-    console.log('DEBUG: AGENTS/REQUEST - Resolved databasePromise:', {
+    debug(debugGroups.GENERAL, 'AGENTS/REQUEST - Resolved databasePromise:', {
       hasConvoData: !!convoData,
       convoDataKeys: convoData ? Object.keys(convoData) : 'null',
       convoId: convoData?.id
@@ -425,7 +426,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     conversation.title =
       conversation && !conversation.title ? null : conversation?.title || 'New Chat';
       
-    console.log('DEBUG: AGENTS/REQUEST - Final conversation object:', {
+    debug(debugGroups.GENERAL, 'AGENTS/REQUEST - Final conversation object:', {
       hasConversation: !!conversation,
       conversationId: conversation?.id,
       title: conversation?.title
@@ -444,7 +445,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     }
 
     // Only send if not aborted
-    console.log('DEBUG: AGENTS/REQUEST - About to send final response, abort status:', {
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - About to send final response, abort status:', {
       isAborted: abortController.signal.aborted,
       hasResponse: !!response,
       hasConversation: !!conversation,
@@ -455,7 +456,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       // Create a new response object with minimal copies
       const finalResponse = { ...response };
 
-      console.log('DEBUG: AGENTS/REQUEST - Sending final event to frontend:', {
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Sending final event to frontend:', {
         final: true,
         conversationId: conversation?.id,
         title: conversation?.title,
@@ -473,7 +474,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
         responseMessage: finalResponse,
       };
 
-      console.log('DEBUG: AGENTS/REQUEST - Complete sendEvent data structure:', {
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Complete sendEvent data structure:', {
         final: eventData.final,
         hasConversation: !!eventData.conversation,
         conversationStructure: eventData.conversation ? {
@@ -501,7 +502,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
         topLevelKeys: Object.keys(eventData)
       });
       
-      console.log('DEBUG: AGENTS/REQUEST - CRITICAL THREADING ANALYSIS:', {
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - CRITICAL THREADING ANALYSIS:', {
         userMessageId: eventData.requestMessage?.messageId,
         userParentMessageId: eventData.requestMessage?.parentMessageId,
         responseMessageId: eventData.responseMessage?.messageId,
@@ -512,21 +513,21 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
         threadingActual: `User parent: ${eventData.requestMessage?.parentMessageId}, Response parent: ${eventData.responseMessage?.parentMessageId}`
       });
 
-      console.log('DEBUG: AGENTS/REQUEST - About to call sendEvent with this exact data structure');
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - About to call sendEvent with this exact data structure');
       sendEvent(res, eventData);
       
-      console.log('DEBUG: AGENTS/REQUEST - Sent final event, calling res.end()');
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Sent final event, calling res.end()');
       res.end();
-      console.log('DEBUG: AGENTS/REQUEST - Called res.end(), setting requestCompleted flag');
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Called res.end(), setting requestCompleted flag');
       
       // Mark request as completed to prevent abort on close
       abortController.requestCompleted = true;
-      console.log('DEBUG: AGENTS/REQUEST - Set abortController.requestCompleted = true');
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Set abortController.requestCompleted = true');
 
       // Save the message if needed
       if (client.savedMessageIds && !client.savedMessageIds.has(messageId)) {
         const messageToSave = { ...finalResponse, user: userId };
-        console.log('DEBUG: AGENTS/REQUEST - About to save message:', {
+        debug(debugGroups.GENERAL, 'AGENTS/REQUEST - About to save message:', {
           hasConversationId: !!messageToSave.conversationId,
           conversationId: messageToSave.conversationId,
           messageId: messageToSave.messageId,
@@ -536,15 +537,15 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
         
         // Ensure conversationId is set from the original source if missing
         if (!messageToSave.conversationId && conversationId) {
-          console.log('DEBUG: AGENTS/REQUEST - Adding missing conversationId from original:', conversationId);
+          debug(debugGroups.GENERAL, 'AGENTS/REQUEST - Adding missing conversationId from original:', conversationId);
           messageToSave.conversationId = conversationId;
         }
         
         // Now we should have a conversationId, so save the message
         if (!messageToSave.conversationId) {
-          console.log('DEBUG: AGENTS/REQUEST - WARNING: Still no conversationId, skipping save');
+          debug(debugGroups.GENERAL, 'AGENTS/REQUEST - WARNING: Still no conversationId, skipping save');
         } else {
-          console.log('DEBUG: AGENTS/REQUEST - Saving message with conversationId:', messageToSave.conversationId);
+          debug(debugGroups.GENERAL, 'AGENTS/REQUEST - Saving message with conversationId:', messageToSave.conversationId);
           await saveMessage(
             req,
             messageToSave,
@@ -557,7 +558,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     // Save user message if needed
     if (!client.skipSaveUserMessage) {
       if (userMessage && typeof userMessage === 'object') {
-        console.log('DEBUG: AGENTS/REQUEST - About to save user message:', {
+        debug(debugGroups.GENERAL, 'AGENTS/REQUEST - About to save user message:', {
           hasUserMessage: !!userMessage,
           userMessageKeys: Object.keys(userMessage),
           conversationId: userMessage.conversationId
@@ -566,18 +567,18 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
           context: "api/server/controllers/agents/request.js - don't skip saving user message",
         });
       } else {
-        console.log('DEBUG: AGENTS/REQUEST - Skipping user message save - userMessage is undefined or invalid:', {
+        debug(debugGroups.GENERAL, 'AGENTS/REQUEST - Skipping user message save - userMessage is undefined or invalid:', {
           userMessage: userMessage,
           userMessageType: typeof userMessage
         });
       }
     }
 
-    console.log('DEBUG: AGENTS/REQUEST - Completed all message saving, checking for title generation');
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Completed all message saving, checking for title generation');
 
     // Add title if needed - extract minimal data and preserve client reference
     if (addTitle && parentMessageId === Constants.NO_PARENT && newConvo) {
-      console.log('DEBUG: AGENTS/REQUEST - Starting title generation');
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Starting title generation');
       // Preserve client reference before cleanup for title generation
       const preservedClient = client;
       addTitle(req, {
@@ -586,27 +587,27 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
         client: preservedClient,
       })
         .then(() => {
-          console.log('DEBUG: AGENTS/REQUEST - Title generation completed successfully');
+          debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Title generation completed successfully');
           logger.debug('[AgentController] Title generation started');
         })
         .catch((err) => {
-          console.log('DEBUG: AGENTS/REQUEST - Title generation error:', err.message);
+          debug(debugGroups.GENERAL, 'AGENTS/REQUEST - Title generation error:', err.message);
           logger.error('[AgentController] Error in title generation', err);
         })
         .finally(() => {
-          console.log('DEBUG: AGENTS/REQUEST - Title generation finally block, calling cleanup');
+          debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Title generation finally block, calling cleanup');
           logger.debug('[AgentController] Title generation completed');
           performCleanup();
         });
     } else {
-      console.log('DEBUG: AGENTS/REQUEST - No title generation needed, calling cleanup directly');
+      debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - No title generation needed, calling cleanup directly');
       performCleanup();
     }
     
-    console.log('DEBUG: AGENTS/REQUEST - Reached end of main try block - request should be complete');
+    debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - Reached end of main try block - request should be complete');
   } catch (error) {
     // Handle error without capturing much scope
-    console.log('DEBUG: AGENTS/REQUEST - Caught error in main try/catch:', {
+    debug(debugGroups.GENERAL, 'AGENTS/REQUEST - Caught error in main try/catch:', {
       errorMessage: error.message,
       errorStack: error.stack,
       errorName: error.name,

@@ -31,7 +31,7 @@ endpoints:
         fetch: false
       titleConvo: true
       titleModel: "gpt-4o-mini"
-      modelDisplayLabel: "Echo AI"
+      modelDisplayLabel: "Echo"
       streamRate: 1
       headers:
         "X-Service-Type": "echo-proxy"
