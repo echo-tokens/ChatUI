@@ -26,6 +26,9 @@ export { default as buildDefaultConvo } from './buildDefaultConvo';
 export { default as getDefaultEndpoint } from './getDefaultEndpoint';
 export { default as createChatSearchParams } from './createChatSearchParams';
 
+// Earnings types
+export * from '../types/earnings';
+
 export const languages = [
   'java',
   'c',

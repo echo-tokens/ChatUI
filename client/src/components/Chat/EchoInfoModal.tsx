@@ -24,8 +24,8 @@ export default function EchoInfoModal({ children }: EchoInfoModalProps) {
   const logoSrc = isThemeDark ? '/assets/logo_full_dark.png' : '/assets/logo_full_light.png';
 
   const handleSetupPayouts = () => {
-    // TODO: Open billing flow
-    console.log('Opening billing flow for payout setup...');
+    // Navigate to earnings dashboard
+    window.location.href = '/earnings';
     setOpen(false);
   };
 
