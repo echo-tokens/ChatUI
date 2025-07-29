@@ -65,7 +65,7 @@ class EchoStreamClient extends BaseClient {
     
     if (!messages || !Array.isArray(messages)) {
       debug(debugGroups.GENERAL, 'buildMessages - Invalid messages input:', messages);
-      return { payload: [] };
+      return { prompt: [] };
     }
     
     // Check if we need to get conversation history from database
@@ -110,7 +110,7 @@ class EchoStreamClient extends BaseClient {
             preview: fullMessages.map(m => `${m.role}: ${m.content?.substring(0, 30)}...`)
           });
           
-          return { payload: fullMessages };
+          return { prompt: fullMessages };
         }
       } catch (error) {
         debug(debugGroups.GENERAL, 'buildMessages - Error getting conversation history:', error.message);
@@ -129,7 +129,7 @@ class EchoStreamClient extends BaseClient {
       preview: apiMessages.map(m => `${m.role}: ${m.content?.substring(0, 30)}...`)
     });
     
-    return { payload: apiMessages };
+    return { prompt: apiMessages };
   }
 
   /** @type {sendCompletion} */
@@ -137,17 +137,21 @@ class EchoStreamClient extends BaseClient {
     let reply = '';
     const requestPayload = {
       messages: payload,
+      model: this.modelOptions?.model || 'gpt-4o-mini', // Required by external API
       stream: true,
       include_ads: true,
       ...this.addParams
     };
 
     debug(debugGroups.STREAMING, 'sendCompletion called with payload:', JSON.stringify(payload, null, 2));
+    debug(debugGroups.STREAMING, 'Final request payload:', JSON.stringify(requestPayload, null, 2));
     debug(debugGroups.STREAMING, 'Full request details:', {
       url: this.baseURL,
       method: 'POST',
       headers: this.headers,
-      payload: requestPayload
+      hasModel: !!requestPayload.model,
+      model: requestPayload.model,
+      messagesCount: Array.isArray(requestPayload.messages) ? requestPayload.messages.length : 'not-array'
     });
     logger.info('EchoStreamClient: Sending request to', this.baseURL);
     logger.debug('EchoStreamClient: Request payload', requestPayload);
@@ -325,6 +329,19 @@ class EchoStreamClient extends BaseClient {
   async titleConvo({ text, responseText = '' }) {
     // Simple title generation for echo_stream - just return default title
     return 'Echo Stream Chat';
+  }
+
+  getBuildMessagesOptions(opts) {
+    return {
+      isChatCompletion: true,
+      promptPrefix: opts.promptPrefix,
+      abortController: opts.abortController,
+    };
+  }
+
+  checkVisionRequest(attachments) {
+    // Echo stream doesn't support vision models - just return
+    return;
   }
 
   getSaveOptions() {
