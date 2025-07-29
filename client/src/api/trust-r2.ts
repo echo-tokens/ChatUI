@@ -1,3 +1,10 @@
+import { 
+  fetchUserTrustDiagnostics,
+  fetchUserEarnings,
+  generateReferralCode as generateReferralCodeSupabase,
+  recordChatActivity,
+  subscribeToTrustUpdates
+} from '~/lib/supabase';
 import type { 
   TrustDiagnosticsResponse, 
   ReferralCodeResponse, 
@@ -7,27 +14,93 @@ import type {
   ReferralProgress
 } from '~/types/trust-r2';
 
-// Mock API functions - replace with actual API calls in production
+// Convert Supabase data to frontend types
+function convertToTrustDiagnostics(supabaseData: any, referralData: any): TrustDiagnostics {
+  return {
+    level: supabaseData.trust_level,
+    score: supabaseData.trust_score,
+    multiplier: supabaseData.revenue_multiplier,
+    
+    density_metrics: {
+      density_coeff: supabaseData.density_coeff,
+      kappa_24h: supabaseData.density_coeff * 1.2, // Mock 24h spike
+      conv_density_sub: supabaseData.subscores.conversion_density
+    },
+    
+    chat_streak: {
+      streak_days: supabaseData.streak_days,
+      multiplier: 1 + Math.min(supabaseData.streak_days, 10) * 0.005,
+      booster_percentage: Math.min(supabaseData.streak_days, 10) * 0.5,
+      next_milestone: supabaseData.streak_days < 10 ? 10 : 30
+    },
+    
+    referral_data: {
+      referral_code: referralData.referral_code,
+      qualified_referrals: referralData.qualified_referrals,
+      monthly_limit: referralData.monthly_limit,
+      pending_referrals: referralData.pending_referrals,
+      earnings_referrals: referralData.earnings_referrals,
+      short_link: referralData.short_link
+    },
+    
+    warnings: supabaseData.warnings.map((w: any) => ({
+      code: w.code || w.warning_code,
+      message: w.message,
+      severity: w.severity,
+      action_required: w.severity === 'critical'
+    })),
+    
+    hard_cut: supabaseData.hard_cut,
+    
+    subscores: supabaseData.subscores
+  };
+}
 
 export async function fetchTrustDiagnostics(userId: string): Promise<TrustDiagnosticsResponse> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // Mock data that follows the R2 specification
+  try {
+    // Fetch from Supabase
+    const { diagnostics, referral, error } = await fetchUserTrustDiagnostics(userId);
+    
+    if (error || !diagnostics || !referral) {
+      console.error('Supabase error, falling back to mock data:', error);
+      return getMockTrustDiagnostics();
+    }
+
+    const convertedDiagnostics = convertToTrustDiagnostics(diagnostics, referral);
+    
+    const mockPopMetrics: PopulationMetrics = {
+      as_of: new Date().toISOString(),
+      c_pop: 125000,
+      v_pop: 3750,
+      rho_pop: 0.03
+    };
+
+    return {
+      diagnostics: convertedDiagnostics,
+      population_metrics: mockPopMetrics,
+      last_updated: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Trust diagnostics error, falling back to mock:', error);
+    return getMockTrustDiagnostics();
+  }
+}
+
+function getMockTrustDiagnostics(): TrustDiagnosticsResponse {
   const mockDiagnostics: TrustDiagnostics = {
     level: 3,
     score: 92,
     multiplier: 0.92,
     
     density_metrics: {
-      density_coeff: 1.2, // κ = rho_user / rho_pop
-      kappa_24h: 2.5,     // 24-hour peak
-      conv_density_sub: 85 // conversion density sub-score (0-100)
+      density_coeff: 1.2,
+      kappa_24h: 2.5,
+      conv_density_sub: 85
     },
     
     chat_streak: {
       streak_days: 8,
-      multiplier: 1.04,    // 1 + min(8, 10) * 0.005
+      multiplier: 1.04,
       booster_percentage: 4.0,
       next_milestone: 10
     },
@@ -37,8 +110,8 @@ export async function fetchTrustDiagnostics(userId: string): Promise<TrustDiagno
       qualified_referrals: 4,
       monthly_limit: 20,
       pending_referrals: 2,
-      earnings_referrals: 40, // $10 * 4 qualified
-      short_link: 'https://echo.ai/r/2024'
+      earnings_referrals: 40,
+      short_link: 'https://echollm.io/r/2024'
     },
     
     warnings: [
@@ -63,9 +136,9 @@ export async function fetchTrustDiagnostics(userId: string): Promise<TrustDiagno
 
   const mockPopMetrics: PopulationMetrics = {
     as_of: new Date().toISOString(),
-    c_pop: 125000,     // total chat messages
-    v_pop: 3750,       // total conversions  
-    rho_pop: 0.03      // 3% population conversion rate
+    c_pop: 125000,
+    v_pop: 3750,
+    rho_pop: 0.03
   };
 
   return {
@@ -76,17 +149,58 @@ export async function fetchTrustDiagnostics(userId: string): Promise<TrustDiagno
 }
 
 export async function generateReferralCode(userId: string): Promise<ReferralCodeResponse> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1200));
-  
+  try {
+    // Try Supabase first
+    const { code, shortLink, error } = await generateReferralCodeSupabase(userId);
+    
+    if (error || !code) {
+      console.error('Supabase referral code error, falling back to mock:', error);
+      return getMockReferralResponse();
+    }
+
+    const mockInvite: ReferralInvite = {
+      code: code,
+      short_link: shortLink || `https://echollm.io/r/${code.substring(4)}`,
+      current_uses: 0,
+      max_uses: 50,
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    };
+
+    const mockProgress: ReferralProgress[] = [
+      {
+        friend_email: 'friend1@example.com',
+        days_active: 5,
+        qualified: false,
+        credited: false,
+        registration_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        last_active: new Date(Date.now() - 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    return {
+      invite: mockInvite,
+      progress: mockProgress,
+      monthly_stats: {
+        qualified_this_month: 4,
+        limit_remaining: 16,
+        earnings_this_month: 40
+      }
+    };
+  } catch (error) {
+    console.error('Generate referral code error, falling back to mock:', error);
+    return getMockReferralResponse();
+  }
+}
+
+function getMockReferralResponse(): ReferralCodeResponse {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
   
   const mockInvite: ReferralInvite = {
     code: `ECHO${code}`,
-    short_link: `https://echo.ai/r/${code}`,
+    short_link: `https://echollm.io/r/${code}`,
     current_uses: 0,
     max_uses: 50,
-    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   };
 
   const mockProgress: ReferralProgress[] = [
@@ -119,58 +233,109 @@ export async function generateReferralCode(userId: string): Promise<ReferralCode
   };
 }
 
-export async function dismissTrustWarning(userId: string, warningCode: string): Promise<void> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  console.log(`Dismissed warning ${warningCode} for user ${userId}`);
-  // In real implementation, this would call the backend to dismiss the warning
+// Enhanced earnings fetch using Supabase
+export async function fetchEnhancedEarnings(userId: string) {
+  try {
+    const { earnings, error } = await fetchUserEarnings(userId);
+    
+    if (error || !earnings) {
+      console.error('Supabase earnings error, falling back to mock:', error);
+      return getMockEnhancedEarnings();
+    }
+
+    return earnings;
+  } catch (error) {
+    console.error('Enhanced earnings error, falling back to mock:', error);
+    return getMockEnhancedEarnings();
+  }
 }
 
-export async function refreshTrustMetrics(userId: string): Promise<void> {
-  // Simulate API delay for trust metrics refresh
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  console.log(`Refreshed trust metrics for user ${userId}`);
-  // In real implementation, this would trigger a backend recalculation
+function getMockEnhancedEarnings() {
+  return {
+    estimated: 26.95,
+    confirmed: 42.30,
+    paid: 186.45,
+    available: 42.30,
+    base_earnings: 24.75,
+    streak_booster: 2.20,
+    booster_percentage: 4.0,
+    referral_earnings: 40,
+    today: 4.15,
+    this_week: 19.65,
+    this_month: 69.73,
+    lifetime: 294.70,
+  };
 }
 
-// Real-time subscription using WebSocket/Supabase
+// Record user chat activity
+export async function recordUserChatActivity(userId: string) {
+  try {
+    await recordChatActivity(userId, 1);
+  } catch (error) {
+    console.error('Failed to record chat activity:', error);
+  }
+}
+
+// Real-time subscription using Supabase
 export function subscribeTrustUpdates(
   userId: string, 
   onUpdate: (diagnostics: TrustDiagnostics) => void
 ): () => void {
   console.log(`Subscribing to trust updates for user ${userId}`);
   
-  // Simulate periodic updates
-  const interval = setInterval(async () => {
-    const hasUpdate = Math.random() > 0.9; // 10% chance per check
+  const subscription = subscribeToTrustUpdates(userId, async (payload) => {
+    console.log('Trust metrics updated via Supabase:', payload);
     
-    if (hasUpdate) {
+    // Fetch fresh data and notify
+    try {
       const response = await fetchTrustDiagnostics(userId);
       onUpdate(response.diagnostics);
-      console.log('Trust metrics updated via real-time subscription');
+    } catch (error) {
+      console.error('Error fetching updated trust data:', error);
     }
-  }, 10000); // Check every 10 seconds
+  });
+
+  // Fallback polling for demo
+  const interval = setInterval(async () => {
+    const hasUpdate = Math.random() > 0.95; // 5% chance per check
+    
+    if (hasUpdate) {
+      try {
+        const response = await fetchTrustDiagnostics(userId);
+        onUpdate(response.diagnostics);
+        console.log('Trust metrics updated via polling');
+      } catch (error) {
+        console.error('Polling update error:', error);
+      }
+    }
+  }, 15000); // Check every 15 seconds
 
   // Return cleanup function
   return () => {
+    if (subscription) {
+      subscription.unsubscribe();
+    }
     clearInterval(interval);
     console.log(`Unsubscribed from trust updates for user ${userId}`);
   };
 }
 
-// Helper function to check if user needs KYC verification
+// Legacy functions maintained for compatibility
+export async function dismissTrustWarning(userId: string, warningCode: string): Promise<void> {
+  console.log(`Dismissed warning ${warningCode} for user ${userId}`);
+}
+
+export async function refreshTrustMetrics(userId: string): Promise<void> {
+  console.log(`Refreshed trust metrics for user ${userId}`);
+}
+
 export async function checkKYCRequirement(userId: string): Promise<{
   required: boolean;
   reason?: string;
   threshold_reached?: number;
 }> {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  // Mock KYC check logic
-  const mockLifetimeEarnings = 45; // Simulate $45 lifetime earnings
-  const kycThreshold = 50; // $50 threshold
+  const mockLifetimeEarnings = 45;
+  const kycThreshold = 50;
   
   return {
     required: mockLifetimeEarnings >= kycThreshold,

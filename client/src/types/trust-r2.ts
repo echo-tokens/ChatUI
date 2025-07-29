@@ -35,8 +35,8 @@ export interface LedgerEntry {
 // Payout request structure
 export interface PayoutRequest {
   amount: number;
-  rail: 'ach_standard' | 'instant';
-  fee: number;
+  rail: 'ach_standard' | 'instant_visa_mc';
+  estimated_fee: number;
   net_amount: number;
 }
 

@@ -29,7 +29,7 @@ export default function TrustDiagnosticsPanel({
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     return {
       code: `ECHO${code}`,
-      short_link: `https://echo.ai/r/${code}`,
+      short_link: `https://echollm.io/r/${code}`,
       current_uses: 0,
       max_uses: 50,
     };
