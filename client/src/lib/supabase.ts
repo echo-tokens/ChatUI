@@ -1,26 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Use the environment variables that match Railway deployment
-// Vite apps use VITE_ prefix, but also check for legacy REACT_APP_ and direct names
+// Use Railway's environment variables correctly for Vite
+// Railway sets SUPABASE_URL and SUPABASE_ANON_KEY, but Vite needs VITE_ prefix to expose them to browser
 const supabaseUrl = 
   import.meta.env.VITE_SUPABASE_URL || 
-  process.env.SUPABASE_URL || 
-  process.env.REACT_APP_SUPABASE_URL || 
   'https://rgrlrawmkmzclisyerln.supabase.co';
 
 const supabaseAnonKey = 
   import.meta.env.VITE_SUPABASE_ANON_KEY || 
-  process.env.SUPABASE_ANON_KEY || 
-  process.env.REACT_APP_SUPABASE_ANON_KEY || 
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJncmxyYXdta21aa2xpc3llcmxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3OTM3ODEsImV4cCI6MjA1NDM2OTc4MX0.bfIJmPJU41uWKxrNBtF2IDXOH7XdNwf4U3h2OwD5iBY';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-console.log('Supabase initialized with:', { 
-  url: supabaseUrl.substring(0, 30) + '...', 
-  hasKey: !!supabaseAnonKey,
-  keyPrefix: supabaseAnonKey.substring(0, 20) + '...'
-});
 
 // Types for R2 Trust System
 export interface TrustDiagnosticsResponse {
