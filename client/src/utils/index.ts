@@ -29,6 +29,9 @@ export { default as createChatSearchParams } from './createChatSearchParams';
 // Earnings types
 export * from '../types/earnings';
 
+// R2 Trust types  
+export * from '../types/trust-r2';
+
 export const languages = [
   'java',
   'c',
