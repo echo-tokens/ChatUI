@@ -245,3 +245,4 @@ cd client && npm run dev
 
 **Need Help?** Check the logs first, then refer to [LibreChat Documentation](https://docs.librechat.ai).
 # Force Railway rebuild
+# Disable social login completely
