@@ -1,9 +1,5 @@
 version: 1.2.1
 
-# Registration configuration for social logins
-registration:
-  socialLogins: ['google']
-
 interface:
   modelSelect: true
   sidePanel: false
