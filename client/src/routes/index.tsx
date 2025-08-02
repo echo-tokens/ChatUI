@@ -19,6 +19,7 @@ import ChatRoute from './ChatRoute';
 import Search from './Search';
 import Root from './Root';
 import EarningsPage from './EarningsPage';
+import EarnRoute from './EarnRoute';
 
 const AuthLayout = () => (
   <AuthContextProvider>
@@ -109,6 +110,10 @@ export const router = createBrowserRouter([
           {
             path: 'earnings',
             element: <EarningsPage />,
+          },
+          {
+            path: 'earn',
+            element: <EarnRoute />,
           },
         ],
       },

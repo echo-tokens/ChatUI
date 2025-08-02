@@ -1,0 +1,351 @@
+/* Chat Layout */
+.task-container {
+  padding: 0;
+  margin: 0;
+}
+
+.task-content {
+  padding: 0rem;
+}
+
+.section-title {
+  text-align: left;
+  font-weight: bold;
+  margin-bottom: 10px;
+  padding-left: 0rem;
+}
+
+.section-title-response {
+  text-align: left;
+  font-weight: bold;
+  margin-bottom: 15px;
+  padding-left: 0rem;
+}
+
+.prompt-content {
+  text-align: left;
+  margin-bottom: 20px;
+  padding-left: 0rem;
+}
+
+.response-container {
+  text-align: left;
+  margin-bottom: 20px;
+  margin-left: 0rem;
+  margin-right: 0rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  background-color: #fafafa;
+}
+
+/* PinnableText Component */
+.pinnable-container {
+  display: flex;
+  gap: 15px;
+  align-items: stretch;
+  padding: 15px;
+}
+
+.markdown-panel {
+  flex: 1;
+  padding: 15px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.markdown-content {
+  flex: 1;
+}
+
+.pin-panel {
+  flex: 1;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pin-panel-header {
+  font-size: 12px;
+  color: #495057;
+  margin-bottom: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pin-counter {
+  margin-left: 10px;
+  color: #0056b3;
+  font-weight: normal;
+}
+
+.pin-instructions {
+  margin-left: 15px;
+  color: #6c757d;
+  font-weight: normal;
+  text-transform: none;
+  font-size: 11px;
+}
+
+.pin-content {
+  flex: 1;
+  background-color: #ffffff;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  overflow-y: auto;
+}
+
+.pin-status {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: #e7f3ff;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #0056b3;
+}
+
+.clear-button {
+  margin-left: 15px;
+  padding: 4px 8px;
+  font-size: 11px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-button:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+/* Pin Slot Styles */
+.pin-slot {
+  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid transparent;
+  height: 8px;
+  width: 100%;
+  border-radius: 3px;
+  position: relative;
+  transition: all 0.2s ease;
+  margin: 2px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-slot:hover {
+  background-color: #f0f0f0;
+  border-color: #ced4da;
+}
+
+.pin-slot.pinned {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+}
+
+.pin-slot.pinned:hover {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+}
+
+.pin-slot.disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.pin-slot.disabled:hover {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.pin-slot.disabled.pinned:hover {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+}
+
+.pin-icon {
+  font-size: 10px;
+  color: #dc3545;
+}
+
+.pin-placeholder {
+  font-size: 8px;
+  color: #aaa;
+}
+
+/* Text Line Styles */
+.text-line {
+  min-height: 1.2em;
+  line-height: 1.3em;
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  font-size: 14px;
+  color: #495057;
+  white-space: pre-wrap;
+  padding: 0 8px;
+}
+
+/* Disabled States */
+.pin-panel.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.ad-descriptions-section.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.ad-descriptions-section.disabled .ad-description-textarea {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
+/* Ad Description Section */
+.ad-descriptions-section {
+  margin-top: 15px;
+  margin-left: 0rem;
+  margin-right: 0rem;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  border-top: 3px solid #28a745;
+  transition: opacity 0.3s ease;
+}
+
+.ad-descriptions-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #495057;
+}
+
+.ad-descriptions-subtitle {
+  font-size: 13px;
+  color: #6c757d;
+  margin-bottom: 20px;
+}
+
+.ad-descriptions-grid {
+  display: grid;
+  gap: 15px;
+}
+
+.ad-description-item {
+  padding: 15px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+}
+
+.ad-description-label {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.ad-description-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 10px;
+  font-size: 13px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #ffffff;
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.ad-description-textarea:focus {
+  outline: none;
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+}
+
+.ad-description-textarea:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Markdown Component Overrides */
+.markdown-content p {
+  margin: 0 0 10px 0;
+  line-height: 1.6;
+}
+
+.markdown-content code {
+  background-color: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 5px;
+  overflow: auto;
+  margin: 10px 0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #ddd;
+  padding-left: 15px;
+  margin: 10px 0;
+  font-style: italic;
+}
+
+.markdown-content h1 {
+  font-size: 1.5em;
+  margin: 15px 0 10px 0;
+}
+
+.markdown-content h2 {
+  font-size: 1.3em;
+  margin: 15px 0 10px 0;
+}
+
+.markdown-content h3 {
+  font-size: 1.1em;
+  margin: 15px 0 10px 0;
+}
+
+.markdown-content ul {
+  margin: 5px 0 10px 20px;
+}
+
+.markdown-content ol {
+  margin: 5px 0 10px 20px;
+  list-style-type: decimal;
+  padding-left: 20px;
+}
+
+.markdown-content li {
+  margin: 2px 0;
+  display: list-item;
+} 

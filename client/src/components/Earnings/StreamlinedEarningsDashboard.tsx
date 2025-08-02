@@ -224,8 +224,8 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
   // Loading state
   if (isLoading || !earnings || !trustDiagnostics) {
     return (
-      <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900 p-6', className)}>
-        <div className="max-w-6xl mx-auto">
+      <div className={cn('h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6', className)}>
+        <div className="max-w-6xl mx-auto min-h-full">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -247,8 +247,8 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
   // Show Stripe setup if needed
   if (needsStripeSetup && showStripeSetup) {
     return (
-      <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900 p-6', className)}>
-        <div className="max-w-4xl mx-auto">
+      <div className={cn('h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6', className)}>
+        <div className="max-w-4xl mx-auto min-h-full">
           <StripeSetupFlow 
             onSetupComplete={() => {
               setCurrentUser(prev => prev ? { ...prev, stripe_account_id: 'acct_new_123' } : null);
@@ -262,8 +262,8 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
   }
 
   return (
-    <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900', className)}>
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className={cn('h-full overflow-y-auto bg-gray-50 dark:bg-gray-900', className)}>
+      <div className="max-w-6xl mx-auto p-6 space-y-6 min-h-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
