@@ -13,7 +13,7 @@ interface PinnableTextProps {
 }
 
 // Custom component for pinnable text with markdown support
-function PinnableText({ text, pins, onPinToggle, isSubmitting }: PinnableTextProps) {
+function PinnableText({ text, pins, onPinToggle, adDescriptions, onAdDescriptionChange, isSubmitting }: PinnableTextProps) {
     if (!text || text === 'Loading...' || text === 'pre-fetch') {
         return <Markdown>{text}</Markdown>;
     }
@@ -87,78 +87,106 @@ function PinnableText({ text, pins, onPinToggle, isSubmitting }: PinnableTextPro
         );
     };
 
-    return (
-        <div className="pinnable-container">
-            {/* Left side - Clean markdown display */}
-            <div className="markdown-panel">
-                <div className="panel-header">
-                    📖 Formatted Response
-                </div>
-                <div className="markdown-content">
-                    <Markdown
-                        components={{
-                            p: ({ children }) => <p>{children}</p>,
-                            strong: ({ children }) => <strong>{children}</strong>,
-                            em: ({ children }) => <em>{children}</em>,
-                            code: ({ children }) => <code>{children}</code>,
-                            pre: ({ children }) => <pre>{children}</pre>,
-                            blockquote: ({ children }) => <blockquote>{children}</blockquote>,
-                            h1: ({ children }) => <h1>{children}</h1>,
-                            h2: ({ children }) => <h2>{children}</h2>,
-                            h3: ({ children }) => <h3>{children}</h3>,
-                            ul: ({ children }) => <ul>{children}</ul>,
-                            ol: ({ children, ...props }) => <ol {...props}>{children}</ol>,
-                            li: ({ children, ...props }) => <li {...props}>{children}</li>,
-                        }}
-                    >
-                        {text}
-                    </Markdown>
-                </div>
-            </div>
+    // Function to render markdown with integrated pin slots and ads
+    const renderMarkdownWithPins = () => {
+        const lines = text.split('\n');
+        const result: Array<{ type: 'line' | 'pinSlot' | 'ad'; content?: string; index: number }> = [];
+        let pinIndex = 0;
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            result.push({ type: 'line', content: line, index: i });
+            
+            // Add a pin slot or ad after each line (including the last line)
+            if (pins.includes(pinIndex)) {
+                result.push({ type: 'ad', index: pinIndex });
+            } else {
+                result.push({ type: 'pinSlot', index: pinIndex });
+            }
+            pinIndex++;
+            
+            // Check if we need to skip consecutive empty lines
+            if (i < lines.length - 1) {
+                // Look ahead to see if there are consecutive empty lines
+                let j = i + 1;
+                let hasEmptyLines = false;
+                
+                // Skip over consecutive empty lines
+                while (j < lines.length && lines[j].trim() === '') {
+                    hasEmptyLines = true;
+                    j++;
+                }
+                
+                // If we found empty lines, skip them in the main loop
+                if (hasEmptyLines) {
+                    i = j - 1; // -1 because the for loop will increment
+                }
+            }
+        }
+        
+        return result;
+    };
 
-            {/* Right side - Pin insertion window */}
-            <div className={`pin-panel ${isSubmitting ? 'disabled' : ''}`}>
-                <div className="pin-panel-header">
-                    📌 Pin Placement Mode
-                    {pins.length > 0 && (
-                        <span className="pin-counter">
-                            ({pins.length} pin{pins.length !== 1 ? 's' : ''} placed)
-                        </span>
-                    )}
-                    <span className="pin-instructions">
-                        {isSubmitting ? 'Please wait...' : 'Click the + symbols to mark insertion points after each line'}
-                    </span>
-                </div>
-                
-                <div className="pin-content">
-                    {processedElements.map((element, elementIndex) => (
-                        <div key={elementIndex}>
-                            {element.type === 'line' ? (
-                                renderTextLine(element.content!, element.index)
-                            ) : (
-                                <PinSlot index={element.index} />
-                            )}
+    return (
+        <div className="integrated-markdown">
+            {renderMarkdownWithPins().map((element, elementIndex) => (
+                <div key={elementIndex}>
+                    {element.type === 'line' ? (
+                        <div className="markdown-line">
+                            <Markdown
+                                components={{
+                                    p: ({ children, ...props }) => <p className="markdown-p" {...props}>{children}</p>,
+                                    strong: ({ children, ...props }) => <strong className="markdown-strong" {...props}>{children}</strong>,
+                                    em: ({ children, ...props }) => <em className="markdown-em" {...props}>{children}</em>,
+                                    code: ({ children, ...props }) => <code className="markdown-code" {...props}>{children}</code>,
+                                    pre: ({ children, ...props }) => <pre className="markdown-pre" {...props}>{children}</pre>,
+                                    blockquote: ({ children, ...props }) => <blockquote className="markdown-blockquote" {...props}>{children}</blockquote>,
+                                    h1: ({ children, ...props }) => <h1 className="markdown-h1" {...props}>{children}</h1>,
+                                    h2: ({ children, ...props }) => <h2 className="markdown-h2" {...props}>{children}</h2>,
+                                    h3: ({ children, ...props }) => <h3 className="markdown-h3" {...props}>{children}</h3>,
+                                    ul: ({ children, ...props }) => <ul className="markdown-ul" {...props}>{children}</ul>,
+                                    ol: ({ children, ...props }) => <ol className="markdown-ol" {...props}>{children}</ol>,
+                                    li: ({ children, ...props }) => <li className="markdown-li" {...props}>{children}</li>,
+                                }}
+                            >
+                                {element.content || '\u00A0'}
+                            </Markdown>
                         </div>
-                    ))}
+                    ) : element.type === 'pinSlot' ? (
+                        <div className="inline-pin-slot">
+                            <button
+                                className="pin-button"
+                                onClick={() => !isSubmitting && onPinToggle(element.index)}
+                                disabled={isSubmitting}
+                                title="Add pin"
+                            >
+                                +
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="inline-ad-placeholder">
+                            <div className="ad-header">
+                                <span>📢 Advertisement</span>
+                                <button
+                                    className="remove-pin-button"
+                                    onClick={() => !isSubmitting && onPinToggle(element.index)}
+                                    disabled={isSubmitting}
+                                    title="Remove pin"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            <textarea
+                                className="ad-description-input"
+                                placeholder="Describe the advertisement content..."
+                                value={adDescriptions[element.index] || ''}
+                                onChange={(e) => !isSubmitting && onAdDescriptionChange(element.index, e.target.value)}
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                    )}
                 </div>
-                
-                {pins.length > 0 && (
-                    <div className="pin-status">
-                        <strong>Active Pins:</strong> {pins.sort((a, b) => a - b).map(pin => `Position ${pin + 1}`).join(', ')}
-                        <button 
-                            className="clear-button"
-                            onClick={() => {
-                                if (!isSubmitting) {
-                                    pins.forEach(pin => onPinToggle(pin)); // Remove all pins
-                                }
-                            }}
-                            disabled={isSubmitting}
-                        >
-                            Clear All
-                        </button>
-                    </div>
-                )}
-            </div>
+            ))}
         </div>
     );
 }
@@ -223,7 +251,7 @@ const AdPlacementAndDescriptionTaskView = React.forwardRef<{ setAndCheckTaskResp
             (pinIndex) => !adDescriptions[pinIndex] || adDescriptions[pinIndex].trim() === ''
         );
         if (localInsertionList.length > 0 && hasEmptyAdDescription) {
-            throw new Error('Please provide a description for every pin before submitting.');
+            throw new Error('Please provide a description for every ad placement before submitting.');
         }
         
         // Call the onSubmit callback
@@ -258,34 +286,7 @@ const AdPlacementAndDescriptionTaskView = React.forwardRef<{ setAndCheckTaskResp
                     />
                 </div>
 
-                {/* Ad Description Section */}
-                {localInsertionList.length > 0 && (
-                    <div className={`ad-descriptions-section ${isSubmitting ? 'disabled' : ''}`}>
-                        <h3 className="ad-descriptions-title">
-                            📝 Ad Descriptions ({localInsertionList.length} pin{localInsertionList.length !== 1 ? 's' : ''})
-                        </h3>
-                        <p className="ad-descriptions-subtitle">
-                            {isSubmitting ? 'Please wait while processing...' : 'Describe what type of advertisement would be appropriate for each pin:'}
-                        </p>
-                        
-                        <div className="ad-descriptions-grid">
-                            {localInsertionList.sort((a, b) => a - b).map((pinIndex) => (
-                                <div key={pinIndex} className="ad-description-item">
-                                    <label className="ad-description-label">
-                                        Position {pinIndex + 1}:
-                                    </label>
-                                    <textarea
-                                        className="ad-description-textarea"
-                                        value={adDescriptions[pinIndex] || ''}
-                                        onChange={(e) => handleAdDescriptionChange(pinIndex, e.target.value)}
-                                        placeholder="Describe what type of ad would be appropriate here (e.g., 'Kitchen equipment ad for woks or stir-fry pans')"
-                                        disabled={isSubmitting}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+
             </div>
         </div>
     );

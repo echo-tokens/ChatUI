@@ -98,7 +98,19 @@ const claimAndLoadTask = async (userId) => {
       type: 'ad_placement_and_description',
       title: 'Review Ad Placement',
       description: 'Review and improve ad placement for better user experience',
-      instructions: 'Place the pins in the response below where you think advertisements would be appropriate. Prioritize user experience and only select locations that could serve relevant, useful ads for products or services someone would primarily purchase online (i.e. not groceries). As a general guideline, it\'s probably not appropriate to place more than three pins/ads in one response. If no ads are appropriate, submit without any pins. After placing a pin, a box will appear below the response section. In this box, describe what type of ad would be appropriate for that pin location. Please ensure that you are writing the advertisement description for the correct pin -- they are ordered.\n\nFor example, if the prompt asks how to make stir fry and the response mentions a wok, the line after a mention of the wok would be a good place to insert an ad for a wok. Only place ads AFTER (not before) the relevant line(s) in the response.',
+      instructions: [
+        "1) Read the user query and response.",
+        "2) Insert an advertisement(s) in the response below where you think an advertisement(s) would be most appropriate.",
+        "3) In each advertisement box, write a description for the type of ad that would be appropriate for that location (e.g. 'Kitchen equipment ad for woks or stir-fry pans').",
+        "4) Click submit.",
+        "",
+        "Some guidelines:",
+        "- Prioritize user experience by only inserting ads that are relevant to the user's goal/intent.",
+        "- Ads should be for products or services someone would primarily purchase online (i.e. not groceries).",
+        "- Do not place more than one or two ads in one response.",
+        "- If no ads are appropriate, submit without inserting any ads.",
+        "- Only place ads AFTER (not before) the relevant line(s) in the response. For example, if the response mentions a wok, the line after a mention of the wok would be a good place to insert an ad for a wok.",
+      ].join('\n'),
       data: {
         user_query: 'What are some good places to eat in San Francisco?',
         response: `## 🍽️ Top Places to Eat in San Francisco
