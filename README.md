@@ -43,6 +43,7 @@ ECHO_STREAM_API_KEY=dummy
 
 # Security
 JWT_SECRET=your_jwt_secret_here
+JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
 CREDS_KEY=your_creds_encryption_key
 CREDS_IV=your_creds_iv
 
