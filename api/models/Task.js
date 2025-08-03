@@ -14,7 +14,7 @@ const getTaskStats = async (userId) => {
     return {
       tasks_completed: 0,
       total_earnings: 0,
-      available_tasks: 5, // Mock available tasks
+      available_tasks: 1, // Mock available tasks
       pending_earnings: 0
     };
   } catch (error) {
