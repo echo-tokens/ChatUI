@@ -135,19 +135,19 @@ function PinnableText({ text, pins, onPinToggle, adDescriptions, onAdDescription
                         <div className="flex-1">
                             <Markdown
                                 components={{
-                                    p: ({ children, ...props }) => <p className="my-0 leading-6" {...props}>{children}</p>,
-                                    strong: ({ children, ...props }) => <strong className="font-bold" {...props}>{children}</strong>,
-                                    em: ({ children, ...props }) => <em className="italic" {...props}>{children}</em>,
-                                    code: ({ children, ...props }) => <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>,
-                                    pre: ({ children, ...props }) => <pre className="bg-gray-100 dark:bg-gray-700 p-3 rounded overflow-auto my-0 text-sm font-mono leading-6" {...props}>{children}</pre>,
-                                    blockquote: ({ children, ...props }) => <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 my-0 italic text-gray-600 dark:text-gray-400" {...props}>{children}</blockquote>,
-                                    h1: ({ children, ...props }) => <h1 className="text-2xl font-bold my-0 mb-0 text-gray-900 dark:text-white" {...props}>{children}</h1>,
-                                    h2: ({ children, ...props }) => <h2 className="text-xl font-bold my-0 mb-0 text-gray-900 dark:text-white" {...props}>{children}</h2>,
-                                    h3: ({ children, ...props }) => <h3 className="text-lg font-bold my-0 mb-0 text-gray-900 dark:text-white" {...props}>{children}</h3>,
-                                    ul: ({ children, ...props }) => <ul className="list-disc pl-5 my-0" {...props}>{children}</ul>,
-                                    ol: ({ children, ...props }) => <ol className="list-decimal pl-5 my-0" {...props}>{children}</ol>,
-                                    li: ({ children, ...props }) => <li className="list-item my-0 leading-6" {...props}>{children}</li>,
-                                    hr: ({ ...props }) => <hr className="my-4 border-gray-300 dark:border-gray-600" {...props} />,
+                                    p: ({ children, ...props }) => <p className="my-0 leading-6 text-[var(--text-primary)]" {...props}>{children}</p>,
+                                    strong: ({ children, ...props }) => <strong className="font-bold text-[var(--text-primary)]" {...props}>{children}</strong>,
+                                    em: ({ children, ...props }) => <em className="italic text-[var(--text-primary)]" {...props}>{children}</em>,
+                                    code: ({ children, ...props }) => <code className="bg-[var(--surface-tertiary)] dark:bg-[var(--surface-tertiary)] px-1 py-0.5 rounded text-sm font-mono text-[var(--text-primary)]" {...props}>{children}</code>,
+                                    pre: ({ children, ...props }) => <pre className="bg-[var(--surface-tertiary)] dark:bg-[var(--surface-tertiary)] p-3 rounded overflow-auto my-0 text-sm font-mono leading-6 text-[var(--text-primary)]" {...props}>{children}</pre>,
+                                    blockquote: ({ children, ...props }) => <blockquote className="border-l-4 border-[var(--border-medium)] pl-4 my-0 italic text-[var(--text-secondary)]" {...props}>{children}</blockquote>,
+                                    h1: ({ children, ...props }) => <h1 className="text-2xl font-bold my-0 mb-0 text-[var(--text-primary)]" {...props}>{children}</h1>,
+                                    h2: ({ children, ...props }) => <h2 className="text-xl font-bold my-0 mb-0 text-[var(--text-primary)]" {...props}>{children}</h2>,
+                                    h3: ({ children, ...props }) => <h3 className="text-lg font-bold my-0 mb-0 text-[var(--text-primary)]" {...props}>{children}</h3>,
+                                    ul: ({ children, ...props }) => <ul className="list-disc pl-5 my-0 text-[var(--text-primary)]" {...props}>{children}</ul>,
+                                    ol: ({ children, ...props }) => <ol className="list-decimal pl-5 my-0 text-[var(--text-primary)]" {...props}>{children}</ol>,
+                                    li: ({ children, ...props }) => <li className="list-item my-0 leading-6 text-[var(--text-primary)]" {...props}>{children}</li>,
+                                    hr: ({ ...props }) => <hr className="my-4 border-[var(--border-medium)]" {...props} />,
                                 }}
                             >
                                 {element.content || '\u00A0'}
@@ -156,22 +156,28 @@ function PinnableText({ text, pins, onPinToggle, adDescriptions, onAdDescription
                     ) : element.type === 'pinSlot' ? (
                         <div className="absolute flex justify-start items-center p-0 -ml-10" style={{ top: '50%', transform: 'translateY(-50%)' }}>
                             <button
-                                className="p-1 border border-[var(--border-medium)] dark:border-[var(--border-heavy)] bg-transparent cursor-pointer transition-all duration-200 hover:bg-[var(--surface-hover)] dark:hover:bg-[var(--surface-hover)] rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                className="p-1 border border-[var(--border-medium)] dark:border-[var(--border-heavy)] bg-transparent cursor-pointer transition-all duration-200 hover:bg-[var(--surface-hover)] dark:hover:bg-[var(--surface-hover)] rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center relative group"
                                 onClick={() => !isSubmitting && onPinToggle(element.index)}
                                 disabled={isSubmitting}
-                                title="Add pin"
+                                // title="Insert Ad Here"
                                                             >
                                     <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '4px' }}>
                                         <path d="M3 2L9 6L3 10" stroke="var(--border-medium)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="dark:stroke-[var(--border-heavy)]"/>
                                     </svg>
+                                    {/* Custom tooltip */}
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 dark:bg-gray-900 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                        Insert Ad Here
+                                        {/* Tooltip arrow */}
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800 dark:border-t-gray-900"></div>
+                                    </div>
                             </button>
                         </div>
                     ) : (
-                        <div className="my-2 p-3 pr-4 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg border-l-4 border-l-green-500 relative min-h-20 block">
-                            <div className="flex justify-between items-center italic text-gray-600 dark:text-gray-400 text-sm font-normal mb-2">
+                        <div className="my-2 p-3 pr-4 bg-[var(--surface-tertiary)] border border-[var(--border-medium)] rounded-lg border-l-4 border-l-green-500 relative min-h-20 block">
+                            <div className="flex justify-between items-center italic text-[var(--text-secondary)] text-sm font-normal mb-2">
                                 <span>📢 Advertisement</span>
                                 <button
-                                    className="bg-none border-none text-gray-600 dark:text-gray-400 text-lg cursor-pointer p-0 w-5 h-5 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed min-w-5 min-h-5"
+                                    className="bg-none border-none text-[var(--text-secondary)] text-lg cursor-pointer p-0 w-5 h-5 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-[var(--surface-hover)] hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed min-w-5 min-h-5"
                                     onClick={() => !isSubmitting && onPinToggle(element.index)}
                                     disabled={isSubmitting}
                                     title="Remove pin"
@@ -180,7 +186,7 @@ function PinnableText({ text, pins, onPinToggle, adDescriptions, onAdDescription
                                 </button>
                             </div>
                             <textarea
-                                className="w-full min-h-15 p-2 mt-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 resize-y font-inherit transition-colors duration-200 focus:outline-none focus:border-green-500 focus:shadow-sm disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed block"
+                                className="w-full min-h-15 p-2 mt-2 text-sm border border-[var(--border-medium)] rounded bg-[var(--surface-primary)] text-[var(--text-primary)] resize-y font-inherit transition-colors duration-200 focus:outline-none focus:border-green-500 focus:shadow-sm disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed block"
                                 placeholder="Describe the advertisement content..."
                                 value={adDescriptions[element.index] || ''}
                                 onChange={(e) => !isSubmitting && onAdDescriptionChange(element.index, e.target.value)}
@@ -270,15 +276,15 @@ const AdPlacementAndDescriptionTaskView = React.forwardRef<{ setAndCheckTaskResp
     return (
         <div className="p-0 m-0">
             <div className="p-0">
-                <h3 className="text-left font-bold mb-2.5 pl-0">User Query</h3>
-                <div className="text-left mb-5 pl-0">
+                <h3 className="text-left font-bold mb-2.5 pl-0 text-[var(--text-primary)]">User Query</h3>
+                <div className="text-left mb-5 pl-0 text-[var(--text-primary)]">
                     <Markdown>{localPrompt}</Markdown>
                 </div>
                 
-                <h3 className="text-left font-bold mb-4 pl-0">
+                <h3 className="text-left font-bold mb-4 pl-0 text-[var(--text-primary)]">
                     Response
                 </h3>
-                <div className="text-left mb-5 ml-0 mr-0 border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800 p-4 pl-12">
+                <div className="text-left mb-5 ml-0 mr-0 border border-[var(--border-light)] dark:border-[var(--border-medium)] rounded bg-[var(--surface-secondary)] dark:bg-[var(--surface-tertiary)] p-4 pl-12">
                     <PinnableText 
                         text={localResponse} 
                         pins={localInsertionList} 
