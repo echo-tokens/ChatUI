@@ -164,8 +164,8 @@ export default function TaskEarningsDashboard({
   }
 
   return (
-    <div className={cn('h-full overflow-y-auto bg-gray-50 dark:bg-gray-900', className)}>
-      <div className="max-w-4xl mx-auto p-6 space-y-6 min-h-full">
+    <div className={cn('h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 flex items-center', className)}>
+      <div className="max-w-6xl mx-auto p-6 space-y-6 w-full">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -252,9 +252,9 @@ export default function TaskEarningsDashboard({
         {/* Task Statistics */}
         {statsLoaded && taskStats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <CheckCircle className="h-5 w-5 text-green-500" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between h-32">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                 <span className="font-medium text-gray-900 dark:text-white">Tasks Completed</span>
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -262,9 +262,9 @@ export default function TaskEarningsDashboard({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <DollarSign className="h-5 w-5 text-blue-500" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between h-32">
+              <div className="flex items-start gap-3">
+                <DollarSign className="h-5 w-5 text-blue-500 mt-0.5" />
                 <span className="font-medium text-gray-900 dark:text-white">Total Earnings</span>
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -272,9 +272,9 @@ export default function TaskEarningsDashboard({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <Play className="h-5 w-5 text-orange-500" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between h-32">
+              <div className="flex items-start gap-3">
+                <Play className="h-5 w-5 text-orange-500 mt-0.5" />
                 <span className="font-medium text-gray-900 dark:text-white">Available Tasks</span>
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -282,9 +282,9 @@ export default function TaskEarningsDashboard({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <RefreshCw className="h-5 w-5 text-purple-500" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between h-32">
+              <div className="flex items-start gap-3">
+                <RefreshCw className="h-5 w-5 text-purple-500 mt-0.5" />
                 <span className="font-medium text-gray-900 dark:text-white">Pending</span>
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
