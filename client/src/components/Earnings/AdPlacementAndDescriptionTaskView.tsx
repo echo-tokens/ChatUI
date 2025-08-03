@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Markdown from 'react-markdown';
-import './AdPlacementAndDescriptionTaskView.css';
+
 
 // Types for the pinnable text component
 interface PinnableTextProps {
@@ -128,56 +128,59 @@ function PinnableText({ text, pins, onPinToggle, adDescriptions, onAdDescription
     };
 
     return (
-        <div className="integrated-markdown">
+        <div className="flex flex-col gap-0">
             {renderMarkdownWithPins().map((element, elementIndex) => (
-                <div key={elementIndex}>
+                <div key={elementIndex} className="relative">
                     {element.type === 'line' ? (
-                        <div className="markdown-line">
+                        <div className="flex-1">
                             <Markdown
                                 components={{
-                                    p: ({ children, ...props }) => <p className="markdown-p" {...props}>{children}</p>,
-                                    strong: ({ children, ...props }) => <strong className="markdown-strong" {...props}>{children}</strong>,
-                                    em: ({ children, ...props }) => <em className="markdown-em" {...props}>{children}</em>,
-                                    code: ({ children, ...props }) => <code className="markdown-code" {...props}>{children}</code>,
-                                    pre: ({ children, ...props }) => <pre className="markdown-pre" {...props}>{children}</pre>,
-                                    blockquote: ({ children, ...props }) => <blockquote className="markdown-blockquote" {...props}>{children}</blockquote>,
-                                    h1: ({ children, ...props }) => <h1 className="markdown-h1" {...props}>{children}</h1>,
-                                    h2: ({ children, ...props }) => <h2 className="markdown-h2" {...props}>{children}</h2>,
-                                    h3: ({ children, ...props }) => <h3 className="markdown-h3" {...props}>{children}</h3>,
-                                    ul: ({ children, ...props }) => <ul className="markdown-ul" {...props}>{children}</ul>,
-                                    ol: ({ children, ...props }) => <ol className="markdown-ol" {...props}>{children}</ol>,
-                                    li: ({ children, ...props }) => <li className="markdown-li" {...props}>{children}</li>,
+                                    p: ({ children, ...props }) => <p className="my-0 leading-6" {...props}>{children}</p>,
+                                    strong: ({ children, ...props }) => <strong className="font-bold" {...props}>{children}</strong>,
+                                    em: ({ children, ...props }) => <em className="italic" {...props}>{children}</em>,
+                                    code: ({ children, ...props }) => <code className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono" {...props}>{children}</code>,
+                                    pre: ({ children, ...props }) => <pre className="bg-gray-100 dark:bg-gray-700 p-3 rounded overflow-auto my-0 text-sm font-mono leading-6" {...props}>{children}</pre>,
+                                    blockquote: ({ children, ...props }) => <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 my-0 italic text-gray-600 dark:text-gray-400" {...props}>{children}</blockquote>,
+                                    h1: ({ children, ...props }) => <h1 className="text-2xl font-bold my-0 mb-0 text-gray-900 dark:text-white" {...props}>{children}</h1>,
+                                    h2: ({ children, ...props }) => <h2 className="text-xl font-bold my-0 mb-0 text-gray-900 dark:text-white" {...props}>{children}</h2>,
+                                    h3: ({ children, ...props }) => <h3 className="text-lg font-bold my-0 mb-0 text-gray-900 dark:text-white" {...props}>{children}</h3>,
+                                    ul: ({ children, ...props }) => <ul className="list-disc pl-5 my-0" {...props}>{children}</ul>,
+                                    ol: ({ children, ...props }) => <ol className="list-decimal pl-5 my-0" {...props}>{children}</ol>,
+                                    li: ({ children, ...props }) => <li className="list-item my-0 leading-6" {...props}>{children}</li>,
+                                    hr: ({ ...props }) => <hr className="my-4 border-gray-300 dark:border-gray-600" {...props} />,
                                 }}
                             >
                                 {element.content || '\u00A0'}
                             </Markdown>
                         </div>
                     ) : element.type === 'pinSlot' ? (
-                        <div className="inline-pin-slot">
+                        <div className="absolute flex justify-start items-center p-0 -ml-10" style={{ top: '50%', transform: 'translateY(-50%)' }}>
                             <button
-                                className="pin-button"
+                                className="p-1 border border-[var(--border-medium)] dark:border-[var(--border-heavy)] bg-transparent cursor-pointer transition-all duration-200 hover:bg-[var(--surface-hover)] dark:hover:bg-[var(--surface-hover)] rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                 onClick={() => !isSubmitting && onPinToggle(element.index)}
                                 disabled={isSubmitting}
                                 title="Add pin"
-                            >
-                                +
+                                                            >
+                                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '4px' }}>
+                                        <path d="M3 2L9 6L3 10" stroke="var(--border-medium)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="dark:stroke-[var(--border-heavy)]"/>
+                                    </svg>
                             </button>
                         </div>
                     ) : (
-                        <div className="inline-ad-placeholder">
-                            <div className="ad-header">
+                        <div className="my-2 p-3 pr-4 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg border-l-4 border-l-green-500 relative min-h-20 block">
+                            <div className="flex justify-between items-center italic text-gray-600 dark:text-gray-400 text-sm font-normal mb-2">
                                 <span>📢 Advertisement</span>
                                 <button
-                                    className="remove-pin-button"
+                                    className="bg-none border-none text-gray-600 dark:text-gray-400 text-lg cursor-pointer p-0 w-5 h-5 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed min-w-5 min-h-5"
                                     onClick={() => !isSubmitting && onPinToggle(element.index)}
                                     disabled={isSubmitting}
                                     title="Remove pin"
-                                >
-                                    ×
+                                                                >
+                                ×
                                 </button>
                             </div>
                             <textarea
-                                className="ad-description-input"
+                                className="w-full min-h-15 p-2 mt-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 resize-y font-inherit transition-colors duration-200 focus:outline-none focus:border-green-500 focus:shadow-sm disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 disabled:cursor-not-allowed block"
                                 placeholder="Describe the advertisement content..."
                                 value={adDescriptions[element.index] || ''}
                                 onChange={(e) => !isSubmitting && onAdDescriptionChange(element.index, e.target.value)}
@@ -265,17 +268,17 @@ const AdPlacementAndDescriptionTaskView = React.forwardRef<{ setAndCheckTaskResp
     }, [ref, setAndCheckTaskResponse]);
 
     return (
-        <div className="task-container">
-            <div className="task-content">
-                <h3 className="section-title">User Query</h3>
-                <div className="prompt-content">
+        <div className="p-0 m-0">
+            <div className="p-0">
+                <h3 className="text-left font-bold mb-2.5 pl-0">User Query</h3>
+                <div className="text-left mb-5 pl-0">
                     <Markdown>{localPrompt}</Markdown>
                 </div>
                 
-                <h3 className="section-title-response">
+                <h3 className="text-left font-bold mb-4 pl-0">
                     Response
                 </h3>
-                <div className="response-container">
+                <div className="text-left mb-5 ml-0 mr-0 border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800 p-4 pl-12">
                     <PinnableText 
                         text={localResponse} 
                         pins={localInsertionList} 
@@ -285,8 +288,6 @@ const AdPlacementAndDescriptionTaskView = React.forwardRef<{ setAndCheckTaskResp
                         isSubmitting={isSubmitting}
                     />
                 </div>
-
-
             </div>
         </div>
     );

@@ -100,7 +100,7 @@ const claimAndLoadTask = async (userId) => {
       description: 'Review and improve ad placement for better user experience',
       instructions: [
         "1) Read the user query and response.",
-        "2) Insert an advertisement(s) in the response below where you think an advertisement(s) would be most appropriate.",
+        "2) Insert an advertisement(s) in the response below by clicking the (>) icon where you think an advertisement(s) would be most appropriate.",
         "3) In each advertisement box, write a description for the type of ad that would be appropriate for that location (e.g. 'Kitchen equipment ad for woks or stir-fry pans').",
         "4) Click submit.",
         "",
