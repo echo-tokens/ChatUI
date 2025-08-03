@@ -15,6 +15,7 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [isThankYouFading, setIsThankYouFading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackDisabled, setFeedbackDisabled] = useState(false);
   const [thumbsRating, setThumbsRating] = useState<'up' | 'down' | null>(null);
@@ -67,6 +68,17 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
     setTimeout(() => {
       setIsSubmitting(false);
     }, 700);
+    
+    // Step 5: Start fading out thank you message after 2 seconds
+    setTimeout(() => {
+      setIsThankYouFading(true);
+    }, 2000);
+    
+    // Step 6: Hide thank you message after fade out completes
+    setTimeout(() => {
+      setShowThankYou(false);
+      setIsThankYouFading(false);
+    }, 2300);
     
     // Reset form data
     setPositionRating('');
@@ -312,7 +324,8 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
           <div 
             className={cn(
               "mt-3 mb-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg",
-              "transition-all duration-300 ease-in-out opacity-100"
+              "transition-all duration-300 ease-in-out",
+              isThankYouFading ? "opacity-0" : "opacity-100"
             )}
             style={{
               zIndex: 20
