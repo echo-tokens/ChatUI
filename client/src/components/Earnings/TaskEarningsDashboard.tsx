@@ -9,7 +9,6 @@ interface TaskStats {
   tasks_completed: number;
   total_earnings: number;
   available_tasks: number;
-  pending_earnings: number;
 }
 
 interface TaskEarningsDashboardProps {
@@ -32,6 +31,7 @@ export default function TaskEarningsDashboard({
   const [statsLoaded, setStatsLoaded] = useState(false);
   const [dataSharingStatusLoaded, setDataSharingStatusLoaded] = useState(false);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
+  const [agreementError, setAgreementError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -51,7 +51,7 @@ export default function TaskEarningsDashboard({
     try {
       setStatsError(null);
       setStatsLoaded(false);
-      const response = await fetch(`/api/tasks/stats/${user.id}`, {
+      const response = await fetch(`/api/tasks/stats/${user._id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -76,7 +76,7 @@ export default function TaskEarningsDashboard({
       setDataSharingError(null);
       setDataSharingStatusLoaded(false);
 
-      const response = await fetch(`/api/tasks/data-sharing-status/${user.id}`, {
+      const response = await fetch(`/api/tasks/data-sharing-status/${user._id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -118,15 +118,18 @@ export default function TaskEarningsDashboard({
   };
 
   const handleEnrollDataSharing = () => {
+    setAgreementError(null);
     setShowAgreementModal(true);
   };
 
   const handleAcceptAgreement = async () => {
     try {
-      const response = await fetch(`/api/tasks/accept-data-sharing/${user.id}`, {
+      setAgreementError(null);
+      const response = await fetch(`/api/tasks/accept-data-sharing/${user._id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -137,11 +140,12 @@ export default function TaskEarningsDashboard({
         // Refresh task data after enrollment
         await loadTaskData();
       } else {
-        throw new Error(`Failed to accept data sharing agreement: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        setAgreementError(`Failed to accept data sharing agreement: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
       }
     } catch (error) {
       console.error('Error accepting data sharing agreement:', error);
-      throw new Error('Failed to accept data sharing agreement. Please try again.');
+      setAgreementError('Failed to accept data sharing agreement. Please try again.');
     }
   };
 
@@ -251,7 +255,7 @@ export default function TaskEarningsDashboard({
 
         {/* Task Statistics */}
         {statsLoaded && taskStats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between h-32">
               <div className="flex items-start gap-3">
                 <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
@@ -262,6 +266,16 @@ export default function TaskEarningsDashboard({
               </div>
             </div>
 
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between h-32">
+            <div className="flex items-start gap-3">
+              <Play className="h-5 w-5 text-orange-500 mt-0.5" />
+              <span className="font-medium text-gray-900 dark:text-white">Available Tasks</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {taskStats.available_tasks}
+            </div>
+          </div>
+
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between h-32">
               <div className="flex items-start gap-3">
                 <DollarSign className="h-5 w-5 text-blue-500 mt-0.5" />
@@ -269,26 +283,6 @@ export default function TaskEarningsDashboard({
               </div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatCurrency(taskStats.total_earnings)}
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between h-32">
-              <div className="flex items-start gap-3">
-                <Play className="h-5 w-5 text-orange-500 mt-0.5" />
-                <span className="font-medium text-gray-900 dark:text-white">Available Tasks</span>
-              </div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {taskStats.available_tasks}
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between h-32">
-              <div className="flex items-start gap-3">
-                <RefreshCw className="h-5 w-5 text-purple-500 mt-0.5" />
-                <span className="font-medium text-gray-900 dark:text-white">Pending</span>
-              </div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(taskStats.pending_earnings)}
               </div>
             </div>
           </div>
@@ -375,9 +369,6 @@ export default function TaskEarningsDashboard({
               >
                 <Play className="h-5 w-5 mr-2" />
                 Start Tasks
-                {statsLoaded && taskStats && taskStats.available_tasks > 0 && (
-                  <span className="ml-1">({taskStats.available_tasks} available)</span>
-                )}
               </Button>
             );
 
@@ -406,6 +397,7 @@ export default function TaskEarningsDashboard({
         onClose={() => setShowAgreementModal(false)}
         onAgree={handleAcceptAgreement}
         user={user}
+        error={agreementError}
       />
     </div>
   );

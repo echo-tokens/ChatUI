@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Send, CheckCircle, AlertCircle, RefreshCw, Clock } from 'lucide-react';
+import { ArrowLeft, Send, RefreshCw, AlertCircle, Clock } from 'lucide-react';
 import { cn } from '~/utils';
 import { Button } from '~/components/ui';
 import AdPlacementAndDescriptionTaskView from './AdPlacementAndDescriptionTaskView';
 import { useAuthContext } from '~/hooks/AuthContext';
+import { useOutletContext } from 'react-router-dom';
+import type { ContextType } from '~/common';
 
 interface Task {
   id: string;
-  type: 'ad_placement_and_description' | 'ad_feedback';
-  title: string;
+  task_type: 'ad_placement_and_description' | 'ad_feedback';
+  task_title: string;
   description: string;
   instructions: string;
-  data: any;
   estimated_time_minutes: number;
   reward_amount: number;
+  data: any;
+  minimum_trust_level: number;
 }
 
 interface TaskSubmission {
@@ -29,6 +32,7 @@ interface TasksViewProps {
 
 export default function TasksView({ user, onBack, className }: TasksViewProps) {
   const { token } = useAuthContext();
+  const { navVisible } = useOutletContext<ContextType>();
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,9 +89,15 @@ export default function TasksView({ user, onBack, className }: TasksViewProps) {
       setIsSubmitting(true);
       setError(null);
 
+      // Get the current task response data from the task view
+      let currentTaskResponse = taskResponse;
+      if (taskViewRef.current && taskViewRef.current.setAndCheckTaskResponse) {
+        currentTaskResponse = await taskViewRef.current.setAndCheckTaskResponse();
+      }
+
       const submission: TaskSubmission = {
         task_id: currentTask.id,
-        response: taskResponse
+        response: currentTaskResponse
       };
 
       const response = await fetch(`/api/tasks/submit`, {
@@ -116,7 +126,7 @@ export default function TasksView({ user, onBack, className }: TasksViewProps) {
   const renderTaskContent = () => {
     if (!currentTask) return null;
 
-    switch (currentTask.type) {
+    switch (currentTask.task_type) {
       case 'ad_placement_and_description':
         return (
           <AdPlacementAndDescriptionTaskView 
@@ -161,6 +171,7 @@ export default function TasksView({ user, onBack, className }: TasksViewProps) {
 
   const isSubmitDisabled = () => {
     if (!currentTask || isSubmitting) return true;
+    return false;
   };
 
   const formatCurrency = (amount: number) => {
@@ -212,27 +223,22 @@ export default function TasksView({ user, onBack, className }: TasksViewProps) {
   return (
     <div className={cn('h-full overflow-y-auto bg-gray-50 dark:bg-gray-900', className)}>
       <div className="w-4/5 max-w-6xl mx-auto p-6 space-y-6 min-h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <Button onClick={onBack} variant="outline" className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
-          
-          {currentTask && (
-            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                ~{currentTask.estimated_time_minutes} min
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-green-600 dark:text-green-400 font-medium">
+        {/* Task Info */}
+        {currentTask && (
+          <div className="flex items-center justify-end gap-4 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              ~{currentTask.estimated_time_minutes} min
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg px-3 py-1">
+                <span className="text-green-700 dark:text-green-300 font-semibold">
                   {formatCurrency(currentTask.reward_amount)}
                 </span>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -249,14 +255,14 @@ export default function TasksView({ user, onBack, className }: TasksViewProps) {
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {currentTask.title}
+                {currentTask.task_title}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
+              {/* <p className="text-gray-600 dark:text-gray-300 mb-4">
                 {currentTask.description}
-              </p>
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">Instructions:</h3>
-                <div className="text-blue-800 dark:text-blue-200 whitespace-pre-wrap">{currentTask.instructions}</div>
+              </p> */}
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-1">Instructions:</h3>
+                <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{currentTask.instructions}</div>
               </div>
             </div>
 
@@ -269,9 +275,8 @@ export default function TasksView({ user, onBack, className }: TasksViewProps) {
                   try {
                     if (taskViewRef.current && taskViewRef.current.setAndCheckTaskResponse) {
                       await taskViewRef.current.setAndCheckTaskResponse();
-                    } else {
-                      await submitTask();
                     }
+                    await submitTask();
                   } catch (error) {
                     setPopupError(error instanceof Error ? error.message : 'An error occurred while submitting the task.');
                   }
@@ -304,21 +309,27 @@ export default function TasksView({ user, onBack, className }: TasksViewProps) {
 
       {/* Error Popup */}
       {popupError && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 max-w-md mx-4">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          style={{
+            marginLeft: navVisible ? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 320 : 260) + 'px' : '0px',
+            width: `calc(100vw - ${navVisible ? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 320 : 260) : 0}px)`,
+          }}
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md mx-auto shadow-xl">
             <div className="flex items-center gap-3 mb-4">
-              <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+              <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Submission Error
               </h3>
             </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
+            <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
               {popupError}
             </p>
             <div className="flex justify-end">
               <Button
                 onClick={() => setPopupError(null)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 min-w-[80px]"
               >
                 OK
               </Button>

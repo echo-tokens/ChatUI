@@ -138,6 +138,18 @@ const userSchema = new Schema<IUser>(
       },
       default: {},
     },
+    data_sharing_enrolled: {
+      type: Boolean,
+      default: false,
+    },
+    data_sharing_enrolled_at: {
+      type: Date,
+      default: null,
+    },
+    trust_level: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true },
 );

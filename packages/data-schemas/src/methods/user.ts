@@ -42,6 +42,9 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
     const userData: Partial<IUser> = {
       ...data,
       expiresAt: disableTTL ? undefined : new Date(Date.now() + 604800 * 1000), // 1 week in milliseconds
+      trust_level: 0,
+      data_sharing_enrolled: false,
+      data_sharing_enrolled_at: undefined,
     };
 
     if (disableTTL) {

@@ -249,11 +249,14 @@ const AdPlacementAndDescriptionTaskView = React.forwardRef<{ setAndCheckTaskResp
     };
 
     const setAndCheckTaskResponse = async () => {
-        // Set the task response with current state
-        setTaskResponse({
+        // Create the response data
+        const responseData = {
             pin_list: localInsertionList,
             ad_descriptions: adDescriptions
-        });
+        };
+
+        // Set the task response with current state
+        setTaskResponse(responseData);
 
         // Check if any ad descriptions are empty
         const hasEmptyAdDescription = localInsertionList.some(
@@ -263,8 +266,8 @@ const AdPlacementAndDescriptionTaskView = React.forwardRef<{ setAndCheckTaskResp
             throw new Error('Please provide a description for every ad placement before submitting.');
         }
         
-        // Call the onSubmit callback
-        onSubmit();
+        // Return the response data so the parent can use it immediately
+        return responseData;
     }
 
     useEffect(() => {
@@ -284,7 +287,7 @@ const AdPlacementAndDescriptionTaskView = React.forwardRef<{ setAndCheckTaskResp
                 <h3 className="text-left font-bold mb-4 pl-0 text-[var(--text-primary)]">
                     Response
                 </h3>
-                <div className="text-left mb-5 ml-0 mr-0 border border-[var(--border-light)] dark:border-[var(--border-medium)] rounded bg-[var(--surface-secondary)] dark:bg-[var(--surface-tertiary)] p-4 pl-12">
+                <div className="text-left mb-5 ml-0 mr-0 rounded bg-white dark:bg-gray-800 pt-0 pb-4 pl-12 pr-4">
                     <PinnableText 
                         text={localResponse} 
                         pins={localInsertionList} 

@@ -35,6 +35,9 @@ export interface IUser extends Document {
   };
   createdAt?: Date;
   updatedAt?: Date;
+  trust_level?: number;
+  data_sharing_enrolled?: boolean;
+  data_sharing_enrolled_at?: Date;
 }
 
 export interface BalanceConfig {

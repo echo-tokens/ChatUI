@@ -8,9 +8,10 @@ const {
   acceptDataSharing, 
   claimAndLoadTask, 
   submitTask,
-  getUserTaskHistory,
   getAvailableTaskTypes
 } = require('~/models/Task');
+const jwt = require('jsonwebtoken');
+const { User } = require('~/db/models');
 
 // Apply JWT authentication to all task routes
 router.use(requireJwtAuth);
@@ -24,9 +25,14 @@ router.use(requireJwtAuth);
 router.get('/stats/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
     
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    if (decoded.id !== userId) {
+      return res.status(401).json({ error: 'JWT user ID does not match requested user ID'});
     }
 
     const stats = await getTaskStats(userId);
@@ -44,9 +50,14 @@ router.get('/stats/:userId', async (req, res) => {
 router.get('/data-sharing-status/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
     
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
+    } 
+    
+    if (decoded.id !== userId) {
+      return res.status(401).json({ error: 'JWT user ID does not match requested user ID'});
     }
 
     const status = await getDataSharingStatus(userId);
@@ -64,9 +75,14 @@ router.get('/data-sharing-status/:userId', async (req, res) => {
 router.post('/accept-data-sharing/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
     
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    if (decoded.id !== userId) {
+      return res.status(401).json({ error: 'JWT user ID does not match requested user ID'});
     }
 
     const result = await acceptDataSharing(userId);
@@ -84,9 +100,23 @@ router.post('/accept-data-sharing/:userId', async (req, res) => {
 router.post('/claim-and-load/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    if (decoded.id !== userId) {
+      return res.status(401).json({ error: 'JWT user ID does not match requested user ID'});
+    }
+
+    // Load from mongodb, check if user is enrolled in data sharing agreement
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
+    }
+    if (!user.data_sharing_enrolled) {
+      return res.status(400).json({ error: 'User is not enrolled in data sharing agreement' });
     }
 
     const task = await claimAndLoadTask(userId);
@@ -117,7 +147,7 @@ router.post('/submit', async (req, res) => {
   try {
     const { task_id, response } = req.body;
     const userId = req.user?.id || req.body.user_id; // Get user ID from auth or request body
-    
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
     if (!task_id) {
       return res.status(400).json({ error: 'Task ID is required' });
     }
@@ -126,38 +156,15 @@ router.post('/submit', async (req, res) => {
       return res.status(400).json({ error: 'User ID is required' });
     }
 
+    if (decoded.id !== userId) {
+      return res.status(401).json({ error: 'JWT user ID does not match requested user ID'});
+    }
+
     const result = await submitTask(userId, task_id, response);
     res.json(result);
   } catch (error) {
     logger.error('[Tasks.submitTask] Error:', error);
     res.status(500).json({ error: error.message || 'Failed to submit task' });
-  }
-});
-
-/**
- * GET /api/tasks/history/:userId
- * Get user's task history
- */
-router.get('/history/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { limit, offset, status } = req.query;
-    
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
-    }
-
-    const options = {
-      limit: limit ? parseInt(limit) : 20,
-      offset: offset ? parseInt(offset) : 0,
-      status
-    };
-
-    const history = await getUserTaskHistory(userId, options);
-    res.json(history);
-  } catch (error) {
-    logger.error('[Tasks.getUserTaskHistory] Error:', error);
-    res.status(500).json({ error: error.message || 'Failed to get task history' });
   }
 });
 
