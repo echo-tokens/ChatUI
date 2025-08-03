@@ -105,7 +105,7 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
       </style>
       <div
         className={cn(
-          'my-1 w-fit overflow-hidden rounded-lg transition-all duration-150 ease-out cursor-pointer not-prose',
+          'my-1 w-full overflow-hidden rounded-lg transition-all duration-150 ease-out cursor-pointer not-prose',
           'border border-brand-purple/10 bg-brand-purple/[0.02] px-3 pt-0 pb-0',
           'dark:border-brand-purple/15 dark:bg-brand-purple/[0.03]',
           // Hover effects with subtle transitions
@@ -153,7 +153,7 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
         </div>
         
         {/* Feedback buttons */}
-        <div className="flex justify-end gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-end gap-1 mt-2 -mr-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={(e) => {
               e.stopPropagation();
