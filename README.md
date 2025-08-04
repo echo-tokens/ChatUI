@@ -32,12 +32,12 @@ Create `.env` file in root:
 # Core Database
 MONGO_URI=mongodb://localhost:27017/librechat
 
-# API Keys (get from respective providers)
-OPENAI_API_KEY=your_openai_key
-ANTHROPIC_API_KEY=your_anthropic_key  
-GOOGLE_API_KEY=your_google_key
+# API Keys - DISABLED PROVIDERS
+# OPENAI_API_KEY=your_openai_key         # DISABLED - Provider disabled
+# ANTHROPIC_API_KEY=your_anthropic_key   # DISABLED - Provider disabled  
+# GOOGLE_API_KEY=your_google_key         # DISABLED - Provider disabled
 
-# Echo Streaming Service (Railway)
+# Echo Streaming Service (Railway) - Primary AI Provider
 ECHO_STREAM_BASE_URL=https://streaming-service.railway.internal
 ECHO_STREAM_API_KEY=dummy
 

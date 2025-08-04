@@ -3,15 +3,15 @@ const { EModelEndpoint } = require('librechat-data-provider');
 const { generateConfig } = require('~/server/utils/handleText');
 
 const {
-  OPENAI_API_KEY: openAIApiKey,
+  // OPENAI_API_KEY: openAIApiKey,               // DISABLED - Provider disabled
   AZURE_ASSISTANTS_API_KEY: azureAssistantsApiKey,
   ASSISTANTS_API_KEY: assistantsApiKey,
   AZURE_API_KEY: azureOpenAIApiKey,
-  ANTHROPIC_API_KEY: anthropicApiKey,
+  // ANTHROPIC_API_KEY: anthropicApiKey,         // DISABLED - Provider disabled
   CHATGPT_TOKEN: chatGPTToken,
   PLUGINS_USE_AZURE,
-  GOOGLE_KEY: googleKey,
-  OPENAI_REVERSE_PROXY,
+  // GOOGLE_KEY: googleKey,                      // DISABLED - Provider disabled
+  // OPENAI_REVERSE_PROXY,                       // DISABLED - Provider disabled
   AZURE_OPENAI_BASEURL,
   ASSISTANTS_BASE_URL,
   AZURE_ASSISTANTS_BASE_URL,
@@ -21,18 +21,18 @@ const useAzurePlugins = !!PLUGINS_USE_AZURE;
 
 const userProvidedOpenAI = useAzurePlugins
   ? isUserProvided(azureOpenAIApiKey)
-  : isUserProvided(openAIApiKey);
+  : false; // No longer using direct OpenAI
 
 module.exports = {
   config: {
-    openAIApiKey,
+    // openAIApiKey,                              // DISABLED - Provider disabled
     azureOpenAIApiKey,
     useAzurePlugins,
     userProvidedOpenAI,
-    googleKey,
-    [EModelEndpoint.anthropic]: generateConfig(anthropicApiKey),
+    // googleKey,                                 // DISABLED - Provider disabled
+    // [EModelEndpoint.anthropic]: generateConfig(anthropicApiKey),           // DISABLED
     [EModelEndpoint.chatGPTBrowser]: generateConfig(chatGPTToken),
-    [EModelEndpoint.openAI]: generateConfig(openAIApiKey, OPENAI_REVERSE_PROXY),
+    // [EModelEndpoint.openAI]: generateConfig(openAIApiKey, OPENAI_REVERSE_PROXY),  // DISABLED
     [EModelEndpoint.azureOpenAI]: generateConfig(azureOpenAIApiKey, AZURE_OPENAI_BASEURL),
     [EModelEndpoint.assistants]: generateConfig(
       assistantsApiKey,
