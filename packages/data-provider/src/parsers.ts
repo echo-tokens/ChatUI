@@ -52,15 +52,15 @@ const endpointSchemas: Record<EndpointSchemaKey, EndpointSchema> = {
 /** Get the enabled endpoints from the `ENDPOINTS` environment variable */
 export function getEnabledEndpoints() {
   const defaultEndpoints: string[] = [
-    EModelEndpoint.openAI,
+    // EModelEndpoint.openAI,        // DISABLED - Provider disabled
     EModelEndpoint.agents,
     EModelEndpoint.assistants,
     EModelEndpoint.azureAssistants,
     EModelEndpoint.azureOpenAI,
-    EModelEndpoint.google,
+    // EModelEndpoint.google,        // DISABLED - Provider disabled
     EModelEndpoint.chatGPTBrowser,
     EModelEndpoint.gptPlugins,
-    EModelEndpoint.anthropic,
+    // EModelEndpoint.anthropic,     // DISABLED - Provider disabled
     EModelEndpoint.bedrock,
   ];
 

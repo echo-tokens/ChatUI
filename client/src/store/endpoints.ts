@@ -7,11 +7,11 @@ const defaultConfig: TEndpointsConfig = {
   [EModelEndpoint.azureAssistants]: null,
   [EModelEndpoint.assistants]: null,
   [EModelEndpoint.agents]: null,
-  [EModelEndpoint.openAI]: null,
+  // [EModelEndpoint.openAI]: null,        // DISABLED - Provider disabled
   [EModelEndpoint.chatGPTBrowser]: null,
   [EModelEndpoint.gptPlugins]: null,
-  [EModelEndpoint.google]: null,
-  [EModelEndpoint.anthropic]: null,
+  // [EModelEndpoint.google]: null,        // DISABLED - Provider disabled  
+  // [EModelEndpoint.anthropic]: null,     // DISABLED - Provider disabled
   [EModelEndpoint.custom]: null,
 };
 

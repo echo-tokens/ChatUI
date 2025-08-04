@@ -17,23 +17,23 @@ const { logger } = require('~/config');
 async function loadDefaultModels(req) {
   try {
     const [
-      openAI,
-      anthropic,
+      // openAI,              // DISABLED - Provider disabled
+      // anthropic,           // DISABLED - Provider disabled
       azureOpenAI,
       gptPlugins,
       assistants,
       azureAssistants,
-      google,
+      // google,              // DISABLED - Provider disabled
       bedrock,
     ] = await Promise.all([
-      getOpenAIModels({ user: req.user.id }).catch((error) => {
-        logger.error('Error fetching OpenAI models:', error);
-        return [];
-      }),
-      getAnthropicModels({ user: req.user.id }).catch((error) => {
-        logger.error('Error fetching Anthropic models:', error);
-        return [];
-      }),
+      // getOpenAIModels({ user: req.user.id }).catch((error) => {           // DISABLED
+      //   logger.error('Error fetching OpenAI models:', error);               // DISABLED
+      //   return [];                                                          // DISABLED
+      // }),                                                                   // DISABLED
+      // getAnthropicModels({ user: req.user.id }).catch((error) => {         // DISABLED
+      //   logger.error('Error fetching Anthropic models:', error);            // DISABLED
+      //   return [];                                                          // DISABLED
+      // }),                                                                   // DISABLED
       getOpenAIModels({ user: req.user.id, azure: true }).catch((error) => {
         logger.error('Error fetching Azure OpenAI models:', error);
         return [];
@@ -52,10 +52,10 @@ async function loadDefaultModels(req) {
         logger.error('Error fetching Azure OpenAI Assistants API models:', error);
         return [];
       }),
-      Promise.resolve(getGoogleModels()).catch((error) => {
-        logger.error('Error getting Google models:', error);
-        return [];
-      }),
+      // Promise.resolve(getGoogleModels()).catch((error) => {                // DISABLED
+      //   logger.error('Error getting Google models:', error);                // DISABLED
+      //   return [];                                                          // DISABLED
+      // }),                                                                   // DISABLED
       Promise.resolve(getBedrockModels()).catch((error) => {
         logger.error('Error getting Bedrock models:', error);
         return [];
@@ -63,10 +63,10 @@ async function loadDefaultModels(req) {
     ]);
 
     return {
-      [EModelEndpoint.openAI]: openAI,
-      [EModelEndpoint.agents]: openAI,
-      [EModelEndpoint.google]: google,
-      [EModelEndpoint.anthropic]: anthropic,
+      // [EModelEndpoint.openAI]: openAI,               // DISABLED - Provider disabled
+      [EModelEndpoint.agents]: [],                      // Updated to empty array since openAI is disabled
+      // [EModelEndpoint.google]: google,               // DISABLED - Provider disabled
+      // [EModelEndpoint.anthropic]: anthropic,         // DISABLED - Provider disabled
       [EModelEndpoint.gptPlugins]: gptPlugins,
       [EModelEndpoint.azureOpenAI]: azureOpenAI,
       [EModelEndpoint.assistants]: assistants,
