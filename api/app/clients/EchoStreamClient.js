@@ -8,7 +8,6 @@ const { createStreamEventHandlers } = require('@librechat/api');
 class EchoStreamClient extends BaseClient {
   constructor(apiKey, options = {}) {
     debug(debugGroups.GENERAL, 'EchoStreamClient constructor called with:', {
-      apiKey: apiKey ? '***MASKED***' : 'null',
       baseURL: options.reverseProxyUrl,
       options: Object.keys(options)
     });
@@ -21,7 +20,6 @@ class EchoStreamClient extends BaseClient {
     
     debug(debugGroups.GENERAL, 'EchoStreamClient final URL:', this.baseURL);
     this.headers = {
-      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       'X-Service-Type': 'echo-proxy',
       'User-Agent': 'LibreChat/1.0',
@@ -143,12 +141,17 @@ class EchoStreamClient extends BaseClient {
       ...this.addParams
     };
 
+    const headers = {
+      ...this.headers,
+      'Authorization': `Bearer ${opts.authToken}`
+    }
+
     debug(debugGroups.STREAMING, 'sendCompletion called with payload:', JSON.stringify(payload, null, 2));
     debug(debugGroups.STREAMING, 'Final request payload:', JSON.stringify(requestPayload, null, 2));
     debug(debugGroups.STREAMING, 'Full request details:', {
       url: this.baseURL,
       method: 'POST',
-      headers: this.headers,
+      headers: headers,
       hasModel: !!requestPayload.model,
       model: requestPayload.model,
       messagesCount: Array.isArray(requestPayload.messages) ? requestPayload.messages.length : 'not-array'
@@ -170,7 +173,7 @@ class EchoStreamClient extends BaseClient {
       const response = await axios({
         method: 'POST',
         url: this.baseURL,
-        headers: this.headers,
+        headers: headers,
         data: requestPayload,
         timeout: 120000,
         responseType: 'stream',

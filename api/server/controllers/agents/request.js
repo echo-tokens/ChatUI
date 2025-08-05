@@ -311,6 +311,7 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
       progressOptions: {
         res,
       },
+      authToken: req.headers['Authorization']?.split(' ')[1] || req.headers['authorization']?.split(' ')[1]
     };
     
     debug(debugGroups.MESSAGE_FLOW, 'AGENTS/REQUEST - messageOptions with userMessageId:', {
