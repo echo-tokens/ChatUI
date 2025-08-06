@@ -4,6 +4,8 @@ const { logger } = require('~/config');
 const { debug, debugGroups } = require('~/server/utils/debug');
 const { SplitStreamHandler } = require('@librechat/agents');
 const { createStreamEventHandlers } = require('@librechat/api');
+const { jwtVerify } = require('jose');
+const { supabase } = require('~/lib/supabase');
 
 class EchoStreamClient extends BaseClient {
   constructor(apiKey, options = {}) {
@@ -130,6 +132,60 @@ class EchoStreamClient extends BaseClient {
     return { prompt: apiMessages };
   }
 
+  async getUserIDFromToken(token) {
+    // Retrieve API key for this specific user id from supabase, where user_id is retrieved via JWT
+    if (token) {
+      try {
+        const secret = new TextEncoder().encode(process.env.CHAT_UI_JWT_SECRET);
+        try {
+          const { payload } = await jwtVerify(token, secret);
+          return payload.id;
+        } catch (err) {
+          debug(debugGroups.GENERAL, 'JWT verification failed:', err.message);
+          throw new Error('Error verifying JWT');
+        }
+      } catch (err) {
+        debug(debugGroups.GENERAL, 'Error verifying JWT:', err.message);
+        throw new Error('Error verifying JWT');
+      }
+    } else {
+      debug(debugGroups.GENERAL, 'No auth token found');
+      throw new Error('No auth token found');
+    }
+  }
+
+  async getUserAPIKeyFromUserID(userId) {
+    if (userId) {
+      try {
+        const { data, error } = await supabase
+          .from('streaming_service_api_keys')
+          .select('api_key')
+          .eq('user_id', userId)
+          .eq('active', true)
+          .single();
+        if (error) {
+          debug(debugGroups.GENERAL, 'Error fetching user API key:', error.message);
+          throw new Error('Error fetching user API key');
+        } else if (data && data.api_key) {
+          debug(debugGroups.GENERAL, `Fetched API key for user ${userId}`);
+          return data.api_key;
+        }
+      } catch (err) {
+        debug(debugGroups.GENERAL, 'Exception fetching user API key:', err.message);
+        throw new Error('Error fetching user API key');
+      }
+    } else {
+      debug(debugGroups.GENERAL, 'No user ID found');
+      throw new Error('No user ID found');
+    }
+  }
+
+  async getUserApiKeyFromToken(token) {
+    // Retrieve API key for this specific user id from supabase, where user_id is retrieved via JWT
+    const userId = await this.getUserIDFromToken(token);
+    return this.getUserAPIKeyFromUserID(userId);
+  }
+
   /** @type {sendCompletion} */
   async sendCompletion(payload, opts = {}) {
     let reply = '';
@@ -141,9 +197,10 @@ class EchoStreamClient extends BaseClient {
       ...this.addParams
     };
 
+    const userApiKey = await this.getUserApiKeyFromToken(opts.authToken);
     const headers = {
       ...this.headers,
-      'Authorization': `Bearer ${opts.authToken}`
+      'Authorization': `Bearer ${userApiKey}`
     }
 
     debug(debugGroups.STREAMING, 'sendCompletion called with payload:', JSON.stringify(payload, null, 2));

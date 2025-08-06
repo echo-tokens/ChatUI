@@ -14,7 +14,8 @@
     "create-user": "node ./create-user.js",
     "invite-user": "node ./invite-user.js",
     "ban-user": "node ./ban-user.js",
-    "delete-user": "node ./delete-user.js"
+    "delete-user": "node ./delete-user.js",
+    "test-api-keys": "node ./test-api-key-creation.js"
   },
   "repository": {
     "type": "git",
@@ -115,7 +116,8 @@
     "winston": "^3.11.0",
     "winston-daily-rotate-file": "^5.0.0",
     "youtube-transcript": "^1.2.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",

@@ -24,6 +24,8 @@ const { isEmailDomainAllowed } = require('~/server/services/domains');
 const { checkEmailConfig, sendEmail } = require('~/server/utils');
 const { getBalanceConfig } = require('~/server/services/Config');
 const { registerSchema } = require('~/strategies/validators');
+const { supabase } = require('~/lib/supabase');
+const { v4: uuidv4 } = require('uuid');
 
 const domains = {
   client: process.env.DOMAIN_CLIENT,
@@ -159,6 +161,44 @@ const verifyEmail = async (req) => {
 };
 
 /**
+ * Create an API key for a user in Supabase
+ * @param {string} userId - The user's ID
+ * @returns {Promise<{success: boolean, apiKey?: string, error?: string}>}
+ */
+const createUserAPIKey = async (userId) => {
+  try {
+    if (!supabase) {
+      logger.warn('Supabase not configured, skipping API key creation');
+      return { success: false, error: 'Supabase not configured' };
+    }
+
+    // Generate a unique API key
+    const apiKey = `sk-${uuidv4().replace(/-/g, '')}`;
+    
+    // Insert the API key into the streaming_service_api_keys table
+    const { data, error } = await supabase
+      .from('streaming_service_api_keys')
+      .insert({
+        user_id: userId,
+        api_key: apiKey,
+        active: false, // Start as inactive
+        created_at: new Date().toISOString()
+      });
+
+    if (error) {
+      logger.error('Error creating API key in Supabase:', error);
+      return { success: false, error: error.message };
+    }
+
+    logger.info(`API key created for user ${userId}`);
+    return { success: true, apiKey };
+  } catch (err) {
+    logger.error('Exception creating API key:', err);
+    return { success: false, error: err.message };
+  }
+};
+
+/**
  * Register a new user.
  * @param {MongoUser} user <email, password, name, username>
  * @param {Partial<MongoUser>} [additionalData={}]
@@ -223,6 +263,14 @@ const registerUser = async (user, additionalData = {}) => {
 
     const newUser = await createUser(newUserData, balanceConfig, disableTTL, true);
     newUserId = newUser._id;
+    
+    // Create API key for the new user
+    const apiKeyResult = await createUserAPIKey(newUserId.toString());
+    if (!apiKeyResult.success) {
+      logger.warn(`Failed to create API key for user ${newUserId}: ${apiKeyResult.error}`);
+      // Don't fail registration if API key creation fails
+    }
+    
     if (emailEnabled && !newUser.emailVerified) {
       await sendVerificationEmail({
         _id: newUserId,
