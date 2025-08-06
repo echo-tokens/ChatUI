@@ -25,7 +25,7 @@ router.use(requireJwtAuth);
 router.get('/stats/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.CHAT_UI_JWT_SECRET);
     
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
@@ -50,7 +50,7 @@ router.get('/stats/:userId', async (req, res) => {
 router.get('/data-sharing-status/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.CHAT_UI_JWT_SECRET);
     
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
@@ -75,7 +75,7 @@ router.get('/data-sharing-status/:userId', async (req, res) => {
 router.post('/accept-data-sharing/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.CHAT_UI_JWT_SECRET);
     
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
@@ -100,7 +100,7 @@ router.post('/accept-data-sharing/:userId', async (req, res) => {
 router.post('/claim-and-load/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.CHAT_UI_JWT_SECRET);
 
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
@@ -147,7 +147,7 @@ router.post('/submit', async (req, res) => {
   try {
     const { task_id, response } = req.body;
     const userId = req.user?.id || req.body.user_id; // Get user ID from auth or request body
-    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.JWT_SECRET);
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.CHAT_UI_JWT_SECRET);
     if (!task_id) {
       return res.status(400).json({ error: 'Task ID is required' });
     }

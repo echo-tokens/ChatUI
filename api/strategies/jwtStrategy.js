@@ -8,7 +8,7 @@ const jwtLogin = () =>
   new JwtStrategy(
     {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_SECRET,
+      secretOrKey: process.env.CHAT_UI_JWT_SECRET,
     },
     async (payload, done) => {
       try {

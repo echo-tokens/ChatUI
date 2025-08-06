@@ -26,7 +26,7 @@ const { deleteAssistant } = require('~/models/Assistant');
 const { getFlowStateManager } = require('~/config');
 const { getLogStores } = require('~/cache');
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.CHAT_UI_JWT_SECRET;
 const toolNameRegex = /^[a-zA-Z0-9_-]+$/;
 const replaceSeparatorRegex = new RegExp(actionDomainSeparator, 'g');
 

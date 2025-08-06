@@ -219,7 +219,7 @@ export function createSessionMethods(mongoose: typeof import('mongoose')) {
           id: session.user,
           sessionId: session._id,
         },
-        secret: process.env.JWT_REFRESH_SECRET!,
+        secret: process.env.CHAT_UI_JWT_REFRESH_SECRET!,
         expirationTime: Math.floor((expiresIn - Date.now()) / 1000),
       });
 

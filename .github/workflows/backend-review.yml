@@ -16,7 +16,7 @@ jobs:
     env:
       MONGO_URI: ${{ secrets.MONGO_URI }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      CHAT_UI_JWT_SECRET: ${{ secrets.CHAT_UI_JWT_SECRET }}
       CREDS_KEY: ${{ secrets.CREDS_KEY }}
       CREDS_IV: ${{ secrets.CREDS_IV }}
       BAN_VIOLATIONS: ${{ secrets.BAN_VIOLATIONS }}

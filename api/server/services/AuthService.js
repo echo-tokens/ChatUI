@@ -507,7 +507,7 @@ const resendVerificationEmail = async (req) => {
  * @returns {String} - The generated JWT token
  */
 const generateShortLivedToken = (userId, expireIn = '5m') => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+  return jwt.sign({ id: userId }, process.env.CHAT_UI_JWT_SECRET, {
     expiresIn: expireIn,
     algorithm: 'HS256',
   });

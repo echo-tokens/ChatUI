@@ -8,7 +8,7 @@ const { getFlowStateManager } = require('~/config');
 const { getLogStores } = require('~/cache');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.CHAT_UI_JWT_SECRET;
 
 /**
  * Handles the OAuth callback and exchanges the authorization code for tokens.

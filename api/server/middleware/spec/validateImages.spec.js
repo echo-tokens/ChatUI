@@ -16,7 +16,7 @@ describe('validateImageRequest middleware', () => {
       send: jest.fn(),
     };
     next = jest.fn();
-    process.env.JWT_REFRESH_SECRET = 'test-secret';
+    process.env.CHAT_UI_JWT_REFRESH_SECRET = 'test-secret';
   });
 
   afterEach(() => {
@@ -45,7 +45,7 @@ describe('validateImageRequest middleware', () => {
   test('should return 403 if refresh token is expired', () => {
     const expiredToken = jwt.sign(
       { id: validObjectId, exp: Math.floor(Date.now() / 1000) - 3600 },
-      process.env.JWT_REFRESH_SECRET,
+      process.env.CHAT_UI_JWT_REFRESH_SECRET,
     );
     req.headers.cookie = `refreshToken=${expiredToken}`;
     validateImageRequest(req, res, next);
@@ -56,7 +56,7 @@ describe('validateImageRequest middleware', () => {
   test('should call next() for valid image path', () => {
     const validToken = jwt.sign(
       { id: validObjectId, exp: Math.floor(Date.now() / 1000) + 3600 },
-      process.env.JWT_REFRESH_SECRET,
+      process.env.CHAT_UI_JWT_REFRESH_SECRET,
     );
     req.headers.cookie = `refreshToken=${validToken}`;
     req.originalUrl = `/images/${validObjectId}/example.jpg`;
@@ -67,7 +67,7 @@ describe('validateImageRequest middleware', () => {
   test('should return 403 for invalid image path', () => {
     const validToken = jwt.sign(
       { id: validObjectId, exp: Math.floor(Date.now() / 1000) + 3600 },
-      process.env.JWT_REFRESH_SECRET,
+      process.env.CHAT_UI_JWT_REFRESH_SECRET,
     );
     req.headers.cookie = `refreshToken=${validToken}`;
     req.originalUrl = '/images/65cfb246f7ecadb8b1e8036c/example.jpg'; // Different ObjectId
@@ -79,7 +79,7 @@ describe('validateImageRequest middleware', () => {
   test('should return 403 for invalid ObjectId format', () => {
     const validToken = jwt.sign(
       { id: validObjectId, exp: Math.floor(Date.now() / 1000) + 3600 },
-      process.env.JWT_REFRESH_SECRET,
+      process.env.CHAT_UI_JWT_REFRESH_SECRET,
     );
     req.headers.cookie = `refreshToken=${validToken}`;
     req.originalUrl = '/images/123/example.jpg'; // Invalid ObjectId
@@ -92,7 +92,7 @@ describe('validateImageRequest middleware', () => {
   test('should prevent file traversal attempts', () => {
     const validToken = jwt.sign(
       { id: validObjectId, exp: Math.floor(Date.now() / 1000) + 3600 },
-      process.env.JWT_REFRESH_SECRET,
+      process.env.CHAT_UI_JWT_REFRESH_SECRET,
     );
     req.headers.cookie = `refreshToken=${validToken}`;
 
@@ -115,7 +115,7 @@ describe('validateImageRequest middleware', () => {
   test('should handle URL encoded characters in valid paths', () => {
     const validToken = jwt.sign(
       { id: validObjectId, exp: Math.floor(Date.now() / 1000) + 3600 },
-      process.env.JWT_REFRESH_SECRET,
+      process.env.CHAT_UI_JWT_REFRESH_SECRET,
     );
     req.headers.cookie = `refreshToken=${validToken}`;
     req.originalUrl = `/images/${validObjectId}/image%20with%20spaces.jpg`;

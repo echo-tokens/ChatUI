@@ -82,7 +82,7 @@ const refreshController = async (req, res) => {
     }
   }
   try {
-    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const payload = jwt.verify(refreshToken, process.env.CHAT_UI_JWT_REFRESH_SECRET);
     const user = await getUserById(payload.id, '-password -__v -totpSecret');
     if (!user) {
       return res.status(401).redirect('/login');

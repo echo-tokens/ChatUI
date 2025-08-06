@@ -20,7 +20,7 @@ const verify2FAWithTempToken = async (req, res) => {
 
     let payload;
     try {
-      payload = jwt.verify(tempToken, process.env.JWT_SECRET);
+      payload = jwt.verify(tempToken, process.env.CHAT_UI_JWT_SECRET);
     } catch (err) {
       return res.status(401).json({ message: 'Invalid or expired temporary token' });
     }

@@ -168,7 +168,7 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
         provider: user.provider,
         email: user.email,
       },
-      secret: process.env.JWT_SECRET,
+      secret: process.env.CHAT_UI_JWT_SECRET,
       expirationTime: expires / 1000,
     });
   }

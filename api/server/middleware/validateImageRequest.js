@@ -37,7 +37,7 @@ function validateImageRequest(req, res, next) {
 
   let payload;
   try {
-    payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    payload = jwt.verify(refreshToken, process.env.CHAT_UI_JWT_REFRESH_SECRET);
   } catch (err) {
     logger.warn('[validateImageRequest]', err);
     return res.status(403).send('Access Denied');
