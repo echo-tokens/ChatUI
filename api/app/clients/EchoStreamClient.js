@@ -157,6 +157,7 @@ class EchoStreamClient extends BaseClient {
   async getUserAPIKeyFromUserID(userId) {
     if (userId) {
       try {
+        debug(debugGroups.GENERAL, 'Fetching user API key for user ID:', userId);
         const { data, error } = await supabase
           .from('streaming_service_api_keys')
           .select('api_key')
