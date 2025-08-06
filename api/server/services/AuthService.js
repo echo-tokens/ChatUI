@@ -181,7 +181,7 @@ const createUserAPIKey = async (userId) => {
       .insert({
         user_id: userId,
         api_key: apiKey,
-        active: false, // Start as inactive
+        active: true, // Start as active
         created_at: new Date().toISOString()
       });
 
