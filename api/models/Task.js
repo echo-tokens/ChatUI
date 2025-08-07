@@ -1,12 +1,11 @@
 const { logger } = require('@librechat/data-schemas');
 const { User } = require('~/db/models');
 const { updateUser, createUser } = require('~/models');
-const { createClient } = require('@supabase/supabase-js');
+const { supabase } = require('~/lib/supabase');
 const OpenAI = require('openai');
 
 const MOCK = false;
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
