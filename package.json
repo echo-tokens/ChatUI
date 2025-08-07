@@ -71,7 +71,8 @@
         "b:test:api": "cd api && bun run b:test",
         "b:balance": "bun config/add-balance.js",
         "b:list-balances": "bun config/list-balances.js",
-        "reset-terms": "node config/reset-terms.js"
+        "reset-terms": "node config/reset-terms.js",
+        "generate-api-keys": "node scripts/generate-api-keys.js"
     },
     "repository": {
         "type": "git",
@@ -147,6 +148,7 @@
     "dependencies": {
         "@supabase/supabase-js": "^2.53.0",
         "http-proxy-middleware": "^3.0.5",
-        "js-yaml": "^4.1.0"
+        "js-yaml": "^4.1.0",
+        "uuid": "^9.0.1"
     }
 }

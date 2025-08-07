@@ -27,7 +27,7 @@
 #       E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
 #       E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
 #       CHAT_UI_JWT_SECRET: ${{ secrets.CHAT_UI_JWT_SECRET }}
-#       JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+#       CHAT_UI_JWT_REFRESH_SECRET: ${{ secrets.CHAT_UI_JWT_REFRESH_SECRET }}
 #       CREDS_KEY: ${{ secrets.CREDS_KEY }}
 #       CREDS_IV: ${{ secrets.CREDS_IV }}
 #       DOMAIN_CLIENT: ${{ secrets.DOMAIN_CLIENT }}
