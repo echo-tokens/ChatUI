@@ -42,13 +42,23 @@ export function parseAdContent(text: string): ParsedContent[] {
     
     // Check for [LINK:url] format inside ad content and extract the link
     const linkMatch = processedContent.match(/\[(?:link|LINK):([^\]]+)\]/);
+    const taskMatch = processedContent.match(/\[(?:task_id|TASK_ID):([^\]]+)\]/);
     if (linkMatch && linkMatch[1]) {
       // Remove the [LINK:url] from display content but keep link info for AdTile
-      const displayContent = processedContent.replace(/\[(?:link|LINK):[^\]]+\]/, '').trim();
+      const displayContent = processedContent.replace(/\[(?:link|LINK):[^\]]+\]/, '').replace(/\[(?:task_id|TASK_ID):[^\]]+\]/, '').trim();
       const linkUrl = linkMatch[1].trim();
-      
-      // Store both content and link in a format the AdTile can use
-      const adTileContent = `${displayContent}\n[link]${linkUrl}[/link]`;
+
+      let adTileContent = '';
+      if (taskMatch && taskMatch[1]) {
+        const taskInfo = taskMatch[1].trim().split('/');
+        const taskId = taskInfo[0];
+        const taskPrice = taskInfo[1];
+        // Store both content and link in a format the AdTile can use
+        adTileContent = `${displayContent}\n[link]${linkUrl}[/link] [task_id]${taskId}[/task_id] [task_price]${taskPrice}[/task_price]`;
+        console.log('Ad Tile Content:', adTileContent);
+      } else {
+        adTileContent = `${displayContent}\n[link]${linkUrl}[/link]`;
+      }
       
       parts.push({
         type: 'ad_tile',

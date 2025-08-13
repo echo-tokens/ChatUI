@@ -1,5 +1,7 @@
 import { memo, useState, useEffect } from 'react';
 import { cn } from '~/utils';
+import { useAuthContext } from '~/hooks/AuthContext';
+import TaskComponent from './TaskTypes';
 
 interface AdTileProps {
   content: string;
@@ -12,6 +14,7 @@ interface AdTileProps {
 }
 
 const AdTile = memo(({ content, showCursor }: AdTileProps) => {
+  const { token } = useAuthContext();
   const [isVisible, setIsVisible] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
@@ -22,6 +25,12 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
   const [positionRating, setPositionRating] = useState('');
   const [relevancyRating, setRelevancyRating] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
+  const [isLoadingTask, setIsLoadingTask] = useState(false);
+  const [taskInfo, setTaskInfo] = useState<any>(null);
+  const [showTask, setShowTask] = useState(false);
+  const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+  const [showTaskThankYou, setShowTaskThankYou] = useState(false);
+  const [taskSubmitted, setTaskSubmitted] = useState(false);
 
   // Animate the tile appearance only for new content
   useEffect(() => {
@@ -33,10 +42,14 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
 
   // Simple content display - extract link and show just the ad text (based on original approach)
   const linkMatch = content.match(/\[link\](.*?)\[\/link\]/);
-  const description = content.replace(/\[link\].*?\[\/link\]/g, '').trim().replace(/\[ADVERTISER: (.*?)\]/g, '');
+  const taskIdMatch = content.match(/\[task_id\](.*?)\[\/task_id\]/);
+  const taskPriceMatch = content.match(/\[task_price\](.*?)\[\/task_price\]/);
+  const description = content.replace(/\[link\].*?\[\/link\]/g, '').replace(/\[task_id\].*?\[\/task_id\]/g, '').replace(/\[task_price\].*?\[\/task_price\]/g, '').trim().replace(/\[ADVERTISER: (.*?)\]/g, '');
   const linkUrl = linkMatch && linkMatch[1] ? linkMatch[1].trim() : null;
   const advertiserNameMatch = content.match(/\[ADVERTISER: (.*?)\]/);
   const advertiserName = advertiserNameMatch ? advertiserNameMatch[1] : null;
+  const taskId = taskIdMatch && taskIdMatch[1] ? taskIdMatch[1].trim() : null;
+  const taskPrice = taskPriceMatch && taskPriceMatch[1] ? taskPriceMatch[1].trim() : null;
 
   const handleClick = () => {
     if (linkUrl) {
@@ -86,6 +99,65 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
     setFeedbackText('');
   };
 
+  const handleTaskSubmit = async (result: any) => {
+    console.log('Task submitted:', result);
+    
+    // Start fade out animation
+    setIsSubmittingTask(true);
+    
+    try {
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      // Submit task result to backend
+      const response = await fetch('/api/tasks/submit', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          taskId: taskId,
+          result: result
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const submitResult = await response.json();
+      console.log('Task submission result:', submitResult);
+      
+      // Fade out task
+      setShowTask(false);
+      setIsSubmittingTask(false);
+      setTaskInfo(null);
+      
+      // Mark task as submitted (permanent)
+      setTaskSubmitted(true);
+      
+      // Show thank you message for 3 seconds
+      setShowTaskThankYou(true);
+      setTimeout(() => {
+        setShowTaskThankYou(false);
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error submitting task:', error);
+      setIsSubmittingTask(false);
+    }
+  };
+
+  const handleTaskClose = () => {
+    setShowTask(false);
+    setTaskInfo(null);
+  };
+
+
+
 
   return (
     <>
@@ -101,11 +173,13 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
               transform: translateY(-20px) scale(1);
             }
           }
+          
+
         `}
       </style>
       <div
         className={cn(
-          'my-1 w-full overflow-hidden rounded-lg transition-all duration-150 ease-out cursor-pointer not-prose',
+          'my-1 w-full rounded-lg cursor-pointer not-prose ad-container',
           'border border-brand-purple/10 bg-brand-purple/[0.02] px-3 pt-0 pb-0',
           'dark:border-brand-purple/15 dark:bg-brand-purple/[0.03]',
           // Hover effects with subtle transitions
@@ -153,64 +227,168 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
         </div>
         
         {/* Feedback buttons */}
-        <div className="flex justify-end gap-1 mt-2 -mr-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setThumbsRating('up');
-              setShowFeedback(true);
-            }}
-            disabled={thumbsRating !== null}
-            className={cn(
-              "p-1 transition-colors",
-              thumbsRating === null 
-                ? "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" 
-                : thumbsRating === 'up'
-                ? "text-gray-800 dark:text-gray-200"
-                : "text-gray-300 dark:text-gray-600 opacity-50"
-            )}
-            title="Like this ad?"
-          >
-            <svg 
-              className={cn(
-                "w-4 h-4",
-                thumbsRating === null ? "fill-none stroke-current" : "fill-current"
-              )} 
-              viewBox="0 0 20 20"
-              strokeWidth={thumbsRating === null ? "1.5" : "0"}
+        <div className="flex justify-end items-center gap-1 mt-2 -mr-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
+          {/* Task completion text */}
+          {taskPrice && taskId && !taskSubmitted && (
+            <button
+              onClick={async (e) => {
+                e.stopPropagation();
+                try {
+                  if (!token) {
+                    console.error('No authentication token found');
+                    return;
+                  }
+
+                  setIsLoadingTask(true);
+
+                  // Call the task info endpoint
+                  const response = await fetch(`/api/tasks/info/${taskId}`, {
+                    method: 'GET',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                    }
+                  });
+
+                  if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+
+                  const taskInfoData = await response.json();
+                  console.log('Task info retrieved:', taskInfoData);
+                  
+                  // Set the task info and show the task interface
+                  setTaskInfo(taskInfoData);
+                  setShowTask(true);
+                  
+                } catch (error) {
+                  console.error('Error fetching task info:', error);
+                } finally {
+                  setIsLoadingTask(false);
+                }
+              }}
+              className="text-xs text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:underline transition-colors cursor-pointer mr-2"
             >
-              <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-            </svg>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setThumbsRating('down');
-              setShowFeedback(true);
-            }}
-            disabled={thumbsRating !== null}
-            className={cn(
-              "p-1 transition-colors",
-              thumbsRating === null 
-                ? "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" 
-                : thumbsRating === 'down'
-                ? "text-gray-800 dark:text-gray-200"
-                : "text-gray-300 dark:text-gray-600 opacity-50"
-            )}
-            title="Don't like this ad?"
-          >
-            <svg 
+              Earn ${parseFloat(taskPrice).toFixed(2)} by completing a short task
+            </button>
+          )}
+          
+          {/* Thumbs buttons */}
+          <div className="flex gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setThumbsRating('up');
+                setShowFeedback(true);
+              }}
+              disabled={thumbsRating !== null}
               className={cn(
-                "w-4 h-4",
-                thumbsRating === null ? "fill-none stroke-current" : "fill-current"
-              )} 
-              viewBox="0 0 20 20"
-              strokeWidth={thumbsRating === null ? "1.5" : "0"}
+                "p-1 transition-colors",
+                thumbsRating === null 
+                  ? "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" 
+                  : thumbsRating === 'up'
+                  ? "text-gray-800 dark:text-gray-200"
+                  : "text-gray-300 dark:text-gray-600 opacity-50"
+              )}
+              title="Like this ad?"
             >
-              <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.105-1.79l-.05-.025A4 4 0 0011.055 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z" />
-            </svg>
-          </button>
+              <svg 
+                className={cn(
+                  "w-4 h-4",
+                  thumbsRating === null ? "fill-none stroke-current" : "fill-current"
+                )} 
+                viewBox="0 0 20 20"
+                strokeWidth={thumbsRating === null ? "1.5" : "0"}
+              >
+                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setThumbsRating('down');
+                setShowFeedback(true);
+              }}
+              disabled={thumbsRating !== null}
+              className={cn(
+                "p-1 transition-colors",
+                thumbsRating === null 
+                  ? "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" 
+                  : thumbsRating === 'down'
+                  ? "text-gray-800 dark:text-gray-200"
+                  : "text-gray-300 dark:text-gray-600 opacity-50"
+              )}
+              title="Don't like this ad?"
+            >
+              <svg 
+                className={cn(
+                  "w-4 h-4",
+                  thumbsRating === null ? "fill-none stroke-current" : "fill-current"
+                )} 
+                viewBox="0 0 20 20"
+                strokeWidth={thumbsRating === null ? "1.5" : "0"}
+              >
+                <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.105-1.79l-.05-.025A4 4 0 0011.055 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z" />
+              </svg>
+            </button>
+          </div>
         </div>
+
+        {/* Loading animation */}
+        {isLoadingTask && (
+          <div 
+            className={cn(
+              "mt-3 mb-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700",
+              "transition-all duration-300 ease-in-out transform origin-top animate-fadeGrow"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 dark:border-blue-400"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                Loading task information...
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Task Interface */}
+        {showTask && taskInfo && (
+          <div 
+            className={cn(
+              "mt-3 mb-3 transition-all duration-300 ease-in-out",
+              isSubmittingTask ? "opacity-0 transform scale-95" : "opacity-100 transform scale-100"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <TaskComponent
+              taskInfo={taskInfo}
+              onSubmit={handleTaskSubmit}
+              onClose={handleTaskClose}
+            />
+          </div>
+        )}
+
+        {/* Task Thank You Message */}
+        {showTaskThankYou && (
+          <div 
+            className="mt-3 mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center space-x-2">
+              <svg 
+                className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" 
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                Thank you! Your task has been submitted successfully.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Feedback form */}
         {showFeedback && (
@@ -343,6 +521,8 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
           </div>
                 )}
       </div>
+
+
     </>
   );
 });
