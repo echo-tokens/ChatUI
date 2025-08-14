@@ -24,6 +24,8 @@ interface InlinePreferenceTaskProps {
 }
 
 const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
+
+
   const { token } = useAuthContext();
   const [selectedAds, setSelectedAds] = useState<Set<number>>(new Set());
   const [hasSelection, setHasSelection] = useState(false);
@@ -284,16 +286,21 @@ const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
         "overflow-y-clip overflow-x-visible transition-all duration-700 ease-in-out",
         isCollapsing ? "max-h-0" : "max-h-[1000px]"
       )}>
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 mb-4">
-          <div 
-            className="bg-gray-400 dark:bg-gray-500 h-1 rounded-full transition-all duration-100 ease-linear"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        {/* Reward and Instructions */}
-        <div className="flex items-center gap-3 mb-2 -mt-1 overflow-x-visible">
+        {/* Wrapper with rounded corners and top border progress */}
+        <div className="bg-white dark:bg-gray-900 rounded-lg border-t-4 border-r border-b border-l border-gray-200 dark:border-gray-700 p-2 relative">
+          {/* Top border progress indicator */}
+          <div className={cn(
+            "absolute -top-1 left-0 h-2 transition-all duration-100 ease-linear",
+            progress >= 100 ? "rounded-tr-xl bg-gray-300 dark:bg-gray-400" : "bg-gray-200 dark:bg-gray-300"
+          )}
+               style={{ 
+                 width: `${progress}%`,
+                 borderTopLeftRadius: '100px',
+                 borderTopRightRadius: progress >= 100 ? '100px' : '0px'
+               }} />
+          
+          {/* Reward and Instructions */}
+          <div className="flex items-center gap-3 mb-2 mt-1 overflow-x-visible">
           {adData.task?.price_usd && (
             <div className="relative">
               <span className={cn(
@@ -331,8 +338,8 @@ const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
                   ? 'border-blue-700 dark:border-blue-300 shadow-lg'
                   : 'border-blue-500 dark:border-blue-400 shadow-lg'
                 : isLoading 
-                  ? 'border-gray-200 dark:border-gray-600'
-                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500',
+                  ? 'border-gray-200 dark:border-gray-300'
+                  : 'border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400',
               isAnimating && selectedAds.has(index) && 'animate-pulse',
               'cursor-pointer' // Show pointer cursor
             )}
@@ -360,13 +367,6 @@ const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
           </div>
         ))}
         </div>
-
-        {/* Bottom Progress Bar */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 mt-4">
-          <div 
-            className="bg-gray-400 dark:bg-gray-500 h-1 rounded-full transition-all duration-100 ease-linear"
-            style={{ width: `${progress}%` }}
-          />
         </div>
       </div>
 
