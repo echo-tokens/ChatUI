@@ -58,23 +58,37 @@ const getTaskInfo = async (taskId, userId) => {
       if (!node || typeof node !== 'object') {
         return;
       }
-      
-      // Check if this node has contextualized_ad
-      if (node.contextualized_ad) {
-        contextualizedAdsFound.push(node.contextualized_ad);
-      }
-      
-      if (node.ad_advertiser) {
-        adAdvertisersFound.push(node.ad_advertiser);
-      }
 
+      let branch_count = 0;
       // Recursively search through next_node arrays (AdRetrieval tree structure)
       if (node.next_node && Array.isArray(node.next_node)) {
         for (let index = 0; index < node.next_node.length; index++) {
           const childNode = node.next_node[index];
-          dfsSearch(childNode);
+          branch_count += dfsSearch(childNode);
         }
       }
+
+      // Post-order traversal to repeat contextualized_ad for children
+      if (node.contextualized_ad) {
+        if (!node.next_node || node.next_node.length === 0) {
+          contextualizedAdsFound.push(node.contextualized_ad);
+        } else {
+          for (let i = 0; i < branch_count; i++) {
+            contextualizedAdsFound.push(node.contextualized_ad);
+          }
+        }
+      }
+      if (node.advertiser) {
+        if (!node.next_node || node.next_node.length === 0) {
+          adAdvertisersFound.push(node.advertiser);
+        } else {
+          for (let i = 0; i < branch_count; i++) {
+            adAdvertisersFound.push(node.advertiser);
+          }
+        }
+      }
+      
+      return (node.next_node && Array.isArray(node.next_node)) ? node.next_node.length : 1;
     };
     
     if (task.outputs && typeof task.outputs === 'object') {

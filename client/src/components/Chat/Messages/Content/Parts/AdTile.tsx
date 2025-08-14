@@ -186,7 +186,7 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
           'hover:bg-brand-purple/[0.04] hover:border-brand-purple/20 hover:shadow-sm',
           'dark:hover:bg-brand-purple/[0.06] dark:hover:border-brand-purple/25',
           'transition-colors transition-shadow duration-200 ease-in-out',
-          isVisible ? 'animate-fadeGrow opacity-100' : 'max-h-0 opacity-0'
+          isVisible ? 'opacity-100' : 'max-h-0 opacity-0'
         )}
         role="note"
         aria-label="Sponsored message"

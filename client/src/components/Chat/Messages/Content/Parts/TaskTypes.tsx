@@ -88,7 +88,7 @@ class TaskEvaluation extends Task {
         </div>
 
         {/* Ad Selection */}
-        <div className="mb-6">
+        <div className="mb-3">
           <div className="space-y-3">
             {Object.entries(this.taskInfo.outputs).map(([pipelineName, output]) => (
               <div
