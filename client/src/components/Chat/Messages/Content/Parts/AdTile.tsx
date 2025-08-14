@@ -4,16 +4,17 @@ import { useAuthContext } from '~/hooks/AuthContext';
 import TaskComponent from './TaskTypes';
 
 interface AdTileProps {
-  content: string;
+  link?: string;
+  advertiser?: string;
+  contextualized_ad?: string;
+  task_id?: string;
+  task_price_usd?: string;
   showCursor: boolean;
+  clickable?: boolean;
+  display_thumbs?: boolean;
 }
 
-interface AdTileProps {
-  content: string;
-  showCursor: boolean;
-}
-
-const AdTile = memo(({ content, showCursor }: AdTileProps) => {
+const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_usd, showCursor, clickable = true, display_thumbs = true }: AdTileProps) => {
   const { token } = useAuthContext();
   const [isVisible, setIsVisible] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -40,25 +41,23 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Simple content display - extract link and show just the ad text (based on original approach)
-  const linkMatch = content.match(/\[link\](.*?)\[\/link\]/);
-  const taskIdMatch = content.match(/\[task_id\](.*?)\[\/task_id\]/);
-  const taskPriceMatch = content.match(/\[task_price\](.*?)\[\/task_price\]/);
-  const description = content.replace(/\[link\].*?\[\/link\]/g, '').replace(/\[task_id\].*?\[\/task_id\]/g, '').replace(/\[task_price\].*?\[\/task_price\]/g, '').trim().replace(/\[ADVERTISER: (.*?)\]/g, '');
-  const linkUrl = linkMatch && linkMatch[1] ? linkMatch[1].trim() : null;
-  const advertiserNameMatch = content.match(/\[ADVERTISER: (.*?)\]/);
-  const advertiserName = advertiserNameMatch ? advertiserNameMatch[1] : null;
-  const taskId = taskIdMatch && taskIdMatch[1] ? taskIdMatch[1].trim() : null;
-  const taskPrice = taskPriceMatch && taskPriceMatch[1] ? taskPriceMatch[1].trim() : null;
+  // Use the provided props directly
+  const linkUrl = link;
+  const advertiserName = advertiser;
+  const description = contextualized_ad;
+  const taskId = task_id;
+  const taskPrice = task_price_usd;
 
   const handleClick = () => {
+    if (!clickable) return;
+    
     if (linkUrl) {
       // Ensure URL has protocol (same as previous working implementation)
       const fullUrl = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
       window.open(fullUrl, '_blank', 'noopener,noreferrer');
     } else {
       // Fallback for ads without links
-      console.log('Ad clicked (no link):', content);
+      console.log('Ad clicked (no link):', description);
     }
   };
 
@@ -112,6 +111,10 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
       }
 
       // Submit task result to backend
+      if (!task_id) {
+        console.error('No task ID provided for submission');
+        return;
+      }
       const response = await fetch('/api/tasks/submit', {
         method: 'POST',
         headers: {
@@ -119,7 +122,7 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          taskId: taskId,
+          taskId: task_id,
           result: result
         })
       });
@@ -179,12 +182,11 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
       </style>
       <div
         className={cn(
-          'my-1 w-full rounded-lg cursor-pointer not-prose ad-container',
+          'my-1 w-full rounded-lg not-prose ad-container',
           'border border-brand-purple/10 bg-brand-purple/[0.02] px-3 pt-0 pb-0',
           'dark:border-brand-purple/15 dark:bg-brand-purple/[0.03]',
           // Hover effects with subtle transitions
-          'hover:bg-brand-purple/[0.04] hover:border-brand-purple/20 hover:shadow-sm',
-          'dark:hover:bg-brand-purple/[0.06] dark:hover:border-brand-purple/25',
+          clickable && 'cursor-pointer hover:bg-brand-purple/[0.04] hover:border-brand-purple/20 hover:shadow-sm dark:hover:bg-brand-purple/[0.06] dark:hover:border-brand-purple/25',
           'transition-colors transition-shadow duration-200 ease-in-out',
           isVisible ? 'opacity-100' : 'max-h-0 opacity-0'
         )}
@@ -206,13 +208,13 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
           )}
           <div className="flex-1 min-w-0">
             {advertiserName && (
-              <div>
-                <p className="text-gray-400 dark:text-gray-400 text-xs leading-none inline-block mt-3 w-5">
+              <div className="mt-2 leading-none">
+                <span className="text-gray-400 dark:text-gray-400 text-xs">
                   {"Ad:"}
-                </p>
-                <p className="text-gray-400 dark:text-gray-400 text-xs leading-none font-bold inline-block mt-3">
+                </span>
+                <span className="text-gray-400 dark:text-gray-400 text-xs font-bold ml-1">
                   {advertiserName}
-                </p>
+                </span>
               </div>
             )}
             {description && (
@@ -229,7 +231,7 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
         {/* Feedback buttons */}
         <div className="flex justify-end items-center gap-1 mt-2 -mr-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
           {/* Task completion text */}
-          {taskPrice && taskId && !taskSubmitted && (
+          {task_price_usd && task_id && !taskSubmitted && (
             <button
               onClick={async (e) => {
                 e.stopPropagation();
@@ -242,7 +244,11 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
                   setIsLoadingTask(true);
 
                   // Call the task info endpoint
-                  const response = await fetch(`/api/tasks/info/${taskId}`, {
+                  if (!task_id) {
+                    console.error('No task ID provided');
+                    return;
+                  }
+                  const response = await fetch(`/api/tasks/info/${task_id}`, {
                     method: 'GET',
                     headers: {
                       'Authorization': `Bearer ${token}`,
@@ -269,12 +275,13 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
               }}
               className="text-xs text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:underline transition-colors cursor-pointer mr-2"
             >
-              Earn ${parseFloat(taskPrice).toFixed(2)} by completing a short task
+              Earn ${parseFloat(task_price_usd || '0').toFixed(2)} by completing a short task
             </button>
           )}
           
           {/* Thumbs buttons */}
-          <div className="flex gap-1">
+          {display_thumbs && (
+            <div className="flex gap-1">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -332,6 +339,7 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
               </svg>
             </button>
           </div>
+          )}
         </div>
 
         {/* Loading animation */}

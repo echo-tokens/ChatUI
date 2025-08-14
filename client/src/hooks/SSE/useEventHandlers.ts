@@ -52,6 +52,7 @@ export type EventHandlerParams = {
   setCompleted: React.Dispatch<React.SetStateAction<Set<unknown>>>;
   setMessages: (messages: TMessage[]) => void;
   getMessages: () => TMessage[] | undefined;
+
   setIsSubmitting: SetterOrUpdater<boolean>;
   setConversation?: SetterOrUpdater<TConversation | null>;
   newConversation?: ConvoGenerator;

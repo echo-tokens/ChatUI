@@ -284,6 +284,7 @@ class EchoStreamClient extends BaseClient {
             try {
               const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
+              const type = parsed.choices?.[0]?.delta?.type;
               
               debug(debugGroups.SSE, 'Parsed SSE data:', { 
                 content: content ? `"${content}"` : 'undefined',
@@ -300,7 +301,7 @@ class EchoStreamClient extends BaseClient {
                   // Create a chunk in OpenAI format for SplitStreamHandler
                   const openAIChunk = {
                     choices: [{
-                      delta: { content },
+                      delta: { content, type },
                       finish_reason: null
                     }]
                   };

@@ -195,7 +195,45 @@ const submitTask = async (taskId, result) => {
 
 
 
+/**
+ * Check if a task has been completed
+ * @param {string} taskId - The task ID
+ * @returns {Promise<Object>} Completion status object
+ */
+const checkTaskCompletion = async (taskId) => {
+  try {
+    if (MOCK) {
+      return {
+        completed: false,
+        user_submission: null
+      };
+    }
+
+    // Get the task from the tasks table
+    const { data: task, error: taskError } = await supabase
+      .from('tasks')
+      .select('user_submission, completed_at')
+      .eq('id', taskId)
+      .single();
+
+    if (taskError || !task) {
+      throw new Error('Task not found');
+    }
+
+    const completed = !!(task.user_submission && task.completed_at);
+    
+    return {
+      completed,
+      user_submission: task.user_submission
+    };
+  } catch (error) {
+    logger.error('[Task.checkTaskCompletion] Error checking task completion:', error);
+    throw new Error('Failed to check task completion');
+  }
+};
+
 module.exports = {
   submitTask,
-  getTaskInfo
+  getTaskInfo,
+  checkTaskCompletion
 };

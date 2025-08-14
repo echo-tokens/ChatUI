@@ -51,6 +51,8 @@ export default function useAddedHelpers({
     return queryClient.getQueryData<TMessage[]>([QueryKeys.messages, queryParam, currentIndex]);
   }, [queryParam, queryClient, currentIndex]);
 
+
+
   const setSubmission = useSetRecoilState(store.submissionByIndex(currentIndex));
 
   const { ask, regenerate } = useChatFunctions({
@@ -114,6 +116,7 @@ export default function useAddedHelpers({
     regenerate,
     getMessages,
     setMessages,
+
     conversation,
     isSubmitting,
     setSiblingIdx,
