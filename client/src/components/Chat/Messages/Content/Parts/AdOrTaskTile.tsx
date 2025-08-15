@@ -1,13 +1,16 @@
 import { memo } from 'react';
 import AdTile from './AdTile';
 import InlinePreferenceTask from './InlinePreferenceTask';
+import DropdownTask from './DropdownTask';
 
 interface AdOrTaskTileProps {
   content: Record<string, any>;
   showCursor: boolean;
 }
 
-type SelectionMethod = 'pick_one' | 'pick_multiple' | 'free_response' | 'insertion_location';
+// dropdown is always for the existing ad
+
+type SelectionMethod = 'pick_one' | 'pick_multiple' | 'free_response' | 'insertion_location' | 'likert';
 type InlineSelectionMethod = 'pick_one' | 'pick_multiple';
 
 interface ParsedAdData {
@@ -16,6 +19,7 @@ interface ParsedAdData {
     price_usd: string;
     instructions: string;
     selection_method: SelectionMethod;
+    dropdown_options?: Array<string>;
   };
   ads?: Array<{
     clickthrough_link: string;
@@ -50,9 +54,9 @@ const AdOrTaskTile = memo(({ content, showCursor }: AdOrTaskTileProps) => {
     return <InlinePreferenceTask adData={adData} />;
   }
 
-  if (uiDisplay === 'ad_tile_with_popup' && adData.task) {
-    console.log('Ad only display requested:', adData);
-    return <AdTile link={adData.ads[0].clickthrough_link} advertiser={adData.ads[0].advertiser} contextualized_ad={adData.ads[0].contextualized_ad} task_id={adData.task.id} task_price_usd={adData.task.price_usd} showCursor={showCursor} />;
+  if (uiDisplay === 'dropdown' && adData.task) {
+    console.log('Dropdown task requested:', adData);
+    return <DropdownTask adData={adData} showCursor={showCursor} />;
   }
 
   if (uiDisplay === 'ad_tile') {

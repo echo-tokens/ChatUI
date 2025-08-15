@@ -1,7 +1,6 @@
 import { memo, useState, useEffect } from 'react';
 import { cn } from '~/utils';
 import { useAuthContext } from '~/hooks/AuthContext';
-import TaskComponent from './TaskTypes';
 
 interface AdTileProps {
   link?: string;
@@ -12,9 +11,13 @@ interface AdTileProps {
   showCursor: boolean;
   clickable?: boolean;
   display_thumbs?: boolean;
+  onTaskClick?: () => void;
+  dropdownComponent?: React.ReactNode;
+  isDropdownClosing?: boolean;
+  taskState?: 'unloaded' | 'incomplete' | 'complete';
 }
 
-const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_usd, showCursor, clickable = true, display_thumbs = true }: AdTileProps) => {
+const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_usd, showCursor, clickable = true, display_thumbs = true, onTaskClick, dropdownComponent, isDropdownClosing, taskState }: AdTileProps) => {
   const { token } = useAuthContext();
   const [isVisible, setIsVisible] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -26,12 +29,6 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
   const [positionRating, setPositionRating] = useState('');
   const [relevancyRating, setRelevancyRating] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
-  const [isLoadingTask, setIsLoadingTask] = useState(false);
-  const [taskInfo, setTaskInfo] = useState<any>(null);
-  const [showTask, setShowTask] = useState(false);
-  const [isSubmittingTask, setIsSubmittingTask] = useState(false);
-  const [showTaskThankYou, setShowTaskThankYou] = useState(false);
-  const [taskSubmitted, setTaskSubmitted] = useState(false);
 
   // Animate the tile appearance only for new content
   useEffect(() => {
@@ -98,66 +95,7 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
     setFeedbackText('');
   };
 
-  const handleTaskSubmit = async (result: any) => {
-    console.log('Task submitted:', result);
-    
-    // Start fade out animation
-    setIsSubmittingTask(true);
-    
-    try {
-      if (!token) {
-        console.error('No authentication token found');
-        return;
-      }
 
-      // Submit task result to backend
-      if (!task_id) {
-        console.error('No task ID provided for submission');
-        return;
-      }
-      const response = await fetch('/api/tasks/submit', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          taskId: task_id,
-          result: result
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const submitResult = await response.json();
-      console.log('Task submission result:', submitResult);
-      
-      // Fade out task
-      setShowTask(false);
-      setIsSubmittingTask(false);
-      setTaskInfo(null);
-      
-      // Mark task as submitted (permanent)
-      setTaskSubmitted(true);
-      
-      // Show thank you message for 3 seconds
-      setShowTaskThankYou(true);
-      setTimeout(() => {
-        setShowTaskThankYou(false);
-      }, 3000);
-      
-    } catch (error) {
-      console.error('Error submitting task:', error);
-      setIsSubmittingTask(false);
-    }
-  };
-
-  const handleTaskClose = () => {
-    setShowTask(false);
-    setTaskInfo(null);
-  };
 
 
 
@@ -182,7 +120,7 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
       </style>
       <div
         className={cn(
-          'my-1 w-full rounded-lg not-prose ad-container',
+          'my-1 w-full rounded-lg not-prose ad-container select-none',
           'border border-brand-purple/10 bg-brand-purple/[0.02] px-3 pt-0 pb-0',
           'dark:border-brand-purple/15 dark:bg-brand-purple/[0.03]',
           // Hover effects with subtle transitions
@@ -231,49 +169,16 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
         {/* Feedback buttons */}
         <div className="flex justify-end items-center gap-1 mt-2 -mr-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
           {/* Task completion text */}
-          {task_price_usd && task_id && !taskSubmitted && (
+          {task_price_usd && task_id && onTaskClick && taskState === 'incomplete' && (
             <button
-              onClick={async (e) => {
+              onClick={(e) => {
                 e.stopPropagation();
-                try {
-                  if (!token) {
-                    console.error('No authentication token found');
-                    return;
-                  }
-
-                  setIsLoadingTask(true);
-
-                  // Call the task info endpoint
-                  if (!task_id) {
-                    console.error('No task ID provided');
-                    return;
-                  }
-                  const response = await fetch(`/api/tasks/info/${task_id}`, {
-                    method: 'GET',
-                    headers: {
-                      'Authorization': `Bearer ${token}`,
-                      'Content-Type': 'application/json'
-                    }
-                  });
-
-                  if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                  }
-
-                  const taskInfoData = await response.json();
-                  console.log('Task info retrieved:', taskInfoData);
-                  
-                  // Set the task info and show the task interface
-                  setTaskInfo(taskInfoData);
-                  setShowTask(true);
-                  
-                } catch (error) {
-                  console.error('Error fetching task info:', error);
-                } finally {
-                  setIsLoadingTask(false);
-                }
+                onTaskClick();
               }}
-              className="text-xs text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:underline transition-colors cursor-pointer mr-2"
+              className={cn(
+                "text-xs text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 hover:underline transition-all duration-300 ease-in-out cursor-pointer",
+                !dropdownComponent ? "opacity-100" : "opacity-0 pointer-events-none"
+              )}
             >
               Earn ${parseFloat(task_price_usd || '0').toFixed(2)} by completing a short task
             </button>
@@ -342,61 +247,7 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
           )}
         </div>
 
-        {/* Loading animation */}
-        {isLoadingTask && (
-          <div 
-            className={cn(
-              "mt-3 mb-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700",
-              "transition-all duration-300 ease-in-out transform origin-top animate-fadeGrow"
-            )}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-center space-x-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 dark:border-blue-400"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-300">
-                Loading task information...
-              </span>
-            </div>
-          </div>
-        )}
 
-        {/* Task Interface */}
-        {showTask && taskInfo && (
-          <div 
-            className={cn(
-              "mt-3 mb-3 transition-all duration-300 ease-in-out",
-              isSubmittingTask ? "opacity-0 transform scale-95" : "opacity-100 transform scale-100"
-            )}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <TaskComponent
-              taskInfo={taskInfo}
-              onSubmit={handleTaskSubmit}
-              onClose={handleTaskClose}
-            />
-          </div>
-        )}
-
-        {/* Task Thank You Message */}
-        {showTaskThankYou && (
-          <div 
-            className="mt-3 mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center space-x-2">
-              <svg 
-                className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" 
-                fill="currentColor" 
-                viewBox="0 0 20 20"
-              >
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                Thank you! Your task has been submitted successfully.
-              </span>
-            </div>
-          </div>
-        )}
 
         {/* Feedback form */}
         {showFeedback && (
@@ -504,6 +355,17 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
             </div>
           </div>
         )}
+
+        {/* Dropdown Component */}
+        <div 
+          className={cn(
+            "mt-0.5 overflow-hidden transition-all duration-700 ease-in-out",
+            dropdownComponent && !isDropdownClosing ? "max-h-[400px] mb-3" : "max-h-0 mb-0.5"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {dropdownComponent}
+        </div>
 
         {/* Thank you message */}
         {showThankYou && (
