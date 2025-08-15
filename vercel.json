@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "buildCommand": "npm run frontend",
+  "outputDirectory": "client/dist",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/vercel"
+    }
+  ],
+  "functions": {
+    "api/vercel.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }
+} 

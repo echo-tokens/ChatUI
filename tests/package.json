@@ -1,0 +1,57 @@
+{
+  "name": "librechat-railway-tests",
+  "version": "1.0.0",
+  "description": "Unit and integration tests for LibreChat Railway service integration",
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:railway": "jest --testNamePattern='Railway'",
+    "test:components": "jest tests/unit/components",
+    "test:verbose": "jest --verbose",
+    "test:silent": "jest --silent"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.0",
+    "@babel/preset-env": "^7.23.0",
+    "@babel/preset-react": "^7.22.0",
+    "@babel/preset-typescript": "^7.23.0",
+    "@testing-library/jest-dom": "^6.1.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.5.0",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/setup/test-env.js"],
+    "testMatch": [
+      "<rootDir>/unit/**/*.test.{js,jsx,ts,tsx}",
+      "<rootDir>/integration/**/*.test.{js,jsx,ts,tsx}"
+    ],
+    "moduleNameMapper": {
+      "^~/(.*)$": "<rootDir>/../client/src/$1",
+      "^librechat-data-provider$": "<rootDir>/../packages/data-provider/src/index.ts"
+    },
+    "transform": {
+      "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
+    },
+    "collectCoverageFrom": [
+      "../client/src/components/Chat/Messages/Content/Parts/AdTile.tsx",
+      "../client/src/hooks/SSE/useContentHandler.ts",
+      "../api/server/controllers/ModelController.js"
+    ],
+    "testTimeout": 10000,
+    "verbose": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"],
+    "extensionsToTreatAsEsm": [".ts", ".tsx"],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(librechat-data-provider)/)"
+    ]
+  }
+} 

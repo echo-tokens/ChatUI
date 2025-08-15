@@ -1,0 +1,23 @@
+**/.circleci
+**/.editorconfig
+**/.dockerignore
+**/.git
+**/.DS_Store
+**/.vscode
+**/node_modules
+
+# Specific patterns to ignore
+data-node
+meili_data*
+Dockerfile*
+docs
+
+# Ignore most hidden files (NOT .env)
+.git
+.gitignore
+.DS_Store
+.vscode
+.devcontainer
+.github
+.husky
+.railwayignore

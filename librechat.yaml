@@ -1,0 +1,108 @@
+version: 1.2.1
+
+interface:
+  modelSelect: true
+  sidePanel: false
+  parameters: false
+  presets: false
+  prompts: false
+  bookmarks: false
+  agents: false
+  memories: false
+  temporaryChat: false
+  runCode: true
+  webSearch: true
+
+endpoints:
+  # Railway Echo Stream Service - Intelligent Ad Integration
+  custom:
+    - name: "echo_stream"
+      baseURL: "${ECHO_STREAM_BASE_URL}"
+      apiKey: "${ECHO_STREAM_API_KEY}"
+      models:
+        default: [
+          # Current OpenAI Models (via Echo Stream)
+          "gpt-4o", "o1", "gpt-4o-mini",
+          # Current Anthropic Models (via Echo Stream)  
+          "claude-3-5-sonnet-20241022", "claude-3-opus-20240229",
+          # Current Google Models (via Echo Stream)
+          "gemini-2.0-flash-exp", "gemini-1.5-pro-latest"
+        ]
+        fetch: false
+      titleConvo: true
+      titleModel: "gpt-4o-mini"
+      modelDisplayLabel: "Echo"
+      streamRate: 1
+      headers:
+        "X-Service-Type": "echo-proxy"
+        "User-Agent": "LibreChat/1.0"
+      addParams:
+        stream: true
+        include_ads: true
+      directEndpoint: true
+
+  # openAI:
+  #   apiKey: "${OPENAI_API_KEY}"
+  #   models:
+  #     default: ["gpt-4o", "o1", "gpt-4o-mini"]
+  #     fetch: false
+  #   titleConvo: true
+  #   titleModel: "gpt-4o-mini"
+  #   modelDisplayLabel: "GPT"
+
+  # anthropic:
+  #   apiKey: "${ANTHROPIC_API_KEY}"
+  #   models:
+  #     default: ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229"]
+  #     fetch: false
+  #   titleConvo: true
+  #   titleModel: "claude-3-5-sonnet-20241022"
+  #   modelDisplayLabel: "Claude"
+
+  # google:
+  #   apiKey: "${GOOGLE_API_KEY}"
+  #   models:
+  #     default: ["gemini-2.0-flash-exp", "gemini-1.5-pro-latest"]
+  #     fetch: false
+  #   titleConvo: true
+  #   titleModel: "gemini-2.0-flash-exp"
+  #   modelDisplayLabel: "Gemini"
+
+  # REMOVED XAI ENDPOINT - Not yet supported in this LibreChat version
+
+# Enable file uploads (ChatGPT functionality)
+fileConfig:
+  endpoints:
+    # openAI:
+    #   fileLimit: 10
+    #   fileSizeLimit: 100
+    #   totalSizeLimit: 500
+    #   supportedMimeTypes:
+    #     - "image/.*"
+    #     - "application/pdf"
+    #     - "text/.*"
+    #     - "application/.*"
+    # anthropic:
+    #   fileLimit: 5
+    #   fileSizeLimit: 100
+    #   totalSizeLimit: 500
+    #   supportedMimeTypes:
+    #     - "image/.*"
+    #     - "application/pdf"
+    #     - "text/.*"
+    # google:
+    #   fileLimit: 10
+    #   fileSizeLimit: 100
+    #   totalSizeLimit: 500
+    #   supportedMimeTypes:
+    #     - "image/.*"
+    #     - "application/pdf"
+    #     - "text/.*"
+    xai:
+      fileLimit: 5
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "text/.*"
+ 
