@@ -146,14 +146,14 @@ export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: 
 
   return (
     <div
-      className={`flex h-full transform-gpu flex-col items-center justify-center pb-16 transition-all duration-200 ${centerFormOnLanding ? 'max-h-full sm:max-h-0' : 'max-h-full'} ${getDynamicMargin}`}
+      className={`flex h-full transform-gpu flex-col items-center justify-end sm:justify-center pb-16 transition-all duration-200 ${centerFormOnLanding ? 'max-h-full sm:max-h-0' : 'max-h-full'} ${getDynamicMargin}`}
     >
       {/* Echo Logo positioned above everything else */}
       <div className="mb-8">
         <EchoLogoButton />
       </div>
       
-      <div ref={contentRef} className="flex flex-col items-center gap-0 p-2">
+      <div ref={contentRef} className="flex flex-col items-center gap-0 p-2 mb-20">
         <div
           className={`flex ${textHasMultipleLines ? 'flex-col' : 'flex-col md:flex-row'} items-center justify-center gap-2`}
         >

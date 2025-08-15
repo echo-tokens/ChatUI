@@ -42,6 +42,7 @@ export default function useChatFunctions({
   setFiles,
   getMessages,
   setMessages,
+  
   isSubmitting,
   latestMessage,
   setSubmission,
@@ -55,6 +56,7 @@ export default function useChatFunctions({
   latestMessage: TMessage | null;
   getMessages: () => TMessage[] | undefined;
   setMessages: (messages: TMessage[]) => void;
+
   files?: Map<string, ExtendedFile>;
   setFiles?: SetterOrUpdater<Map<string, ExtendedFile>>;
   setSubmission: SetterOrUpdater<TSubmission | null>;

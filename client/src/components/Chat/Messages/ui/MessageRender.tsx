@@ -174,6 +174,7 @@ const MessageRender = memo(
                   edit={edit}
                   isLast={isLast}
                   text={msg.text || ''}
+                  type={msg.type || 'text'}
                   message={msg}
                   enterEdit={enterEdit}
                   error={!!(msg.error ?? false)}

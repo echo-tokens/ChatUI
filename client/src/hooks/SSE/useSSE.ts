@@ -32,6 +32,7 @@ type ChatHelpers = Pick<
   EventHandlerParams,
   | 'setMessages'
   | 'getMessages'
+
   | 'setConversation'
   | 'setIsSubmitting'
   | 'newConversation'

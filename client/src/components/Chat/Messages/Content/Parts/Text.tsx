@@ -4,7 +4,7 @@ import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
 import Markdown from '~/components/Chat/Messages/Content/Markdown';
 import { useChatContext, useMessageContext } from '~/Providers';
 import { parseAdContent, containsAdTags } from '~/utils/adParser';
-import AdTile from './AdTile';
+import AdOrTaskTile from './AdOrTaskTile';
 import { cn } from '~/utils';
 import store from '~/store';
 
@@ -50,7 +50,7 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
       isLastPart = index === parsedParts.length - 1;
       const partShowCursor = isLastPart && showCursor;
       
-      if (part.type === 'text') {
+      if (part.type === 'text' || isCreatedByUser) {
         const partText = typeof part.text === 'string' ? part.text : part.text?.value || '';
         if (!isCreatedByUser) {
           return (
@@ -67,7 +67,7 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
         }
       } else if (part.type === 'ad_tile') {
         return (
-          <AdTile 
+          <AdOrTaskTile 
             key={`ad-${index}`} 
             content={part.ad_content} 
             showCursor={partShowCursor} 

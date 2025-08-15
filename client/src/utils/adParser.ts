@@ -5,7 +5,7 @@ interface ParsedContent {
   type: 'text' | 'ad_tile';
   content?: string;
   text?: string;
-  ad_content?: string;
+  ad_content?: Record<string, any>;
 }
 
 /**
@@ -39,28 +39,45 @@ export function parseAdContent(text: string): ParsedContent[] {
     
     // Process ad content - handle new [LINK:url] format but keep original logic
     let processedContent = adContent.trim();
-    
-    // Check for [LINK:url] format inside ad content and extract the link
-    const linkMatch = processedContent.match(/\[(?:link|LINK):([^\]]+)\]/);
-    if (linkMatch && linkMatch[1]) {
-      // Remove the [LINK:url] from display content but keep link info for AdTile
-      const displayContent = processedContent.replace(/\[(?:link|LINK):[^\]]+\]/, '').trim();
-      const linkUrl = linkMatch[1].trim();
-      
-      // Store both content and link in a format the AdTile can use
-      const adTileContent = `${displayContent}\n[link]${linkUrl}[/link]`;
-      
+    try {
       parts.push({
         type: 'ad_tile',
-        ad_content: adTileContent,
+        ad_content: JSON.parse(processedContent),
       });
-    } else {
-      // No link, just add the content as-is (same as original)
-      parts.push({
-        type: 'ad_tile',
-        ad_content: processedContent,
-      });
+    } catch (error) {
+      console.error('Error parsing ad content:', error);
     }
+    // // Check for [LINK:url] format inside ad content and extract the link
+    // const linkMatch = processedContent.match(/\[(?:link|LINK):([^\]]+)\]/);
+    // const taskMatch = processedContent.match(/\[(?:task_id|TASK_ID):([^\]]+)\]/);
+    // if (linkMatch && linkMatch[1]) {
+    //   // Remove the [LINK:url] from display content but keep link info for AdTile
+    //   const displayContent = processedContent.replace(/\[(?:link|LINK):[^\]]+\]/, '').replace(/\[(?:task_id|TASK_ID):[^\]]+\]/, '').trim();
+    //   const linkUrl = linkMatch[1].trim();
+
+    //   let adTileContent = '';
+    //   if (taskMatch && taskMatch[1]) {
+    //     const taskInfo = taskMatch[1].trim().split('/');
+    //     const taskId = taskInfo[0];
+    //     const taskPrice = taskInfo[1];
+    //     // Store both content and link in a format the AdTile can use
+    //     adTileContent = `${displayContent}\n[link]${linkUrl}[/link] [task_id]${taskId}[/task_id] [task_price]${taskPrice}[/task_price]`;
+    //     console.log('Ad Tile Content:', adTileContent);
+    //   } else {
+    //     adTileContent = `${displayContent}\n[link]${linkUrl}[/link]`;
+    //   }
+      
+    //   parts.push({
+    //     type: 'ad_tile',
+    //     ad_content: adTileContent,
+    //   });
+    // } else {
+    //   // No link, just add the content as-is (same as original)
+    //   parts.push({
+    //     type: 'ad_tile',
+    //     ad_content: processedContent,
+    //   });
+    // }
     
     lastIndex = adRegex.lastIndex;
   }

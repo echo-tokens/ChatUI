@@ -1,17 +1,24 @@
 import { memo, useState, useEffect } from 'react';
 import { cn } from '~/utils';
+import { useAuthContext } from '~/hooks/AuthContext';
 
 interface AdTileProps {
-  content: string;
+  link?: string;
+  advertiser?: string;
+  contextualized_ad?: string;
+  task_id?: string;
+  task_price_usd?: string;
   showCursor: boolean;
+  clickable?: boolean;
+  display_thumbs?: boolean;
+  onTaskClick?: () => void;
+  dropdownComponent?: React.ReactNode;
+  isDropdownClosing?: boolean;
+  taskState?: 'unloaded' | 'incomplete' | 'complete';
 }
 
-interface AdTileProps {
-  content: string;
-  showCursor: boolean;
-}
-
-const AdTile = memo(({ content, showCursor }: AdTileProps) => {
+const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_usd, showCursor, clickable = true, display_thumbs = true, onTaskClick, dropdownComponent, isDropdownClosing, taskState }: AdTileProps) => {
+  const { token } = useAuthContext();
   const [isVisible, setIsVisible] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
@@ -31,21 +38,23 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Simple content display - extract link and show just the ad text (based on original approach)
-  const linkMatch = content.match(/\[link\](.*?)\[\/link\]/);
-  const description = content.replace(/\[link\].*?\[\/link\]/g, '').trim().replace(/\[ADVERTISER: (.*?)\]/g, '');
-  const linkUrl = linkMatch && linkMatch[1] ? linkMatch[1].trim() : null;
-  const advertiserNameMatch = content.match(/\[ADVERTISER: (.*?)\]/);
-  const advertiserName = advertiserNameMatch ? advertiserNameMatch[1] : null;
+  // Use the provided props directly
+  const linkUrl = link;
+  const advertiserName = advertiser;
+  const description = contextualized_ad;
+  const taskId = task_id;
+  const taskPrice = task_price_usd;
 
   const handleClick = () => {
+    if (!clickable) return;
+    
     if (linkUrl) {
       // Ensure URL has protocol (same as previous working implementation)
       const fullUrl = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
       window.open(fullUrl, '_blank', 'noopener,noreferrer');
     } else {
       // Fallback for ads without links
-      console.log('Ad clicked (no link):', content);
+      console.log('Ad clicked (no link):', description);
     }
   };
 
@@ -87,6 +96,10 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
   };
 
 
+
+
+
+
   return (
     <>
       <style>
@@ -101,18 +114,19 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
               transform: translateY(-20px) scale(1);
             }
           }
+          
+
         `}
       </style>
       <div
         className={cn(
-          'my-1 w-full overflow-hidden rounded-lg transition-all duration-150 ease-out cursor-pointer not-prose',
+          'my-1 w-full rounded-lg not-prose ad-container select-none',
           'border border-brand-purple/10 bg-brand-purple/[0.02] px-3 pt-0 pb-0',
           'dark:border-brand-purple/15 dark:bg-brand-purple/[0.03]',
           // Hover effects with subtle transitions
-          'hover:bg-brand-purple/[0.04] hover:border-brand-purple/20 hover:shadow-sm',
-          'dark:hover:bg-brand-purple/[0.06] dark:hover:border-brand-purple/25',
+          clickable && 'cursor-pointer hover:bg-brand-purple/[0.04] hover:border-brand-purple/20 hover:shadow-sm dark:hover:bg-brand-purple/[0.06] dark:hover:border-brand-purple/25',
           'transition-colors transition-shadow duration-200 ease-in-out',
-          isVisible ? 'animate-fadeGrow opacity-100' : 'max-h-0 opacity-0'
+          isVisible ? 'opacity-100' : 'max-h-0 opacity-0'
         )}
         role="note"
         aria-label="Sponsored message"
@@ -132,13 +146,13 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
           )}
           <div className="flex-1 min-w-0">
             {advertiserName && (
-              <div>
-                <p className="text-gray-400 dark:text-gray-400 text-xs leading-none inline-block mt-3 w-5">
+              <div className="mt-2 leading-none">
+                <span className="text-gray-400 dark:text-gray-400 text-xs">
                   {"Ad:"}
-                </p>
-                <p className="text-gray-400 dark:text-gray-400 text-xs leading-none font-bold inline-block mt-3">
+                </span>
+                <span className="text-gray-400 dark:text-gray-400 text-xs font-bold ml-1">
                   {advertiserName}
-                </p>
+                </span>
               </div>
             )}
             {description && (
@@ -153,64 +167,92 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
         </div>
         
         {/* Feedback buttons */}
-        <div className="flex justify-end gap-1 mt-2 -mr-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setThumbsRating('up');
-              setShowFeedback(true);
-            }}
-            disabled={thumbsRating !== null}
-            className={cn(
-              "p-1 transition-colors",
-              thumbsRating === null 
-                ? "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" 
-                : thumbsRating === 'up'
-                ? "text-gray-800 dark:text-gray-200"
-                : "text-gray-300 dark:text-gray-600 opacity-50"
-            )}
-            title="Like this ad?"
-          >
-            <svg 
+        <div className="flex justify-end items-center gap-1 mt-2 -mr-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
+          {/* Task completion text */}
+          {task_price_usd && task_id && onTaskClick && taskState === 'incomplete' && (
+            <div className={cn(
+              "flex items-center gap-1 transition-all duration-300 ease-in-out",
+              !dropdownComponent ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTaskClick();
+                }}
+                className="text-xs font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-1.5 py-0.5 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30"
+              >
+                Earn ${parseFloat(task_price_usd || '0').toFixed(2)}
+              </button>
+              <span className="text-xs text-gray-400 dark:text-gray-400">
+                by completing a short task
+              </span>
+            </div>
+          )}
+          
+          {/* Thumbs buttons */}
+          {display_thumbs && (
+            <div className="flex gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setThumbsRating('up');
+                setShowFeedback(true);
+              }}
+              disabled={thumbsRating !== null}
               className={cn(
-                "w-4 h-4",
-                thumbsRating === null ? "fill-none stroke-current" : "fill-current"
-              )} 
-              viewBox="0 0 20 20"
-              strokeWidth={thumbsRating === null ? "1.5" : "0"}
+                "p-1 transition-colors",
+                thumbsRating === null 
+                  ? "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" 
+                  : thumbsRating === 'up'
+                  ? "text-gray-800 dark:text-gray-200"
+                  : "text-gray-300 dark:text-gray-600 opacity-50"
+              )}
+              title="Like this ad?"
             >
-              <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-            </svg>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setThumbsRating('down');
-              setShowFeedback(true);
-            }}
-            disabled={thumbsRating !== null}
-            className={cn(
-              "p-1 transition-colors",
-              thumbsRating === null 
-                ? "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" 
-                : thumbsRating === 'down'
-                ? "text-gray-800 dark:text-gray-200"
-                : "text-gray-300 dark:text-gray-600 opacity-50"
-            )}
-            title="Don't like this ad?"
-          >
-            <svg 
+              <svg 
+                className={cn(
+                  "w-4 h-4",
+                  thumbsRating === null ? "fill-none stroke-current" : "fill-current"
+                )} 
+                viewBox="0 0 20 20"
+                strokeWidth={thumbsRating === null ? "1.5" : "0"}
+              >
+                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setThumbsRating('down');
+                setShowFeedback(true);
+              }}
+              disabled={thumbsRating !== null}
               className={cn(
-                "w-4 h-4",
-                thumbsRating === null ? "fill-none stroke-current" : "fill-current"
-              )} 
-              viewBox="0 0 20 20"
-              strokeWidth={thumbsRating === null ? "1.5" : "0"}
+                "p-1 transition-colors",
+                thumbsRating === null 
+                  ? "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" 
+                  : thumbsRating === 'down'
+                  ? "text-gray-800 dark:text-gray-200"
+                  : "text-gray-300 dark:text-gray-600 opacity-50"
+              )}
+              title="Don't like this ad?"
             >
-              <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.105-1.79l-.05-.025A4 4 0 0011.055 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z" />
-            </svg>
-          </button>
+              <svg 
+                className={cn(
+                  "w-4 h-4",
+                  thumbsRating === null ? "fill-none stroke-current" : "fill-current"
+                )} 
+                viewBox="0 0 20 20"
+                strokeWidth={thumbsRating === null ? "1.5" : "0"}
+              >
+                <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.105-1.79l-.05-.025A4 4 0 0011.055 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z" />
+              </svg>
+            </button>
+          </div>
+          )}
         </div>
+
+
 
         {/* Feedback form */}
         {showFeedback && (
@@ -319,6 +361,17 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
           </div>
         )}
 
+        {/* Dropdown Component */}
+        <div 
+          className={cn(
+            "mt-0.5 overflow-hidden transition-all duration-700 ease-in-out",
+            dropdownComponent && !isDropdownClosing ? "max-h-[400px] mb-3" : "max-h-0 mb-0.5"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {dropdownComponent}
+        </div>
+
         {/* Thank you message */}
         {showThankYou && (
           <div 
@@ -343,6 +396,8 @@ const AdTile = memo(({ content, showCursor }: AdTileProps) => {
           </div>
                 )}
       </div>
+
+
     </>
   );
 });

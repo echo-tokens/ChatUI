@@ -70,10 +70,10 @@ export const ErrorMessage = ({
   );
 };
 
-const DisplayMessage = ({ text, isCreatedByUser, message, showCursor }: TDisplayProps) => {
+const DisplayMessage = ({ text, isCreatedByUser, message, showCursor, type }: TDisplayProps) => {
   return (
     <Container message={message}>
-      <TextPart text={text} isCreatedByUser={isCreatedByUser} showCursor={showCursor} />
+      <TextPart text={text} isCreatedByUser={isCreatedByUser} showCursor={showCursor} type={type} />
     </Container>
   );
 };
@@ -88,6 +88,7 @@ export const UnfinishedMessage = ({ message }: { message: TMessage }) => (
 
 const MessageContent = ({
   text,
+  type,
   edit,
   error,
   unfinished,
@@ -135,6 +136,7 @@ const MessageContent = ({
         key={`display-${messageId}`}
         showCursor={showRegularCursor}
         text={regularContent}
+        type={type}
         {...props}
       />
       {unfinishedMessage}
