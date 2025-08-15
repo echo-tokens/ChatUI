@@ -170,16 +170,16 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
         <div className="flex justify-end items-center gap-1 mt-2 -mr-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
           {/* Task completion text */}
           {task_price_usd && task_id && onTaskClick && taskState === 'incomplete' && (
-            <div className="flex items-center gap-1">
+            <div className={cn(
+              "flex items-center gap-1 transition-all duration-300 ease-in-out",
+              !dropdownComponent ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onTaskClick();
                 }}
-                className={cn(
-                  "text-xs font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-1.5 py-0.5 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30",
-                  !dropdownComponent ? "opacity-100" : "opacity-0 pointer-events-none"
-                )}
+                className="text-xs font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-1.5 py-0.5 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30"
               >
                 Earn ${parseFloat(task_price_usd || '0').toFixed(2)}
               </button>

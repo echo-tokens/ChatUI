@@ -287,7 +287,7 @@ const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
         isCollapsing ? "max-h-0" : "max-h-[1000px]"
       )}>
         {/* Wrapper with rounded corners and top border progress */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg border-t-4 border-r border-b border-l border-gray-200 dark:border-gray-700 p-2 relative">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border-t-4 border-r border-b border-l border-gray-200 dark:border-gray-700 p-2 relative">
           {/* Top border progress indicator */}
           <div className={cn(
             "absolute -top-1 left-0 h-2 transition-all duration-100 ease-linear",
@@ -304,7 +304,7 @@ const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
           {adData.task?.price_usd && (
             <div className="relative">
               <span className={cn(
-                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-600 rounded px-2 py-1 transition-all duration-1000 relative z-10",
+                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-2 py-1 transition-all duration-1000 relative z-10",
                 showPulse && "animate-pulse scale-125 shadow-lg"
               )}>
                 {showPulse ? `+$${parseFloat(adData.task.price_usd).toFixed(2)}` : `Earn $${parseFloat(adData.task.price_usd).toFixed(2)}`}

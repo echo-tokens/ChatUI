@@ -220,12 +220,12 @@ const DropdownTask = memo(({ adData, showCursor }: DropdownTaskProps) => {
 
   // Create the task interface component
   const taskInterface = (showTask || isClosing) && adData.task ? (
-    <div className={cn(
-      "bg-white dark:bg-gray-900 rounded-lg border-t-4 border-r border-b border-l border-gray-200 dark:border-gray-700 p-3 relative",
-      "transition-all duration-300 ease-in-out transform origin-top",
-      isSubmitting ? "opacity-50 pointer-events-none" : "opacity-100",
-      isSubmittingAnimation ? "scale-95 opacity-0" : "scale-100 opacity-100"
-    )}>
+          <div className={cn(
+        "bg-white dark:bg-gray-800 rounded-lg border-t-4 border-r border-b border-l border-gray-200 dark:border-gray-700 px-3 pt-4 pb-2 relative",
+        "transition-all duration-300 ease-in-out transform origin-top",
+        isSubmitting ? "opacity-50 pointer-events-none" : "opacity-100",
+        isSubmittingAnimation ? "scale-95 opacity-0" : "scale-100 opacity-100"
+      )}>
       {/* Top border progress indicator */}
       <div className={cn(
         "absolute -top-1 left-0 h-2 transition-all duration-100 ease-linear",
@@ -242,7 +242,7 @@ const DropdownTask = memo(({ adData, showCursor }: DropdownTaskProps) => {
           {adData.task?.price_usd && (
             <div className="relative">
               <span className={cn(
-                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-600 rounded px-2 py-1 transition-all duration-1000 relative z-10",
+                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-2 py-1 transition-all duration-1000 relative z-10",
                 showPulse && "animate-pulse scale-125 shadow-lg"
               )}>
                 {showEarnedText ? `+$${parseFloat(adData.task.price_usd).toFixed(2)}` : `Earn $${parseFloat(adData.task.price_usd).toFixed(2)}`}
