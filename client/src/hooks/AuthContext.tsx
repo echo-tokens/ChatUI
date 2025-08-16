@@ -16,11 +16,11 @@ import type * as t from 'librechat-data-provider';
 import {
   useGetRole,
   useGetUserQuery,
-  useLoginUserMutation,
   useLogoutUserMutation,
   useRefreshTokenMutation,
 } from '~/data-provider';
 import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
+import { redirectToAccountLogin } from '~/utils/authRedirect';
 import useTimeout from './useTimeout';
 import store from '~/store';
 
@@ -34,7 +34,30 @@ const AuthContextProvider = ({
   children: ReactNode;
 }) => {
   const [user, setUser] = useRecoilState(store.user);
-  const [token, setToken] = useState<string | undefined>(undefined);
+  const [token, setToken] = useState<string | undefined>(() => {
+    // Priority: Check for chatAuthToken cookie first, then localStorage
+    const getCookie = (name: string): string | null => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    };
+    
+    const cookieToken = getCookie('chatAuthToken');
+    if (cookieToken) {
+      // Use cookie token and store it in localStorage
+      localStorage.setItem('authToken', cookieToken);
+      setTokenHeader(cookieToken);
+      return cookieToken;
+    }
+    
+    // Fallback to localStorage if no cookie
+    const storedToken = localStorage.getItem('authToken');
+    if (storedToken) {
+      setTokenHeader(storedToken);
+    }
+    return storedToken || undefined;
+  });
   const [error, setError] = useState<string | undefined>(undefined);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const logoutRedirectRef = useRef<string | undefined>(undefined);
@@ -77,40 +100,35 @@ const AuthContextProvider = ({
   );
   const doSetError = useTimeout({ callback: (error) => setError(error as string | undefined) });
 
-  const loginUser = useLoginUserMutation({
-    onSuccess: (data: t.TLoginResponse) => {
-      const { user, token, twoFAPending, tempToken } = data;
-      if (twoFAPending) {
-        // Redirect to the two-factor authentication route.
-        navigate(`/login/2fa?tempToken=${tempToken}`, { replace: true });
-        return;
-      }
-      setError(undefined);
-      setUserContext({ token, isAuthenticated: true, user, redirect: '/c/new' });
-    },
-    onError: (error: TResError | unknown) => {
-      const resError = error as TResError;
-      doSetError(resError.message);
-      navigate('/login', { replace: true });
-    },
-  });
+
   const logoutUser = useLogoutUserMutation({
     onSuccess: (data) => {
+      // Clean up tokens
+      localStorage.removeItem('authToken');
+      document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      
       setUserContext({
         token: undefined,
         isAuthenticated: false,
         user: undefined,
-        redirect: data.redirect ?? '/login',
       });
+      // Redirect to account auth service login
+      redirectToAccountLogin('chat');
     },
     onError: (error) => {
       doSetError((error as Error).message);
+      
+      // Clean up tokens even on error
+      localStorage.removeItem('authToken');
+      document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      
       setUserContext({
         token: undefined,
         isAuthenticated: false,
         user: undefined,
-        redirect: '/login',
       });
+      // Redirect to account auth service login on error too
+      redirectToAccountLogin('chat');
     },
   });
   const refreshToken = useRefreshTokenMutation();
@@ -127,34 +145,46 @@ const AuthContextProvider = ({
 
   const userQuery = useGetUserQuery({ enabled: !!(token ?? '') });
 
-  const login = (data: t.TLoginUser) => {
-    loginUser.mutate(data);
-  };
-
   const silentRefresh = useCallback(() => {
     if (authConfig?.test === true) {
       console.log('Test mode. Skipping silent refresh.');
       return;
     }
+    
+    // Check if we have a token from account auth service
+    const accountToken = localStorage.getItem('authToken');
+    if (accountToken) {
+      // We have a token from account auth service, don't try ChatUI refresh
+      // Instead, trigger the tokenUpdated event to set up authentication
+      window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: accountToken }));
+      return;
+    }
+    
     refreshToken.mutate(undefined, {
       onSuccess: (data: t.TRefreshTokenResponse | undefined) => {
         const { user, token = '' } = data ?? {};
         if (token) {
           setUserContext({ token, isAuthenticated: true, user });
         } else {
-          console.log('Token is not present. User is not authenticated.');
           if (authConfig?.test === true) {
             return;
           }
-          navigate('/login');
+          // Clean up tokens on refresh failure
+          localStorage.removeItem('authToken');
+          document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          
+          redirectToAccountLogin('chat');
         }
       },
       onError: (error) => {
-        console.log('refreshToken mutation error:', error);
         if (authConfig?.test === true) {
           return;
         }
-        navigate('/login');
+        // Clean up tokens on refresh error
+        localStorage.removeItem('authToken');
+        document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        
+        redirectToAccountLogin('chat');
       },
     });
   }, []);
@@ -164,7 +194,12 @@ const AuthContextProvider = ({
       setUser(userQuery.data);
     } else if (userQuery.isError) {
       doSetError((userQuery.error as Error).message);
-      navigate('/login', { replace: true });
+      
+      // Clean up tokens on user query error
+      localStorage.removeItem('authToken');
+      document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      
+      redirectToAccountLogin('chat');
     }
     if (error != null && error && isAuthenticated) {
       doSetError(undefined);
@@ -187,13 +222,49 @@ const AuthContextProvider = ({
 
   useEffect(() => {
     const handleTokenUpdate = (event) => {
-      console.log('tokenUpdated event received event');
       const newToken = event.detail;
-      setUserContext({
-        token: newToken,
-        isAuthenticated: true,
-        user: user,
-      });
+      
+      try {
+        // Decode JWT token to get user info
+        const base64Url = newToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        
+        // Create user object from token payload
+        const userFromToken = {
+          _id: payload.id,
+          id: payload.id,
+          email: payload.email,
+          name: payload.name,
+          username: payload.name || payload.email,
+          role: payload.role || 'user',
+          account_status: payload.account_status,
+          avatar: '',
+          provider: 'local',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        setUserContext({
+          token: newToken,
+          isAuthenticated: true,
+          user: userFromToken,
+        });
+      } catch (error) {
+        console.error('Error decoding JWT token:', error);
+        // Fallback to setting just the token
+        setUserContext({
+          token: newToken,
+          isAuthenticated: true,
+          user: user,
+        });
+      }
     };
 
     window.addEventListener('tokenUpdated', handleTokenUpdate);
@@ -201,7 +272,7 @@ const AuthContextProvider = ({
     return () => {
       window.removeEventListener('tokenUpdated', handleTokenUpdate);
     };
-  }, [setUserContext, user]);
+  }, [setUserContext]);
 
   // Make the provider update only when it should
   const memoedValue = useMemo(
@@ -209,7 +280,6 @@ const AuthContextProvider = ({
       user,
       token,
       error,
-      login,
       logout,
       setError,
       roles: {

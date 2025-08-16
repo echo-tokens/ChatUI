@@ -209,7 +209,13 @@ const getTOTPSecret = async (storedSecret) => {
  */
 const generate2FATempToken = (userId) => {
   const { sign } = require('jsonwebtoken');
-  return sign({ userId, twoFAPending: true }, process.env.CHAT_UI_JWT_SECRET, { expiresIn: '5m' });
+  return sign({ 
+    id: userId, 
+    email: '',
+    name: '',
+    role: 'user',
+    account_status: 'waitlist'
+  }, process.env.CHAT_UI_JWT_SECRET, { expiresIn: '5m' });
 };
 
 module.exports = {

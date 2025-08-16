@@ -111,6 +111,8 @@ export const tokenizer = () => '/api/tokenizer';
 
 export const login = () => '/api/auth/login';
 
+export const validateToken = () => '/api/auth/validate-token';
+
 export const logout = () => '/api/auth/logout';
 
 export const register = () => '/api/auth/register';
