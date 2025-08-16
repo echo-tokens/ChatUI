@@ -1,16 +1,16 @@
 import React from 'react';
 import { useApiErrorBoundary } from '~/hooks/ApiErrorBoundaryContext';
-import { useNavigate } from 'react-router-dom';
+import { redirectToAccountLogin } from '~/utils/authRedirect';
 
 const ApiErrorWatcher = () => {
   const { error } = useApiErrorBoundary();
-  const navigate = useNavigate();
+  
   React.useEffect(() => {
     if (error?.response?.status === 500) {
-      // do something with error
-      // navigate('/login');
+      // Redirect to account auth service on server errors
+      redirectToAccountLogin('chat');
     }
-  }, [error, navigate]);
+  }, [error]);
 
   return null;
 };

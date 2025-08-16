@@ -29,10 +29,87 @@ const {
   validateRegistration,
   validatePasswordReset,
 } = require('~/server/middleware');
+const { jwtVerify } = require('jose');
 
 const router = express.Router();
 
 const ldapAuth = !!process.env.LDAP_URL && !!process.env.LDAP_USER_SEARCH_BASE;
+
+// Token validation endpoint
+router.post('/validate-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Token is required' 
+      });
+    }
+
+    // Check if JWT secret is configured
+    if (!process.env.CHAT_UI_JWT_SECRET) {
+      console.error('CHAT_UI_JWT_SECRET not configured');
+      return res.status(500).json({
+        success: false,
+        valid: false,
+        error: 'JWT secret not configured'
+      });
+    }
+    
+    // Convert the secret to Uint8Array for jose
+    const secret = new TextEncoder().encode(process.env.CHAT_UI_JWT_SECRET);
+    
+    // Verify the JWT token with signature validation
+    const { payload } = await jwtVerify(token, secret, {
+      algorithms: ['HS256'], // Only allow HS256 algorithm
+      issuer: undefined, // No issuer validation for now
+      audience: undefined, // No audience validation for now
+    });
+    
+    // If we get here, the token is valid and signature is verified
+    return res.status(200).json({
+      success: true,
+      valid: true,
+      user: {
+        id: payload.id,
+        email: payload.email,
+        name: payload.name,
+        role: payload.role,
+        account_status: payload.account_status
+      }
+    });
+  } catch (error) {
+    console.error('Token validation error:', error.message);
+    
+    if (error.code === 'ERR_JWT_INVALID') {
+      return res.status(401).json({
+        success: false,
+        valid: false,
+        error: 'Invalid token format or signature'
+      });
+    } else if (error.code === 'ERR_JWT_EXPIRED') {
+      return res.status(401).json({
+        success: false,
+        valid: false,
+        error: 'Token has expired'
+      });
+    } else if (error.code === 'ERR_JWT_ALGORITHM_MISMATCH') {
+      return res.status(401).json({
+        success: false,
+        valid: false,
+        error: 'Invalid token algorithm'
+      });
+    } else {
+      return res.status(401).json({
+        success: false,
+        valid: false,
+        error: 'Token validation failed: ' + error.message
+      });
+    }
+  }
+});
+
 //Local
 router.post('/logout', requireJwtAuth, logoutController);
 router.post(

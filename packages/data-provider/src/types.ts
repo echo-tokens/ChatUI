@@ -188,6 +188,7 @@ export type TUser = {
   avatar: string;
   role: string;
   provider: string;
+  account_status?: string;
   plugins?: string[];
   twoFactorEnabled?: boolean;
   backupCodes?: TBackupCode[];
