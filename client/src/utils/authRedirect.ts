@@ -3,6 +3,7 @@
  */
 export function getAccountAuthUrl(): string {
   const accountUrl = import.meta.env.VITE_ACCOUNT_URL!;
+  console.log('getAccountAuthUrl - process.env.VITE_ACCOUNT_URL:', accountUrl);
   return accountUrl;
 }
 
@@ -19,5 +20,6 @@ export function getAccountLoginUrl(type: string = 'chat'): string {
  */
 export function redirectToAccountLogin(type: string = 'chat'): void {
   const loginUrl = getAccountLoginUrl(type);
+  return;
   window.location.href = loginUrl;
 }
