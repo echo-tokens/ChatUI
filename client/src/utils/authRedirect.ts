@@ -2,7 +2,7 @@
  * Get the account auth service URL for redirects
  */
 export function getAccountAuthUrl(): string {
-  const accountUrl = process.env.VITE_ACCOUNT_URL || 'http://localhost:5050';
+  const accountUrl = process.env.VITE_ACCOUNT_URL!;
   return accountUrl;
 }
 
