@@ -134,7 +134,9 @@ axios.interceptors.response.use(
             `Refresh token failed from shared link, attempting request to ${originalRequest.url}`,
           );
         } else {
-          window.location.href = '/login';
+          console.log('data-provider: Refresh token failed, redirecting to account login');
+          // Dispatch a custom event to trigger account auth redirect
+          window.dispatchEvent(new CustomEvent('redirectToAccountLogin', { detail: 'chat' }));
         }
       } catch (err) {
         processQueue(err as AxiosError, null);

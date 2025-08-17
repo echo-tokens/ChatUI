@@ -72,7 +72,9 @@ const refreshController = async (req, res) => {
       const claims = tokenset.claims();
       const user = await findUser({ email: claims.email });
       if (!user) {
-        return res.status(401).redirect('/login');
+        console.log('AuthController: OpenID user not found, redirecting to account auth service');
+        const accountAuthUrl = process.env.VITE_ACCOUNT_URL || 'https://account-staging.echollm.io';
+        return res.status(401).redirect(`${accountAuthUrl}/login?type=chat`);
       }
       const token = setOpenIDAuthTokens(tokenset, res);
       return res.status(200).send({ token, user });
@@ -85,7 +87,9 @@ const refreshController = async (req, res) => {
     const payload = jwt.verify(refreshToken, process.env.CHAT_UI_JWT_REFRESH_SECRET);
     const user = await getUserById(payload.id, '-password -__v -totpSecret');
     if (!user) {
-      return res.status(401).redirect('/login');
+      console.log('AuthController: User not found by ID, redirecting to account auth service');
+      const accountAuthUrl = process.env.VITE_ACCOUNT_URL || 'https://account-staging.echollm.io';
+      return res.status(401).redirect(`${accountAuthUrl}/login?type=chat`);
     }
 
     const userId = payload.id;
@@ -108,7 +112,9 @@ const refreshController = async (req, res) => {
       // Retrying from a refresh token request that failed (401)
       res.status(403).send('No session found');
     } else if (payload.exp < Date.now() / 1000) {
-      res.status(403).redirect('/login');
+      console.log('AuthController: Refresh token expired, redirecting to account auth service');
+      const accountAuthUrl = process.env.VITE_ACCOUNT_URL || 'https://account-staging.echollm.io';
+      res.status(403).redirect(`${accountAuthUrl}/login?type=chat`);
     } else {
       res.status(401).send('Refresh token expired or not found for this user');
     }

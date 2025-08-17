@@ -2,12 +2,14 @@ import React from 'react';
 import { useAuthContext } from '~/hooks/AuthContext';
 import StreamlinedEarningsDashboard from '~/components/Earnings/StreamlinedEarningsDashboard';
 import type { User } from '~/types/trust-r2';
+import { redirectToAccountLogin } from '~/utils/authRedirect';
 
 export default function EarningsPage() {
   const { user: authUser, isAuthenticated } = useAuthContext();
 
   if (!isAuthenticated) {
-    window.location.href = '/login';
+    console.log('EarningsPage: User not authenticated, redirecting to account login');
+    redirectToAccountLogin('chat');
     return null;
   }
 

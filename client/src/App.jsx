@@ -1,3 +1,4 @@
+import React from 'react';
 import { RecoilRoot } from 'recoil';
 import { DndProvider } from 'react-dnd';
 import { RouterProvider } from 'react-router-dom';
@@ -10,9 +11,24 @@ import { ToastProvider } from './Providers';
 import Toast from './components/ui/Toast';
 import { LiveAnnouncer } from '~/a11y';
 import { router } from './routes';
+import { redirectToAccountLogin } from './utils/authRedirect';
 
 const App = () => {
   const { setError } = useApiErrorBoundary();
+
+  // Add event listener for account auth redirects
+  React.useEffect(() => {
+    const handleRedirectToAccountLogin = (event) => {
+      console.log('App: Received redirectToAccountLogin event, type:', event.detail);
+      redirectToAccountLogin(event.detail);
+    };
+
+    window.addEventListener('redirectToAccountLogin', handleRedirectToAccountLogin);
+    
+    return () => {
+      window.removeEventListener('redirectToAccountLogin', handleRedirectToAccountLogin);
+    };
+  }, []);
 
   const queryClient = new QueryClient({
     queryCache: new QueryCache({

@@ -16,7 +16,11 @@ const checkDomainAllowed = async (req, res, next = () => {}) => {
   const email = req?.user?.email;
   if (email && !(await isEmailDomainAllowed(email))) {
     logger.error(`[Social Login] [Social Login not allowed] [Email: ${email}]`);
-    return res.redirect('/login');
+    
+    // Redirect to account auth service instead of hardcoded /login
+    const accountAuthUrl = process.env.VITE_ACCOUNT_URL || 'https://account-staging.echollm.io';
+    console.log(`checkDomainAllowed: Redirecting to account auth service: ${accountAuthUrl}/login?type=chat`);
+    return res.redirect(`${accountAuthUrl}/login?type=chat`);
   } else {
     return next();
   }
