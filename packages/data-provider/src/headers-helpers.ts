@@ -5,7 +5,7 @@ export function setAcceptLanguageHeader(value: string): void {
 }
 
 export function setTokenHeader(token: string) {
-  console.log('setTokenHeader: Setting Authorization header with token:', token.substring(0, 20) + '...');
+  console.log('setTokenHeader: Setting Authorization header');
   axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
-  console.log('setTokenHeader: Authorization header set to:', axios.defaults.headers.common['Authorization']?.substring(0, 20) + '...');
+  console.log('setTokenHeader: Authorization header set');
 }

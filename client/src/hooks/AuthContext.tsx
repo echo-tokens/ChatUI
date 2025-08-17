@@ -33,6 +33,15 @@ const AuthContextProvider = ({
   authConfig?: TAuthConfig;
   children: ReactNode;
 }) => {
+  // Helper function to clear all authentication cookies and tokens
+  const clearAllAuthData = () => {
+    localStorage.removeItem('authToken');
+    
+    // Clear all authentication cookies
+    document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'token_provider=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  };
   const [user, setUser] = useRecoilState(store.user);
   const [token, setToken] = useState<string | undefined>(() => {
     // Priority: Check for chatAuthToken cookie first, then localStorage
@@ -75,7 +84,7 @@ const AuthContextProvider = ({
     () =>
       debounce((userContext: TUserContext) => {
         const { token, isAuthenticated, user, redirect } = userContext;
-        console.log('AuthContext: setUserContext called with token:', token ? token.substring(0, 20) + '...' : 'undefined');
+        console.log('AuthContext: setUserContext called');
         setUser(user);
         setToken(token);
         //@ts-ignore - ok for token to be undefined initially
@@ -105,9 +114,8 @@ const AuthContextProvider = ({
 
   const logoutUser = useLogoutUserMutation({
     onSuccess: (data) => {
-      // Clean up tokens
-      localStorage.removeItem('authToken');
-      document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      // Clean up all tokens and cookies
+      clearAllAuthData();
       
       setUserContext({
         token: undefined,
@@ -121,9 +129,8 @@ const AuthContextProvider = ({
     onError: (error) => {
       doSetError((error as Error).message);
       
-      // Clean up tokens even on error
-      localStorage.removeItem('authToken');
-      document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      // Clean up all tokens and cookies even on error
+      clearAllAuthData();
       
       setUserContext({
         token: undefined,
@@ -173,9 +180,8 @@ const AuthContextProvider = ({
           if (authConfig?.test === true) {
             return;
           }
-          // Clean up tokens on refresh failure
-          localStorage.removeItem('authToken');
-          document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          // Clean up all tokens and cookies on refresh failure
+          clearAllAuthData();
           
           console.log('AuthContext: Refresh token failure, redirecting to account login');
           redirectToAccountLogin('chat');
@@ -185,9 +191,8 @@ const AuthContextProvider = ({
         if (authConfig?.test === true) {
           return;
         }
-        // Clean up tokens on refresh error
-        localStorage.removeItem('authToken');
-        document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        // Clean up all tokens and cookies on refresh error
+        clearAllAuthData();
         
         console.log('AuthContext: Refresh token error, redirecting to account login');
         redirectToAccountLogin('chat');
@@ -201,9 +206,8 @@ const AuthContextProvider = ({
     } else if (userQuery.isError) {
       doSetError((userQuery.error as Error).message);
       
-      // Clean up tokens on user query error
-      localStorage.removeItem('authToken');
-      document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      // Clean up all tokens and cookies on user query error
+      clearAllAuthData();
       
       console.log('AuthContext: User query error, redirecting to account login');
       redirectToAccountLogin('chat');
@@ -231,7 +235,6 @@ const AuthContextProvider = ({
     const handleTokenUpdate = (event) => {
       const newToken = event.detail;
       console.log('AuthContext: Received tokenUpdated event');
-      console.log('AuthContext: Token:', newToken.substring(0, 20) + '...');
       
       try {
         // Decode JWT token to get user info
@@ -272,7 +275,6 @@ const AuthContextProvider = ({
         });
       } catch (error) {
         console.error('AuthContext: Error decoding JWT token:', error);
-        console.log('AuthContext: Token that failed to decode:', newToken);
         // Fallback to setting just the token
         setUserContext({
           token: newToken,

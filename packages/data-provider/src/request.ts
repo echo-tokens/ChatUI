@@ -103,8 +103,7 @@ axios.interceptors.response.use(
       console.log('401 error details:', {
         url: originalRequest.url,
         method: originalRequest.method,
-        hasAuthHeader: !!originalRequest.headers?.Authorization,
-        authHeader: originalRequest.headers?.Authorization ? originalRequest.headers.Authorization.substring(0, 20) + '...' : 'none'
+        hasAuthHeader: !!originalRequest.headers?.Authorization
       });
       originalRequest._retry = true;
 
