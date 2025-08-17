@@ -16,6 +16,29 @@ import { redirectToAccountLogin } from './utils/authRedirect';
 const App = () => {
   const { setError } = useApiErrorBoundary();
 
+  // Handle cookie-to-localStorage transfer on app load
+  React.useEffect(() => {
+    // Helper function to get cookie
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    };
+
+    // Check for chatAuthToken cookie and transfer to localStorage if needed
+    const cookieToken = getCookie('chatAuthToken');
+    const localStorageToken = localStorage.getItem('authToken');
+
+    if (cookieToken && !localStorageToken) {
+      console.log('App: Found chatAuthToken cookie, transferring to localStorage');
+      localStorage.setItem('authToken', cookieToken);
+      
+      // Trigger the tokenUpdated event to set up authentication
+      window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: cookieToken }));
+    }
+  }, []);
+
   // Add event listener for account auth redirects
   React.useEffect(() => {
     const handleRedirectToAccountLogin = (event) => {

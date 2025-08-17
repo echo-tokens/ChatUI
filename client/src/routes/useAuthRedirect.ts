@@ -15,16 +15,27 @@ export default function useAuthRedirect() {
     };
 
     // Check for chatAuthToken cookie immediately
-    const hasCookieToken = getCookie('chatAuthToken');
+    const cookieToken = getCookie('chatAuthToken');
+    const localStorageToken = localStorage.getItem('authToken');
 
-    // If no cookie token, redirect immediately
-    if (!hasCookieToken) {
-      console.log('useAuthRedirect: No chatAuthToken cookie found, redirecting to account login');
+    // If we have a cookie token but no localStorage token, transfer it
+    if (cookieToken && !localStorageToken) {
+      console.log('useAuthRedirect: Found chatAuthToken cookie, transferring to localStorage');
+      localStorage.setItem('authToken', cookieToken);
+      
+      // Trigger the tokenUpdated event to set up authentication
+      window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: cookieToken }));
+      return;
+    }
+
+    // If no cookie token and no localStorage token, redirect immediately
+    if (!cookieToken && !localStorageToken) {
+      console.log('useAuthRedirect: No chatAuthToken cookie or localStorage token found, redirecting to account login');
       redirectToAccountLogin('chat');
       return;
     }
 
-    // If we have a cookie but still not authenticated after a reasonable time, redirect
+    // If we have a localStorage token but still not authenticated after a reasonable time, redirect
     const timeout = setTimeout(() => {
       if (!isAuthenticated) {
         console.log('useAuthRedirect: Not authenticated after 3 seconds, redirecting to account login');
