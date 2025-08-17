@@ -10,8 +10,5 @@
     "healthcheckTimeout": 60,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
-  },
-  "variables": {
-    "VITE_ACCOUNT_URL": "https://account-staging.echollm.io"
   }
 }

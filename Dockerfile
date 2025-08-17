@@ -10,6 +10,10 @@ RUN apk add --no-cache python3 py3-pip uv
 # Set environment variable to use jemalloc
 ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
 
+# Build arguments for environment variables
+ARG VITE_ACCOUNT_URL
+ENV VITE_ACCOUNT_URL=$VITE_ACCOUNT_URL
+
 # Add `uv` for extended MCP support
 COPY --from=ghcr.io/astral-sh/uv:0.6.13 /uv /uvx /bin/
 RUN uv --version
