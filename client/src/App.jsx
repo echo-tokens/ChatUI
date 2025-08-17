@@ -32,9 +32,11 @@ const App = () => {
 
     if (cookieToken && !localStorageToken) {
       console.log('App: Found chatAuthToken cookie, transferring to localStorage');
+      console.log('App: Token from cookie:', cookieToken.substring(0, 20) + '...');
       localStorage.setItem('authToken', cookieToken);
       
       // Trigger the tokenUpdated event to set up authentication
+      console.log('App: Dispatching tokenUpdated event');
       window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: cookieToken }));
     }
   }, []);

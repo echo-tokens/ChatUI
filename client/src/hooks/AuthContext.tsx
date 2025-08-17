@@ -75,10 +75,12 @@ const AuthContextProvider = ({
     () =>
       debounce((userContext: TUserContext) => {
         const { token, isAuthenticated, user, redirect } = userContext;
+        console.log('AuthContext: setUserContext called with token:', token ? token.substring(0, 20) + '...' : 'undefined');
         setUser(user);
         setToken(token);
         //@ts-ignore - ok for token to be undefined initially
         setTokenHeader(token);
+        console.log('AuthContext: Token header set, isAuthenticated:', isAuthenticated);
         setIsAuthenticated(isAuthenticated);
 
         // Use a custom redirect if set
@@ -228,6 +230,8 @@ const AuthContextProvider = ({
   useEffect(() => {
     const handleTokenUpdate = (event) => {
       const newToken = event.detail;
+      console.log('AuthContext: Received tokenUpdated event');
+      console.log('AuthContext: Token:', newToken.substring(0, 20) + '...');
       
       try {
         // Decode JWT token to get user info
@@ -240,6 +244,8 @@ const AuthContextProvider = ({
             .join('')
         );
         const payload = JSON.parse(jsonPayload);
+        
+        console.log('AuthContext: Decoded token payload:', payload);
         
         // Create user object from token payload
         const userFromToken = {
@@ -256,13 +262,17 @@ const AuthContextProvider = ({
           updatedAt: new Date().toISOString(),
         };
         
+        console.log('AuthContext: Created user object:', userFromToken);
+        
+        console.log('AuthContext: Setting user context with token and user');
         setUserContext({
           token: newToken,
           isAuthenticated: true,
           user: userFromToken,
         });
       } catch (error) {
-        console.error('Error decoding JWT token:', error);
+        console.error('AuthContext: Error decoding JWT token:', error);
+        console.log('AuthContext: Token that failed to decode:', newToken);
         // Fallback to setting just the token
         setUserContext({
           token: newToken,

@@ -100,6 +100,12 @@ axios.interceptors.response.use(
 
     if (error.response.status === 401 && !originalRequest._retry) {
       console.warn('401 error, refreshing token');
+      console.log('401 error details:', {
+        url: originalRequest.url,
+        method: originalRequest.method,
+        hasAuthHeader: !!originalRequest.headers?.Authorization,
+        authHeader: originalRequest.headers?.Authorization ? originalRequest.headers.Authorization.substring(0, 20) + '...' : 'none'
+      });
       originalRequest._retry = true;
 
       if (isRefreshing) {
