@@ -35,12 +35,57 @@ const AuthContextProvider = ({
 }) => {
   // Helper function to clear all authentication cookies and tokens
   const clearAllAuthData = () => {
+    console.log('AuthContext: Clearing all authentication data');
+    
+    // Log current cookies before clearing
+    console.log('AuthContext: Current cookies before clearing:', document.cookie);
+    
+    // Clear localStorage
     localStorage.removeItem('authToken');
     
-    // Clear all authentication cookies
-    document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    document.cookie = 'token_provider=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    // Clear any other potential auth-related localStorage items
+    const authRelatedKeys = [
+      'authToken',
+      'user',
+      'token',
+      'refreshToken',
+      'chatAuthToken'
+    ];
+    
+    authRelatedKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    // Clear all authentication cookies with multiple domain/path combinations
+    const cookiesToClear = [
+      'chatAuthToken',
+      'refreshToken', 
+      'token_provider'
+    ];
+    
+    const domains = ['', 'echollm.io', '.railway.app'];
+    const paths = ['/', '/api', ''];
+    
+    cookiesToClear.forEach(cookieName => {
+      domains.forEach(domain => {
+        paths.forEach(path => {
+          const domainPart = domain ? `; domain=${domain}` : '';
+          const pathPart = path ? `; path=${path}` : '';
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT${domainPart}${pathPart}`;
+        });
+      });
+    });
+    
+    // Force clear any remaining cookies by setting them to empty with various attributes
+    cookiesToClear.forEach(cookieName => {
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname}`;
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    });
+    
+    // Log cookies after clearing
+    console.log('AuthContext: Cookies after clearing:', document.cookie);
+    console.log('AuthContext: All authentication data cleared');
   };
   const [user, setUser] = useRecoilState(store.user);
   const [token, setToken] = useState<string | undefined>(() => {
@@ -122,6 +167,7 @@ const AuthContextProvider = ({
         isAuthenticated: false,
         user: undefined,
       });
+      
       // Redirect to account auth service login
       console.log('AuthContext: Logout success, redirecting to account login');
       redirectToAccountLogin('chat');
@@ -137,6 +183,7 @@ const AuthContextProvider = ({
         isAuthenticated: false,
         user: undefined,
       });
+      
       // Redirect to account auth service login on error too
       console.log('AuthContext: Logout error, redirecting to account login');
       redirectToAccountLogin('chat');

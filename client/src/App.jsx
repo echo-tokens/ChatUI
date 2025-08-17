@@ -30,6 +30,8 @@ const App = () => {
     const cookieToken = getCookie('chatAuthToken');
     const localStorageToken = localStorage.getItem('authToken');
 
+    console.log('App: Initial auth check - cookieToken:', !!cookieToken, 'localStorageToken:', !!localStorageToken);
+
     if (cookieToken && !localStorageToken) {
       console.log('App: Found chatAuthToken cookie, transferring to localStorage');
       localStorage.setItem('authToken', cookieToken);
@@ -37,6 +39,10 @@ const App = () => {
       // Trigger the tokenUpdated event to set up authentication
       console.log('App: Dispatching tokenUpdated event');
       window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: cookieToken }));
+    } else if (cookieToken && localStorageToken) {
+      console.log('App: Both cookie and localStorage have tokens - clearing cookie to prevent conflicts');
+      // Clear the cookie to prevent conflicts
+      document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
   }, []);
 
