@@ -20,7 +20,6 @@ import {
   recordUserChatActivity,
   subscribeTrustUpdates
 } from '~/api/trust-r2';
-import { supabase } from '~/lib/supabase';
 import type {
   User,
   PayoutRequest,
@@ -47,29 +46,6 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
   const [dbConnectionStatus, setDbConnectionStatus] = useState<'checking' | 'connected' | 'disconnected' | 'mock'>('checking');
 
   const needsStripeSetup = !currentUser?.stripe_account_id;
-
-  // Test database connection
-  useEffect(() => {
-    const testDbConnection = async () => {
-      try {
-        console.log('Testing Supabase connection...');
-        const { data, error } = await supabase.from('user_trust_metrics').select('user_id').limit(1);
-        
-        if (error) {
-          console.error('Database connection test failed:', error);
-          setDbConnectionStatus('disconnected');
-        } else {
-          console.log('Database connection successful! Sample data:', data);
-          setDbConnectionStatus('connected');
-        }
-      } catch (error) {
-        console.error('Database connection error:', error);
-        setDbConnectionStatus('disconnected');
-      }
-    };
-
-    testDbConnection();
-  }, []);
 
   useEffect(() => {
     // Initialize user if not provided
