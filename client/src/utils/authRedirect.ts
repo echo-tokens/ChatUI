@@ -19,6 +19,5 @@ export function getAccountLoginUrl(type: string = 'chat'): string {
  */
 export function redirectToAccountLogin(type: string = 'chat'): void {
   const loginUrl = getAccountLoginUrl(type);
-  return;
   window.location.href = loginUrl;
 }
