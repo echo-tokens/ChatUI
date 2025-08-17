@@ -8,6 +8,7 @@ const ApiErrorWatcher = () => {
   React.useEffect(() => {
     if (error?.response?.status === 500) {
       // Redirect to account auth service on server errors
+      console.log('ApiErrorWatcher: Server error (500), redirecting to account login');
       redirectToAccountLogin('chat');
     }
   }, [error]);

@@ -113,6 +113,7 @@ const AuthContextProvider = ({
         user: undefined,
       });
       // Redirect to account auth service login
+      console.log('AuthContext: Logout success, redirecting to account login');
       redirectToAccountLogin('chat');
     },
     onError: (error) => {
@@ -128,6 +129,7 @@ const AuthContextProvider = ({
         user: undefined,
       });
       // Redirect to account auth service login on error too
+      console.log('AuthContext: Logout error, redirecting to account login');
       redirectToAccountLogin('chat');
     },
   });
@@ -173,6 +175,7 @@ const AuthContextProvider = ({
           localStorage.removeItem('authToken');
           document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           
+          console.log('AuthContext: Refresh token failure, redirecting to account login');
           redirectToAccountLogin('chat');
         }
       },
@@ -184,6 +187,7 @@ const AuthContextProvider = ({
         localStorage.removeItem('authToken');
         document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
         
+        console.log('AuthContext: Refresh token error, redirecting to account login');
         redirectToAccountLogin('chat');
       },
     });
@@ -199,6 +203,7 @@ const AuthContextProvider = ({
       localStorage.removeItem('authToken');
       document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       
+      console.log('AuthContext: User query error, redirecting to account login');
       redirectToAccountLogin('chat');
     }
     if (error != null && error && isAuthenticated) {

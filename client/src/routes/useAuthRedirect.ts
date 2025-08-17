@@ -19,6 +19,7 @@ export default function useAuthRedirect() {
 
     // If no cookie token, redirect immediately
     if (!hasCookieToken) {
+      console.log('useAuthRedirect: No chatAuthToken cookie found, redirecting to account login');
       redirectToAccountLogin('chat');
       return;
     }
@@ -26,6 +27,7 @@ export default function useAuthRedirect() {
     // If we have a cookie but still not authenticated after a reasonable time, redirect
     const timeout = setTimeout(() => {
       if (!isAuthenticated) {
+        console.log('useAuthRedirect: Not authenticated after 3 seconds, redirecting to account login');
         redirectToAccountLogin('chat');
       }
     }, 3000); // 3 second timeout
