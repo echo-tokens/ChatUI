@@ -42,7 +42,8 @@ const App = () => {
     } else if (cookieToken && localStorageToken) {
       console.log('App: Both cookie and localStorage have tokens - clearing cookie to prevent conflicts');
       // Clear the cookie to prevent conflicts
-      document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      // document.cookie = 'chatAuthToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      localStorage.setItem('authToken', cookieToken);
     }
   }, []);
 

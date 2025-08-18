@@ -221,6 +221,7 @@ const AuthContextProvider = ({
     refreshToken.mutate(undefined, {
       onSuccess: (data: t.TRefreshTokenResponse | undefined) => {
         const { user, token = '' } = data ?? {};
+        console.log('user', user);
         if (token) {
           setUserContext({ token, isAuthenticated: true, user });
         } else {
@@ -230,7 +231,7 @@ const AuthContextProvider = ({
           // Clean up all tokens and cookies on refresh failure
           clearAllAuthData();
           
-          console.log('AuthContext: Refresh token failure, redirecting to account login');
+          // console.log('AuthContext: Refresh token failure, redirecting to account login');
           redirectToAccountLogin('chat');
         }
       },

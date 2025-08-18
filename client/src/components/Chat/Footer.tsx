@@ -107,8 +107,8 @@ export default function Footer({ className }: { className?: string }) {
 
         {/* Right side - affiliate disclosure */}
         <div className="text-right text-xs text-text-primary">
-          <div>Affiliate links earn us commission.</div>
-          <div>As an Amazon Associate I earn from qualifying purchases.</div>
+          {/* <div>Affiliate links earn us commission.</div> */}
+          {/* <div>As an Amazon Associate I earn from qualifying purchases.</div> */}
         </div>
       </div>
     </div>
