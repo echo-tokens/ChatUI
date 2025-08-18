@@ -455,7 +455,10 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
         <div 
           className={cn(
             "mt-0.5 overflow-hidden transition-all duration-700 ease-in-out",
-            dropdownComponent && !isDropdownClosing ? "max-h-[400px] mb-3" : "max-h-0 mb-0.5"
+            !showFeedback && dropdownComponent && !isDropdownClosing ? "max-h-[400px] mb-3" : "max-h-0 mb-0.5",
+            // Add margin between feedback and task dropdowns when both are active
+            showFeedback && dropdownComponent && !isDropdownClosing && "max-h-[400px] mt-2",
+            showFeedback && "max-h-[400px] mb-3"
           )}
           onClick={(e) => e.stopPropagation()}
         >
