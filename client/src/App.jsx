@@ -12,6 +12,7 @@ import Toast from './components/ui/Toast';
 import { LiveAnnouncer } from '~/a11y';
 import { router } from './routes';
 import { redirectToAccountLogin } from './utils/authRedirect';
+import { DynamicFavicon } from './components/DynamicFavicon.jsx';
 
 const App = () => {
   const { setError } = useApiErrorBoundary();
@@ -78,6 +79,7 @@ const App = () => {
             <RadixToast.Provider>
               <ToastProvider>
                 <DndProvider backend={HTML5Backend}>
+                  <DynamicFavicon />
                   <RouterProvider router={router} />
                   <ReactQueryDevtools initialIsOpen={false} position="top-right" />
                   <Toast />
