@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { getConfigDefaults, PermissionTypes, Permissions } from 'librechat-data-provider';
+import { useOutletContext, useParams } from 'react-router-dom';
+import { getConfigDefaults, PermissionTypes, Permissions, Constants } from 'librechat-data-provider';
 import type { ContextType } from '~/common';
 import ModelSelector from './Menus/Endpoints/ModelSelector';
 import { PresetsMenu, HeaderNewChat, OpenSidebar } from './Menus';
@@ -9,12 +9,17 @@ import ExportAndShareMenu from './ExportAndShareMenu';
 import { useMediaQuery, useHasAccess } from '~/hooks';
 import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
+import { FloatingHelpButton } from '~/components/ui';
+import { useGetMessagesByConvoId } from '~/data-provider';
+import type { TMessage } from 'librechat-data-provider';
 
 const defaultInterface = getConfigDefaults().interface;
 
 export default function Header() {
   const { data: startupConfig } = useGetStartupConfig();
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
+  const { conversationId } = useParams();
+  
   const interfaceConfig = useMemo(
     () => startupConfig?.interface ?? defaultInterface,
     [startupConfig],
@@ -26,6 +31,11 @@ export default function Header() {
   });
 
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
+
+  // Get raw messages data for help request state
+  const { data: rawMessages = [] } = useGetMessagesByConvoId(conversationId ?? '', {
+    enabled: !!conversationId && conversationId !== Constants.NEW_CONVO,
+  });
 
   return (
     <div className="relative sticky top-0 z-10 flex h-14 w-full items-center justify-between bg-white p-2 font-semibold text-text-primary dark:bg-gray-800">
@@ -57,6 +67,7 @@ export default function Header() {
             {false && <AddMultiConvo />}
             {isSmallScreen && (
               <>
+                <FloatingHelpButton conversationId={conversationId} messages={rawMessages} />
                 <ExportAndShareMenu
                   isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
                 />
@@ -67,6 +78,7 @@ export default function Header() {
         </div>
         {!isSmallScreen && (
           <div className="flex items-center gap-2">
+            <FloatingHelpButton conversationId={conversationId} messages={rawMessages} />
             <ExportAndShareMenu
               isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
             />
