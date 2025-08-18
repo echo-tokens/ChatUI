@@ -58,12 +58,100 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
     }
   };
 
-  const handleFeedbackSubmit = () => {
+  // Extract ad_insertion_id from link URL
+  const extractAdInsertionId = (url: string): string | null => {
+    try {
+      if (!url) return null;
+      
+      // Ensure URL has protocol
+      const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+      const urlObj = new URL(fullUrl);
+      
+      // Extract the first path segment as insertion_id
+      const pathSegments = urlObj.pathname.split('/').filter(segment => segment);
+      return pathSegments[0] || null;
+    } catch (error) {
+      console.error('Error extracting ad_insertion_id:', error);
+      return null;
+    }
+  };
+
+  const handleThumbRatingSubmit = async (rating: 'up' | 'down') => {
+    const adInsertionId = extractAdInsertionId(linkUrl || '');
+    if (!adInsertionId) {
+      console.error('Could not extract ad_insertion_id from URL');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/tasks/thumb-rating', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ad_insertion_id: adInsertionId,
+          thumb_rating: rating
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to submit thumb rating');
+      } else {
+        console.log('Thumb rating submitted successfully');
+      }
+    } catch (error) {
+      console.error('Error submitting thumb rating:', error);
+    }
+  };
+
+  const handleFeedbackSubmit = async () => {
     console.log('Ad feedback submitted:', { positionRating, relevancyRating, feedbackText });
     
-    // Step 1: Disable feedback and start submission
+    // Step 1: Disable feedback and start submission immediately
     setFeedbackDisabled(true);
     setIsSubmitting(true);
+    
+    const adInsertionId = extractAdInsertionId(linkUrl || '');
+    if (!adInsertionId) {
+      console.error('Could not extract ad_insertion_id from URL');
+      // Re-enable if there's an error
+      setFeedbackDisabled(false);
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/tasks/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ad_insertion_id: adInsertionId,
+          product_feedback: feedbackText,
+          relevance_rating: relevancyRating
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to submit feedback');
+        // Re-enable if there's an error
+        setFeedbackDisabled(false);
+        setIsSubmitting(false);
+        return;
+      } else {
+        console.log('Feedback submitted successfully');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      // Re-enable if there's an error
+      setFeedbackDisabled(false);
+      setIsSubmitting(false);
+      return;
+    }
     
     // Step 2: Show thank you message below feedback (fades in)
     setShowThankYou(true);
@@ -193,10 +281,11 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
           {display_thumbs && (
             <div className="flex gap-1">
             <button
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
                 setThumbsRating('up');
                 setShowFeedback(true);
+                await handleThumbRatingSubmit('up');
               }}
               disabled={thumbsRating !== null}
               className={cn(
@@ -221,10 +310,11 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
               </svg>
             </button>
             <button
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
                 setThumbsRating('down');
                 setShowFeedback(true);
+                await handleThumbRatingSubmit('down');
               }}
               disabled={thumbsRating !== null}
               className={cn(
