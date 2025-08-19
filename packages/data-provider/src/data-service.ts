@@ -98,6 +98,10 @@ export const login = (payload: t.TLoginUser): Promise<t.TLoginResponse> => {
   return request.post(endpoints.login(), payload);
 };
 
+export const validateToken = (token: string): Promise<{ success: boolean; valid: boolean; user?: any; error?: string }> => {
+  return request.post(endpoints.validateToken(), { token });
+};
+
 export const logout = (): Promise<m.TLogoutResponse> => {
   return request.post(endpoints.logout());
 };

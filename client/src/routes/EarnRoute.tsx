@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuthContext } from '~/hooks/AuthContext';
 import TaskEarningsDashboard from '~/components/Earnings/TaskEarningsDashboard';
 import TasksView from '~/components/Earnings/TasksView';
+import { redirectToAccountLogin } from '~/utils/authRedirect';
 
 type ViewState = 'dashboard' | 'tasks';
 
@@ -10,7 +11,8 @@ export default function EarnRoute() {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
 
   if (!isAuthenticated) {
-    window.location.href = '/login';
+    console.log('EarnRoute: User not authenticated, redirecting to account login');
+    redirectToAccountLogin('chat');
     return null;
   }
 

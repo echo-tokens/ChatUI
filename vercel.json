@@ -20,7 +20,8 @@
   },
   "build": {
     "env": {
-      "NODE_ENV": "production"
+      "NODE_ENV": "production",
+      "VITE_ACCOUNT_URL": "@VITE_ACCOUNT_URL"
     }
   }
 } 

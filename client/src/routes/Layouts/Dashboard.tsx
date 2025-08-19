@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuthContext, usePreviousLocation } from '~/hooks';
 import { DashboardContext } from '~/Providers';
 import store from '~/store';
+import useAuthRedirect from '../useAuthRedirect';
 
 export default function DashboardRoute() {
   const queryClient = useQueryClient();
@@ -12,6 +13,9 @@ export default function DashboardRoute() {
   const prevLocationRef = usePreviousLocation();
   const clearConvoState = store.useClearConvoState();
   const [prevLocationPath, setPrevLocationPath] = useState('');
+  
+  // Use auth redirect hook to handle cookie-to-localStorage transfer
+  useAuthRedirect();
 
   useEffect(() => {
     setPrevLocationPath(prevLocationRef.current?.pathname || '');

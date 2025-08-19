@@ -163,10 +163,11 @@ export function createUserMethods(mongoose: typeof import('mongoose')) {
 
     return await signPayload({
       payload: {
-        id: user._id,
-        username: user.username,
-        provider: user.provider,
+        id: user._id?.toString() || user.id || '',
         email: user.email,
+        name: user.name || user.username || user.email,
+        role: user.role || 'user',
+        account_status: user.account_status || 'waitlist'
       },
       secret: process.env.CHAT_UI_JWT_SECRET,
       expirationTime: expires / 1000,

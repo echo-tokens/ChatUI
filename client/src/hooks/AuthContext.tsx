@@ -16,11 +16,11 @@ import type * as t from 'librechat-data-provider';
 import {
   useGetRole,
   useGetUserQuery,
-  useLoginUserMutation,
   useLogoutUserMutation,
   useRefreshTokenMutation,
 } from '~/data-provider';
 import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
+import { redirectToAccountLogin } from '~/utils/authRedirect';
 import useTimeout from './useTimeout';
 import store from '~/store';
 
@@ -33,8 +33,85 @@ const AuthContextProvider = ({
   authConfig?: TAuthConfig;
   children: ReactNode;
 }) => {
+  // Helper function to clear all authentication cookies and tokens
+  const clearAllAuthData = () => {
+    console.log('AuthContext: Clearing all authentication data');
+    
+    // Log current cookies before clearing
+    console.log('AuthContext: Current cookies before clearing:', document.cookie);
+    
+    // Clear localStorage
+    localStorage.removeItem('authToken');
+    
+    // Clear any other potential auth-related localStorage items
+    const authRelatedKeys = [
+      'authToken',
+      'user',
+      'token',
+      'refreshToken',
+      'chatAuthToken'
+    ];
+    
+    authRelatedKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    // Clear all authentication cookies with multiple domain/path combinations
+    const cookiesToClear = [
+      'chatAuthToken',
+      'refreshToken', 
+      'token_provider'
+    ];
+    
+    const domains = ['', 'echollm.io', '.railway.app'];
+    const paths = ['/', '/api', ''];
+    
+    cookiesToClear.forEach(cookieName => {
+      domains.forEach(domain => {
+        paths.forEach(path => {
+          const domainPart = domain ? `; domain=${domain}` : '';
+          const pathPart = path ? `; path=${path}` : '';
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT${domainPart}${pathPart}`;
+        });
+      });
+    });
+    
+    // Force clear any remaining cookies by setting them to empty with various attributes
+    cookiesToClear.forEach(cookieName => {
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname}`;
+      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    });
+    
+    // Log cookies after clearing
+    console.log('AuthContext: Cookies after clearing:', document.cookie);
+    console.log('AuthContext: All authentication data cleared');
+  };
   const [user, setUser] = useRecoilState(store.user);
-  const [token, setToken] = useState<string | undefined>(undefined);
+  const [token, setToken] = useState<string | undefined>(() => {
+    // Priority: Check for chatAuthToken cookie first, then localStorage
+    const getCookie = (name: string): string | null => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    };
+    
+    const cookieToken = getCookie('chatAuthToken');
+    if (cookieToken) {
+      // Use cookie token and store it in localStorage
+      localStorage.setItem('authToken', cookieToken);
+      setTokenHeader(cookieToken);
+      return cookieToken;
+    }
+    
+    // Fallback to localStorage if no cookie
+    const storedToken = localStorage.getItem('authToken');
+    if (storedToken) {
+      setTokenHeader(storedToken);
+    }
+    return storedToken || undefined;
+  });
   const [error, setError] = useState<string | undefined>(undefined);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const logoutRedirectRef = useRef<string | undefined>(undefined);
@@ -52,10 +129,12 @@ const AuthContextProvider = ({
     () =>
       debounce((userContext: TUserContext) => {
         const { token, isAuthenticated, user, redirect } = userContext;
+        console.log('AuthContext: setUserContext called');
         setUser(user);
         setToken(token);
         //@ts-ignore - ok for token to be undefined initially
         setTokenHeader(token);
+        console.log('AuthContext: Token header set, isAuthenticated:', isAuthenticated);
         setIsAuthenticated(isAuthenticated);
 
         // Use a custom redirect if set
@@ -77,40 +156,37 @@ const AuthContextProvider = ({
   );
   const doSetError = useTimeout({ callback: (error) => setError(error as string | undefined) });
 
-  const loginUser = useLoginUserMutation({
-    onSuccess: (data: t.TLoginResponse) => {
-      const { user, token, twoFAPending, tempToken } = data;
-      if (twoFAPending) {
-        // Redirect to the two-factor authentication route.
-        navigate(`/login/2fa?tempToken=${tempToken}`, { replace: true });
-        return;
-      }
-      setError(undefined);
-      setUserContext({ token, isAuthenticated: true, user, redirect: '/c/new' });
-    },
-    onError: (error: TResError | unknown) => {
-      const resError = error as TResError;
-      doSetError(resError.message);
-      navigate('/login', { replace: true });
-    },
-  });
+
   const logoutUser = useLogoutUserMutation({
     onSuccess: (data) => {
+      // Clean up all tokens and cookies
+      clearAllAuthData();
+      
       setUserContext({
         token: undefined,
         isAuthenticated: false,
         user: undefined,
-        redirect: data.redirect ?? '/login',
       });
+      
+      // Redirect to account auth service login
+      console.log('AuthContext: Logout success, redirecting to account login');
+      redirectToAccountLogin('chat');
     },
     onError: (error) => {
       doSetError((error as Error).message);
+      
+      // Clean up all tokens and cookies even on error
+      clearAllAuthData();
+      
       setUserContext({
         token: undefined,
         isAuthenticated: false,
         user: undefined,
-        redirect: '/login',
       });
+      
+      // Redirect to account auth service login on error too
+      console.log('AuthContext: Logout error, redirecting to account login');
+      redirectToAccountLogin('chat');
     },
   });
   const refreshToken = useRefreshTokenMutation();
@@ -127,34 +203,47 @@ const AuthContextProvider = ({
 
   const userQuery = useGetUserQuery({ enabled: !!(token ?? '') });
 
-  const login = (data: t.TLoginUser) => {
-    loginUser.mutate(data);
-  };
-
   const silentRefresh = useCallback(() => {
     if (authConfig?.test === true) {
       console.log('Test mode. Skipping silent refresh.');
       return;
     }
+    
+    // Check if we have a token from account auth service
+    const accountToken = localStorage.getItem('authToken');
+    if (accountToken) {
+      // We have a token from account auth service, don't try ChatUI refresh
+      // Instead, trigger the tokenUpdated event to set up authentication
+      window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: accountToken }));
+      return;
+    }
+    
     refreshToken.mutate(undefined, {
       onSuccess: (data: t.TRefreshTokenResponse | undefined) => {
         const { user, token = '' } = data ?? {};
+        console.log('user', user);
         if (token) {
           setUserContext({ token, isAuthenticated: true, user });
         } else {
-          console.log('Token is not present. User is not authenticated.');
           if (authConfig?.test === true) {
             return;
           }
-          navigate('/login');
+          // Clean up all tokens and cookies on refresh failure
+          clearAllAuthData();
+          
+          // console.log('AuthContext: Refresh token failure, redirecting to account login');
+          redirectToAccountLogin('chat');
         }
       },
       onError: (error) => {
-        console.log('refreshToken mutation error:', error);
         if (authConfig?.test === true) {
           return;
         }
-        navigate('/login');
+        // Clean up all tokens and cookies on refresh error
+        clearAllAuthData();
+        
+        console.log('AuthContext: Refresh token error, redirecting to account login');
+        redirectToAccountLogin('chat');
       },
     });
   }, []);
@@ -164,7 +253,12 @@ const AuthContextProvider = ({
       setUser(userQuery.data);
     } else if (userQuery.isError) {
       doSetError((userQuery.error as Error).message);
-      navigate('/login', { replace: true });
+      
+      // Clean up all tokens and cookies on user query error
+      clearAllAuthData();
+      
+      console.log('AuthContext: User query error, redirecting to account login');
+      redirectToAccountLogin('chat');
     }
     if (error != null && error && isAuthenticated) {
       doSetError(undefined);
@@ -187,13 +281,55 @@ const AuthContextProvider = ({
 
   useEffect(() => {
     const handleTokenUpdate = (event) => {
-      console.log('tokenUpdated event received event');
       const newToken = event.detail;
-      setUserContext({
-        token: newToken,
-        isAuthenticated: true,
-        user: user,
-      });
+      console.log('AuthContext: Received tokenUpdated event');
+      
+      try {
+        // Decode JWT token to get user info
+        const base64Url = newToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        
+        console.log('AuthContext: Decoded token payload:', payload);
+        
+        // Create user object from token payload
+        const userFromToken = {
+          _id: payload.id,
+          id: payload.id,
+          email: payload.email,
+          name: payload.name,
+          username: payload.name || payload.email,
+          role: payload.role || 'user',
+          account_status: payload.account_status,
+          avatar: '',
+          provider: 'local',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        console.log('AuthContext: Created user object:', userFromToken);
+        
+        console.log('AuthContext: Setting user context with token and user');
+        setUserContext({
+          token: newToken,
+          isAuthenticated: true,
+          user: userFromToken,
+        });
+      } catch (error) {
+        console.error('AuthContext: Error decoding JWT token:', error);
+        // Fallback to setting just the token
+        setUserContext({
+          token: newToken,
+          isAuthenticated: true,
+          user: user,
+        });
+      }
     };
 
     window.addEventListener('tokenUpdated', handleTokenUpdate);
@@ -201,7 +337,7 @@ const AuthContextProvider = ({
     return () => {
       window.removeEventListener('tokenUpdated', handleTokenUpdate);
     };
-  }, [setUserContext, user]);
+  }, [setUserContext]);
 
   // Make the provider update only when it should
   const memoedValue = useMemo(
@@ -209,7 +345,6 @@ const AuthContextProvider = ({
       user,
       token,
       error,
-      login,
       logout,
       setError,
       roles: {

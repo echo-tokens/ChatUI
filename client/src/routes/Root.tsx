@@ -8,6 +8,7 @@ import {
   useFileMap,
   useSearchEnabled,
 } from '~/hooks';
+import useAuthRedirect from './useAuthRedirect';
 import {
   AgentsMapContext,
   AssistantsMapContext,
@@ -29,6 +30,9 @@ export default function Root() {
   });
 
   const { isAuthenticated, logout } = useAuthContext();
+  
+  // Use auth redirect hook to handle cookie-to-localStorage transfer
+  useAuthRedirect();
 
   // Global health check - runs once per authenticated session
   useHealthCheck(isAuthenticated);
@@ -56,7 +60,7 @@ export default function Root() {
 
   const handleDeclineTerms = () => {
     setShowTerms(false);
-    logout('/login?redirect=false');
+    logout();
   };
 
   if (!isAuthenticated) {

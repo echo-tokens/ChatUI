@@ -51,8 +51,10 @@ router.get('/error', (req, res) => {
     message: req.session?.messages?.pop() || 'Unknown error',
   });
 
-  // Redirect to login page with auth_failed parameter to prevent infinite redirect loops
-  res.redirect(`${domains.client}/login?redirect=false`);
+  // Redirect to account auth service instead of hardcoded login page
+  const accountAuthUrl = process.env.VITE_ACCOUNT_URL || 'https://account-staging.echollm.io';
+  console.log('oauth: OAuth authentication error, redirecting to account auth service');
+  res.redirect(`${accountAuthUrl}/login?type=chat&redirect=false`);
 });
 
 /**

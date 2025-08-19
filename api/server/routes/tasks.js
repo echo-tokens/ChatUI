@@ -7,9 +7,9 @@ const {
   submitTask,
   checkTaskCompletion
 } = require('~/models/Task');
+const { supabase } = require('~/lib/supabase');
 const jwt = require('jsonwebtoken');
 const { User } = require('~/db/models');
-const { supabase } = require('~/lib/supabase');
 
 // Apply JWT authentication to all task routes
 router.use(requireJwtAuth);
@@ -91,6 +91,92 @@ router.post('/submit', async (req, res) => {
   } catch (error) {
     logger.error('[Tasks.submit] Error:', error);
     res.status(500).json({ error: error.message || 'Failed to submit task result' });
+  }
+});
+
+/**
+ * POST /api/tasks/feedback
+ * Submit ad feedback
+ */
+router.post('/feedback', async (req, res) => {
+  try {
+    const { ad_insertion_id, product_feedback, relevance_rating } = req.body;
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.CHAT_UI_JWT_SECRET);
+    
+    if (!ad_insertion_id) {
+      return res.status(400).json({ error: 'Ad insertion ID is required' });
+    }
+
+    if (!decoded.id) {
+      return res.status(401).json({ error: 'Invalid JWT token' });
+    }
+
+    let update_dict = {};
+    if (product_feedback) {
+      update_dict.product_feedback = product_feedback;
+    }
+    if (relevance_rating) {
+      update_dict.relevance_rating = relevance_rating;
+    }
+
+    // Upsert feedback into Supabase
+    const { data, error } = await supabase
+      .from('ad_gen_logs')
+      .update(update_dict)
+      .eq('id', ad_insertion_id);
+
+    if (error) {
+      logger.error('[Tasks.feedback] Supabase error:', error);
+      return res.status(500).json({ error: 'Failed to submit feedback' });
+    }
+
+    res.json({ success: true, message: 'Feedback submitted successfully' });
+  } catch (error) {
+    logger.error('[Tasks.feedback] Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to submit feedback' });
+  }
+});
+
+/**
+ * POST /api/tasks/thumb-rating
+ * Submit thumb rating for an ad
+ */
+router.post('/thumb-rating', async (req, res) => {
+  try {
+    const { ad_insertion_id, thumb_rating } = req.body;
+    const decoded = jwt.verify(req.headers.authorization && req.headers.authorization.split(' ')[1], process.env.CHAT_UI_JWT_SECRET);
+    
+    if (!ad_insertion_id) {
+      return res.status(400).json({ error: 'Ad insertion ID is required' });
+    }
+
+    if (!thumb_rating || !['up', 'down'].includes(thumb_rating)) {
+      return res.status(400).json({ error: 'Thumb rating must be "up" or "down"' });
+    }
+
+    if (!decoded.id) {
+      return res.status(401).json({ error: 'Invalid JWT token' });
+    }
+
+    // Upsert thumb rating into Supabase
+    if (thumb_rating !== null) {
+      const { data, error } = await supabase
+        .from('ad_gen_logs')
+        .update({
+          thumb_rating: thumb_rating || null
+        })
+        .eq('id', ad_insertion_id);
+    }
+
+    if (error) {
+      logger.error('[Tasks.thumb-rating] Supabase error:', error);
+      return res.status(500).json({ error: 'Failed to submit thumb rating' });
+    }
+
+    res.json({ success: true, message: 'Thumb rating submitted successfully' });
+  } catch (error) {
+    logger.error('[Tasks.thumb-rating] Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to submit thumb rating' });
   }
 });
 

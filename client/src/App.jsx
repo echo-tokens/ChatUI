@@ -1,3 +1,4 @@
+import React from 'react';
 import { RecoilRoot } from 'recoil';
 import { DndProvider } from 'react-dnd';
 import { RouterProvider } from 'react-router-dom';
@@ -10,9 +11,55 @@ import { ToastProvider } from './Providers';
 import Toast from './components/ui/Toast';
 import { LiveAnnouncer } from '~/a11y';
 import { router } from './routes';
+import { redirectToAccountLogin } from './utils/authRedirect';
+import { DynamicFavicon } from './components/DynamicFavicon.jsx';
 
 const App = () => {
   const { setError } = useApiErrorBoundary();
+
+  // Handle cookie-to-localStorage transfer on app load
+  React.useEffect(() => {
+    // Helper function to get cookie
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    };
+
+    // Check for chatAuthToken cookie and transfer to localStorage if needed
+    const cookieToken = getCookie('chatAuthToken');
+    const localStorageToken = localStorage.getItem('authToken');
+
+    console.log('App: Initial auth check - cookieToken:', !!cookieToken, 'localStorageToken:', !!localStorageToken);
+
+    if (cookieToken && !localStorageToken) {
+      console.log('App: Found chatAuthToken cookie, transferring to localStorage');
+      localStorage.setItem('authToken', cookieToken);
+      
+      // Trigger the tokenUpdated event to set up authentication
+      console.log('App: Dispatching tokenUpdated event');
+      window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: cookieToken }));
+    } else if (cookieToken && localStorageToken) {
+      console.log('App: Both cookie and localStorage have tokens - clearing cookie to prevent conflicts');
+      // Clear the cookie to prevent conflicts
+      localStorage.setItem('authToken', cookieToken);
+    }
+  }, []);
+
+  // Add event listener for account auth redirects
+  React.useEffect(() => {
+    const handleRedirectToAccountLogin = (event) => {
+      console.log('App: Received redirectToAccountLogin event, type:', event.detail);
+      redirectToAccountLogin(event.detail);
+    };
+
+    window.addEventListener('redirectToAccountLogin', handleRedirectToAccountLogin);
+    
+    return () => {
+      window.removeEventListener('redirectToAccountLogin', handleRedirectToAccountLogin);
+    };
+  }, []);
 
   const queryClient = new QueryClient({
     queryCache: new QueryCache({
@@ -32,6 +79,7 @@ const App = () => {
             <RadixToast.Provider>
               <ToastProvider>
                 <DndProvider backend={HTML5Backend}>
+                  <DynamicFavicon />
                   <RouterProvider router={router} />
                   <ReactQueryDevtools initialIsOpen={false} position="top-right" />
                   <Toast />

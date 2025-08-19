@@ -52,6 +52,15 @@ export const useLoginUserMutation = (
   });
 };
 
+export const useValidateTokenMutation = (
+  options?: t.MutationOptions<{ success: boolean; valid: boolean; user?: any; error?: string }, string, unknown, unknown>,
+): UseMutationResult<{ success: boolean; valid: boolean; user?: any; error?: string }, unknown, string, unknown> => {
+  return useMutation([MutationKeys.validateToken], {
+    mutationFn: (token: string) => dataService.validateToken(token),
+    ...(options || {}),
+  });
+};
+
 export const useRefreshTokenMutation = (
   options?: t.MutationOptions<t.TRefreshTokenResponse | undefined, undefined, unknown, unknown>,
 ): UseMutationResult<t.TRefreshTokenResponse | undefined, unknown, undefined, unknown> => {

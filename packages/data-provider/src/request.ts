@@ -100,6 +100,11 @@ axios.interceptors.response.use(
 
     if (error.response.status === 401 && !originalRequest._retry) {
       console.warn('401 error, refreshing token');
+      console.log('401 error details:', {
+        url: originalRequest.url,
+        method: originalRequest.method,
+        hasAuthHeader: !!originalRequest.headers?.Authorization
+      });
       originalRequest._retry = true;
 
       if (isRefreshing) {
@@ -134,7 +139,9 @@ axios.interceptors.response.use(
             `Refresh token failed from shared link, attempting request to ${originalRequest.url}`,
           );
         } else {
-          window.location.href = '/login';
+          console.log('data-provider: Refresh token failed, redirecting to account login');
+          // Dispatch a custom event to trigger account auth redirect
+          window.dispatchEvent(new CustomEvent('redirectToAccountLogin', { detail: 'chat' }));
         }
       } catch (err) {
         processQueue(err as AxiosError, null);

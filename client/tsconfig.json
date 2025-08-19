@@ -26,7 +26,7 @@
       "librechat-data-provider/*": ["./packages/data-provider/*"]
     }
   },
-  "types": ["node", "jest", "@testing-library/jest-dom"],
+  "types": ["node", "jest", "@testing-library/jest-dom", "vite/client"],
   "exclude": ["node_modules", "vite.config.ts"],
   "include": [
     "src/**/*",

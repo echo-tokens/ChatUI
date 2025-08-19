@@ -48,6 +48,8 @@ function ChatView({ index = 0 }: { index?: number }) {
     enabled: !!fileMap,
   });
 
+
+
   const chatHelpers = useChatHelpers(index, conversationId);
   const addedChatHelpers = useAddedResponse({ rootIndex: index });
 
@@ -104,6 +106,7 @@ function ChatView({ index = 0 }: { index?: number }) {
                 {isLandingPage && <Footer />}
               </>
             </div>
+
           </Presentation>
         </AddedChatContext.Provider>
       </ChatContext.Provider>
