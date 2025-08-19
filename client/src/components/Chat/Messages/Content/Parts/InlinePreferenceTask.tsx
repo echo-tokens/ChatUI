@@ -44,10 +44,6 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
   // Check task completion status on component load
   useEffect(() => {
     const checkTaskCompletion = async () => {
-      if (isStreaming) {
-        setPreviousState('complete');
-        return;
-      }
       if (!adData.task?.id || !token) return;
       
       try {
