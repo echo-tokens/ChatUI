@@ -526,7 +526,6 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
                 {showEarnButtonTooltip && isStreaming && (
                   <div className="absolute bottom-full -left-1/2 transform -translate-x-1/2 mb-1 z-50 px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white text-xs rounded shadow-lg whitespace-nowrap custom-tooltip pointer-events-none">
                     Please wait for the response to complete
-                    <div className="absolute top-full -left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-800 dark:border-t-gray-700"></div>
                   </div>
                 )}
               </div>
