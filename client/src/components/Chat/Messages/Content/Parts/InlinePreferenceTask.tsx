@@ -360,7 +360,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
                 contextualized_ad={ad.contextualized_ad}
                 clickable={false}
                 display_thumbs={false}
-                showCursor={false}
+                isStreaming={isStreaming}
               />
             </div>
           </div>

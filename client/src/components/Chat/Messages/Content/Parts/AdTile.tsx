@@ -220,14 +220,15 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
       </style>
       <div
         className={cn(
-          'my-1 w-full rounded-lg not-prose ad-container select-none',
-          'border border-brand-purple/10 bg-brand-purple/[0.02] px-3 pt-0 pb-0',
+          'my-1 w-full not-prose ad-container select-none',
+          'border border-brand-purple/10 bg-brand-purple/[0.02] px-3.5 pt-0 pb-0',
           'dark:border-brand-purple/15 dark:bg-brand-purple/[0.03]',
           // Hover effects with subtle transitions
           clickable && 'cursor-pointer hover:bg-brand-purple/[0.04] hover:border-brand-purple/20 hover:shadow-sm dark:hover:bg-brand-purple/[0.06] dark:hover:border-brand-purple/25',
           'transition-colors transition-shadow duration-200 ease-in-out',
           isVisible ? 'opacity-100' : 'max-h-0 opacity-0'
         )}
+        style={{ borderRadius: '1rem' }}
         role="note"
         aria-label="Sponsored message"
         onClick={handleClick}
@@ -262,45 +263,6 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
         
         {/* Feedback buttons */}
         <div className="flex justify-end items-center gap-1 mt-2 -mr-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
-          {/* Task completion text */}
-          {task_price_usd && task_id && onTaskClick && taskState === 'incomplete' && (
-            <div className={cn(
-              "flex items-center gap-1 transition-all duration-300 ease-in-out relative",
-              !dropdownComponent ? "opacity-100" : "opacity-0 pointer-events-none"
-            )}>
-              <div 
-                className="relative inline-block"
-                onMouseEnter={() => setShowCustomTooltip(true)}
-                onMouseLeave={() => setShowCustomTooltip(false)}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isStreaming) {
-                      onTaskClick();
-                    }
-                  }}
-                  disabled={isStreaming}
-                  className="text-xs font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-1.5 py-0.5 transition-all duration-300 ease-in-out cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Earn ${parseFloat(task_price_usd || '0').toFixed(2)}
-                </button>
-                
-                {/* Custom fast tooltip */}
-                {showCustomTooltip && (
-                  <div className="absolute bottom-full -left-1/3 transform translate-x-1/3 mb-1 z-50 px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white text-xs rounded shadow-lg whitespace-nowrap custom-tooltip pointer-events-none">
-                    {isStreaming ? 'Please wait for the response to complete' : 'Click to start earning by completing a quick task!'}
-                    <div className="absolute top-full left-1/3 transform -translate-x-1/3 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-800 dark:border-t-gray-700"></div>
-                  </div>
-                )}
-              </div>
-              
-              <span className="text-xs text-gray-400 dark:text-gray-400">
-                by completing a short task
-              </span>
-            </div>
-          )}
-          
           {/* Thumbs buttons */}
           {display_thumbs && (
             <div className="flex gap-1">
