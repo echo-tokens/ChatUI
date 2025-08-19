@@ -21,11 +21,10 @@ interface ParsedAdData {
 
 interface InlinePreferenceTaskProps {
   adData: ParsedAdData;
+  isStreaming: boolean;
 }
 
-const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
-
-
+const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTaskProps) => {
   const { token } = useAuthContext();
   const [selectedAds, setSelectedAds] = useState<Set<number>>(new Set());
   const [hasSelection, setHasSelection] = useState(false);
@@ -45,6 +44,10 @@ const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
   // Check task completion status on component load
   useEffect(() => {
     const checkTaskCompletion = async () => {
+      if (isStreaming) {
+        setPreviousState('complete');
+        return;
+      }
       if (!adData.task?.id || !token) return;
       
       try {
@@ -242,7 +245,7 @@ const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
                 contextualized_ad={ad.contextualized_ad}
                 clickable={true}
                 display_thumbs={true}
-                showCursor={false}
+                isStreaming={isStreaming}
               />
             </div>
           );
@@ -266,7 +269,7 @@ const InlinePreferenceTask = memo(({ adData }: InlinePreferenceTaskProps) => {
               contextualized_ad={ad.contextualized_ad}
               clickable={true}
               display_thumbs={true}
-              showCursor={false}
+              isStreaming={isStreaming}
             />
           );
         })}

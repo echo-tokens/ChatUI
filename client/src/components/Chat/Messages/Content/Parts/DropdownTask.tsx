@@ -22,10 +22,10 @@ interface ParsedAdData {
 
 interface DropdownTaskProps {
   adData: ParsedAdData;
-  showCursor: boolean;
+  isStreaming: boolean;
 }
 
-const DropdownTask = memo(({ adData, showCursor }: DropdownTaskProps) => {
+const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
   const { token } = useAuthContext();
   const [isLoading, setIsLoading] = useState(true);
   const [showTask, setShowTask] = useState(false);
@@ -46,6 +46,10 @@ const DropdownTask = memo(({ adData, showCursor }: DropdownTaskProps) => {
   // Check task completion status on component load
   useEffect(() => {
     const checkTaskCompletion = async () => {
+      if (isStreaming) {
+        setPreviousState('complete');
+        return;
+      }
       if (!adData.task?.id || !token) return;
       
       try {
@@ -440,7 +444,7 @@ const DropdownTask = memo(({ adData, showCursor }: DropdownTaskProps) => {
             contextualized_ad={ad.contextualized_ad}
             task_id={adData.task?.id}
             task_price_usd={adData.task?.price_usd}
-            showCursor={showCursor}
+            isStreaming={isStreaming}
             clickable={true}
             display_thumbs={true}
             onTaskClick={handleTaskClick}
@@ -479,7 +483,7 @@ const DropdownTask = memo(({ adData, showCursor }: DropdownTaskProps) => {
           contextualized_ad={ad.contextualized_ad}
           task_id={adData.task?.id}
           task_price_usd={adData.task?.price_usd}
-          showCursor={showCursor}
+          isStreaming={isStreaming}
           clickable={true}
           display_thumbs={true}
           onTaskClick={handleTaskClick}
