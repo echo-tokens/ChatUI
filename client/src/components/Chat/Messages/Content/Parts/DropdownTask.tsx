@@ -46,10 +46,10 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
   // Check task completion status on component load
   useEffect(() => {
     const checkTaskCompletion = async () => {
-      if (isStreaming) {
-        setPreviousState('complete');
-        return;
-      }
+      // if (isStreaming) {
+      //   setPreviousState('incomplete');
+      //   return;
+      // }
       if (!adData.task?.id || !token) return;
       
       try {
