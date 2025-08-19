@@ -5,7 +5,7 @@ import DropdownTask from './DropdownTask';
 
 interface AdOrTaskTileProps {
   content: Record<string, any>;
-  showCursor: boolean;
+  isStreaming: boolean;
 }
 
 // dropdown is always for the existing ad
@@ -29,7 +29,7 @@ interface ParsedAdData {
   ui_display?: string;
 }
 
-const AdOrTaskTile = memo(({ content, showCursor }: AdOrTaskTileProps) => {
+const AdOrTaskTile = memo(({ content, isStreaming }: AdOrTaskTileProps) => {
   // Parse the ad content to extract JSON data
   const parseAdContent = (content: Record<string, any>): ParsedAdData | null => {
     try {
@@ -51,17 +51,17 @@ const AdOrTaskTile = memo(({ content, showCursor }: AdOrTaskTileProps) => {
 
   if (uiDisplay === 'inline_preference' && adData.task) {
     console.log('Inline preference requested:', adData);
-    return <InlinePreferenceTask adData={adData} />;
+    return <InlinePreferenceTask adData={adData} isStreaming={isStreaming} />;
   }
 
   if (uiDisplay === 'dropdown' && adData.task) {
     console.log('Dropdown task requested:', adData);
-    return <DropdownTask adData={adData} showCursor={showCursor} />;
+    return <DropdownTask adData={adData} isStreaming={isStreaming} />;
   }
 
   if (uiDisplay === 'ad_tile') {
     console.log('Ad tile display requested:', adData);
-    return <AdTile link={adData.ads[0].clickthrough_link} advertiser={adData.ads[0].advertiser} contextualized_ad={adData.ads[0].contextualized_ad} showCursor={showCursor} />;
+    return <AdTile link={adData.ads[0].clickthrough_link} advertiser={adData.ads[0].advertiser} contextualized_ad={adData.ads[0].contextualized_ad} isStreaming={isStreaming} />;
   }
 
   return null;

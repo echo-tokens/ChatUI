@@ -8,7 +8,7 @@ interface AdTileProps {
   contextualized_ad?: string;
   task_id?: string;
   task_price_usd?: string;
-  showCursor: boolean;
+  isStreaming: boolean;
   clickable?: boolean;
   display_thumbs?: boolean;
   onTaskClick?: () => void;
@@ -17,7 +17,7 @@ interface AdTileProps {
   taskState?: 'unloaded' | 'incomplete' | 'complete';
 }
 
-const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_usd, showCursor, clickable = true, display_thumbs = true, onTaskClick, dropdownComponent, isDropdownClosing, taskState }: AdTileProps) => {
+const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_usd, isStreaming, clickable = true, display_thumbs = true, onTaskClick, dropdownComponent, isDropdownClosing, taskState }: AdTileProps) => {
   const { token } = useAuthContext();
   const [isVisible, setIsVisible] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -183,11 +183,6 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
     setFeedbackText('');
   };
 
-
-
-
-
-
   return (
     <>
       <style>
@@ -235,10 +230,7 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
           <div className="flex-1 min-w-0">
             {advertiserName && (
               <div className="mt-2 leading-none">
-                <span className="text-gray-400 dark:text-gray-400 text-xs">
-                  {"Ad:"}
-                </span>
-                <span className="text-gray-400 dark:text-gray-400 text-xs font-bold ml-1">
+                <span className="text-gray-400 dark:text-gray-400 text-xs font-bold">
                   {advertiserName}
                 </span>
               </div>
@@ -246,9 +238,6 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
             {description && (
               <p className="text-gray-700 dark:text-gray-300 text-md leading-tight mt-2 mb-0">
                 {description}
-                {showCursor && (
-                  <span className="animate-pulse">|</span>
-                )}
               </p>
             )}
           </div>
@@ -278,7 +267,7 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
           )}
           
           {/* Thumbs buttons */}
-          {display_thumbs && (
+          {display_thumbs && !isStreaming && (
             <div className="flex gap-1">
             <button
               onClick={async (e) => {

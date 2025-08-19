@@ -70,13 +70,13 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
           <AdOrTaskTile 
             key={`ad-${index}`} 
             content={part.ad_content} 
-            showCursor={partShowCursor} 
+            isStreaming={isSubmitting}
           />
         );
       }
       return null;
     }).filter(Boolean);
-  }, [text, isCreatedByUser, enableUserMsgMarkdown, isLatestMessage, showCursor]);
+  }, [text, isCreatedByUser, enableUserMsgMarkdown, isLatestMessage, isSubmitting, showCursor]);
 
   return (
     <div
