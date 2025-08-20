@@ -4,6 +4,7 @@ import AdTile from './AdTile';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useToast from '~/hooks/useToast';
 import { NotificationSeverity } from '~/common';
+import { useQueryClient } from '@tanstack/react-query';
 import { SelectionMethod, InlineSelectionMethod } from './AdOrTaskTile';
 
 interface ParsedAdData {
@@ -27,8 +28,9 @@ interface InlinePreferenceTaskProps {
 }
 
 const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTaskProps) => {
-  const { token } = useAuthContext();
+  const { token, user } = useAuthContext();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedAds, setSelectedAds] = useState<Set<number>>(new Set());
   const [hasSelection, setHasSelection] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -168,6 +170,11 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
           showIcon: true,
           duration: 5000, // Show for 5 seconds
         });
+
+        // Immediately refresh user info in profile to show updated trust/earnings
+        if (user?.id) {
+          queryClient.invalidateQueries({ queryKey: ['userInfo', user.id] });
+        }
       } else {
         console.error('Task verification failed:', response.statusText);
       }

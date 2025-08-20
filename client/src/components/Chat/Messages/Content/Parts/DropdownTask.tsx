@@ -4,6 +4,7 @@ import AdTile from './AdTile';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useToast from '~/hooks/useToast';
 import { NotificationSeverity } from '~/common';
+import { useQueryClient } from '@tanstack/react-query';
 import { SelectionMethod } from './AdOrTaskTile';
 
 interface ParsedAdData {
@@ -28,8 +29,9 @@ interface DropdownTaskProps {
 }
 
 const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
-  const { token } = useAuthContext();
+  const { token, user } = useAuthContext();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [showTask, setShowTask] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,6 +159,11 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
           showIcon: true,
           duration: 5000, // Show for 5 seconds
         });
+
+        // Immediately refresh user info in profile to show updated trust/earnings
+        if (user?.id) {
+          queryClient.invalidateQueries({ queryKey: ['userInfo', user.id] });
+        }
       } else {
         console.error('Task verification failed:', response.statusText);
       }
