@@ -10,8 +10,8 @@ interface AdOrTaskTileProps {
 
 // dropdown is always for the existing ad
 
-type SelectionMethod = 'pick_one' | 'pick_multiple' | 'free_response' | 'insertion_location' | 'likert';
-type InlineSelectionMethod = 'pick_one' | 'pick_multiple';
+type SelectionMethod = 'pick_one' | 'pick_multiple' | 'free_response' | 'insertion_location' | 'likert' | 'AB_click';
+type InlineSelectionMethod = 'pick_one' | 'pick_multiple' | 'AB_click';
 
 interface ParsedAdData {
   task?: {
@@ -49,7 +49,9 @@ const AdOrTaskTile = memo(({ content, isStreaming }: AdOrTaskTileProps) => {
     return null;
   }
 
-  if (uiDisplay === 'inline_preference' && adData.task) {
+  console.log('uiDisplay', uiDisplay, adData);
+
+  if (uiDisplay === 'side-by-side' && adData.task) {
     console.log('Inline preference requested:', adData);
     return <InlinePreferenceTask adData={adData} isStreaming={isStreaming} />;
   }
