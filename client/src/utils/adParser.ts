@@ -40,12 +40,13 @@ export function parseAdContent(text: string): ParsedContent[] {
     // Process ad content - handle new [LINK:url] format but keep original logic
     let processedContent = adContent.trim();
     try {
+      const parsedAd = JSON.parse(processedContent);
       parts.push({
         type: 'ad_tile',
-        ad_content: JSON.parse(processedContent),
+        ad_content: parsedAd,
       });
     } catch (error) {
-      console.error('Error parsing ad content:', error);
+      console.error('❌ Error parsing ad content:', error, 'Content:', processedContent);
     }
     // // Check for [LINK:url] format inside ad content and extract the link
     // const linkMatch = processedContent.match(/\[(?:link|LINK):([^\]]+)\]/);
@@ -108,5 +109,6 @@ export function parseAdContent(text: string): ParsedContent[] {
  * @returns boolean indicating if ad tags are present
  */
 export function containsAdTags(text: string): boolean {
-  return /\[(?:ad|AD)\][\s\S]*?\[\/(?:ad|AD)\]/g.test(text);
+  const hasAds = /\[(?:ad|AD)\][\s\S]*?\[\/(?:ad|AD)\]/g.test(text);
+  return hasAds;
 } 

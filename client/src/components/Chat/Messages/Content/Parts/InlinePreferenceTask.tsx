@@ -2,6 +2,9 @@ import { memo, useState, useEffect } from 'react';
 import { cn } from '~/utils';
 import AdTile from './AdTile';
 import { useAuthContext } from '~/hooks/AuthContext';
+import useToast from '~/hooks/useToast';
+import { NotificationSeverity } from '~/common';
+import { useQueryClient } from '@tanstack/react-query';
 import { SelectionMethod, InlineSelectionMethod } from './AdOrTaskTile';
 
 interface ParsedAdData {
@@ -25,7 +28,9 @@ interface InlinePreferenceTaskProps {
 }
 
 const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTaskProps) => {
-  const { token } = useAuthContext();
+  const { token, user } = useAuthContext();
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedAds, setSelectedAds] = useState<Set<number>>(new Set());
   const [hasSelection, setHasSelection] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -138,6 +143,46 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
     await submitSelection(selectedAds);
   };
 
+  const verifyTaskTrustLevel = async (taskId: string) => {
+    try {
+      const response = await fetch('/api/accounts/verify-task', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: taskId
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Task verification result:', data);
+        
+        // Display trust level update message
+        const isGreen = data.trustworthy;
+        const trustChange = data.trust_level_updated;
+        
+        showToast({
+          message: `Trust level updated to ${trustChange}`,
+          severity: isGreen ? NotificationSeverity.SUCCESS : NotificationSeverity.ERROR,
+          showIcon: true,
+          duration: 5000, // Show for 5 seconds
+        });
+
+        // Immediately refresh user info in profile to show updated trust/earnings
+        if (user?.id) {
+          queryClient.invalidateQueries({ queryKey: ['userInfo', user.id] });
+        }
+      } else {
+        console.error('Task verification failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error verifying task:', error);
+    }
+  };
+
   const submitSelection = async (selection: Set<number>) => {
     if (!adData.task?.id || !token) return;
     
@@ -175,6 +220,9 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
 
         if (response.ok) {
           console.log('Task submission successful');
+          
+          // Call task verification asynchronously
+          verifyTaskTrustLevel(adData.task.id);
           
           // Pick a random ad from the selection
           const selectedArray = Array.from(selection);
@@ -360,7 +408,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
                 contextualized_ad={ad.contextualized_ad}
                 clickable={false}
                 display_thumbs={false}
-                showCursor={false}
+                isStreaming={isStreaming}
               />
             </div>
           </div>

@@ -2,6 +2,9 @@ import { memo, useState, useEffect } from 'react';
 import { cn } from '~/utils';
 import AdTile from './AdTile';
 import { useAuthContext } from '~/hooks/AuthContext';
+import useToast from '~/hooks/useToast';
+import { NotificationSeverity } from '~/common';
+import { useQueryClient } from '@tanstack/react-query';
 import { SelectionMethod } from './AdOrTaskTile';
 
 interface ParsedAdData {
@@ -26,7 +29,9 @@ interface DropdownTaskProps {
 }
 
 const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
-  const { token } = useAuthContext();
+  const { token, user } = useAuthContext();
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [showTask, setShowTask] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,6 +47,9 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
   const [showPulse, setShowPulse] = useState(false);
   const [showEarnedText, setShowEarnedText] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isButtonFadingOut, setIsButtonFadingOut] = useState(false);
+  const [shouldExpandAd, setShouldExpandAd] = useState(false);
+  const [showEarnButtonTooltip, setShowEarnButtonTooltip] = useState(false);
 
   // Check task completion status on component load
   useEffect(() => {
@@ -111,9 +119,57 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
 
   const handleTaskClick = () => {
     if (taskCompleted) return;
-    setShowTask(true);
-    setProgress(0); // Reset progress bar when opening
-    setIsLoading(true); // Start loading state
+    
+    // Start button fade out animation
+    setIsButtonFadingOut(true);
+    
+    // After button fades out, expand ad and show task
+    setTimeout(() => {
+      setShouldExpandAd(true);
+      setShowTask(true);
+      setProgress(0); // Reset progress bar when opening
+      setIsLoading(true); // Start loading state
+    }, 300); // 300ms for button fade out
+  };
+
+  const verifyTaskTrustLevel = async (taskId: string) => {
+    try {
+      const response = await fetch('/api/accounts/verify-task', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: taskId
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Task verification result:', data);
+        
+        // Display trust level update message
+        const isGreen = data.trustworthy;
+        const trustChange = data.trust_level_updated;
+        
+        showToast({
+          message: `Trust level updated to ${trustChange}`,
+          severity: isGreen ? NotificationSeverity.SUCCESS : NotificationSeverity.ERROR,
+          showIcon: true,
+          duration: 5000, // Show for 5 seconds
+        });
+
+        // Immediately refresh user info in profile to show updated trust/earnings
+        if (user?.id) {
+          queryClient.invalidateQueries({ queryKey: ['userInfo', user.id] });
+        }
+      } else {
+        console.error('Task verification failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error verifying task:', error);
+    }
   };
 
   const handleTaskSubmit = async () => {
@@ -161,6 +217,10 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
 
       if (response.ok) {
         console.log('Task submission successful');
+        
+        // Call task verification asynchronously
+        verifyTaskTrustLevel(adData.task.id);
+        
         setTaskCompleted(true);
         setTaskState('complete');
         
@@ -177,21 +237,23 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
         setTimeout(() => {
           setShowSubmitThankYou(true);
           setIsSubmittingAnimation(false);
-          
-          // After 2 seconds, start closing animation
-          setTimeout(() => {
-            setIsClosing(true);
-            
-            // After close animation completes (1000ms), clean up
-            setTimeout(() => {
-              setShowTask(false);
-              setIsClosing(false);
-              setShowSubmitThankYou(false);
-              setSelectedOptions(new Set());
-              setFreeResponseText('');
-            }, 1000);
-          }, 2000);
         }, 500);
+        
+        // After button returns, wait a bit then start closing
+        setTimeout(() => {
+          setShouldExpandAd(false);
+          setIsButtonFadingOut(false);
+          setIsClosing(true);
+          
+          // After close animation completes (800ms), clean up
+          setTimeout(() => {
+            setShowTask(false);
+            setIsClosing(false);
+            setShowSubmitThankYou(false);
+            setSelectedOptions(new Set());
+            setFreeResponseText('');
+          }, 800);
+        }, 2500); // Total of 2.5 seconds before auto-close
         
       } else {
         console.error('Task submission failed');
@@ -207,12 +269,21 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
 
   const handleTaskClose = () => {
     setIsClosing(true);
+    
+    // Start inverse animations - first shrink ad back (max-width will animate from 100% to calc(100%-120px))
+    setShouldExpandAd(false);
+    
+    // After ad starts shrinking, fade button back in
+    setTimeout(() => {
+      setIsButtonFadingOut(false);
+    }, 500); // Start button fade in shortly after ad starts shrinking
+    
     setTimeout(() => {
       setShowTask(false);
       setIsClosing(false);
       setSelectedOptions(new Set());
       setFreeResponseText('');
-    }, 1000); // Match the animation duration
+    }, 800); // Match the animation duration
   };
 
   // If no ads available, return null
@@ -246,9 +317,10 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
           {adData.task?.price_usd && (
             <div className="relative">
               <span className={cn(
-                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-2 py-1 transition-all duration-1000 relative z-10",
+                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-2 py-1 transition-all duration-1000 relative z-10",
                 showPulse && "animate-pulse scale-125 shadow-lg"
-              )}>
+              )}
+              style={{ borderRadius: '0.5rem' }}>
                 {showEarnedText ? `+$${parseFloat(adData.task.price_usd).toFixed(2)}` : `Earn $${parseFloat(adData.task.price_usd).toFixed(2)}`}
               </span>
               {/* Radiating circles */}
@@ -435,25 +507,78 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
   // Show the ad with dropdown task interface
   if (previousState === 'incomplete') {
     return (
-      <div className="relative">
-        {/* AdTile wrapper */}
+      <>
+        <style>
+          {`
+            @keyframes tooltipFadeIn {
+              from {
+                opacity: 0;
+                transform: translateY(4px) scale(0.95);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+              }
+            }
+            
+            .custom-tooltip {
+              animation: tooltipFadeIn 0.1s ease-out forwards;
+            }
+          `}
+        </style>
         <div className="relative">
-          <AdTile
-            link={ad.clickthrough_link}
-            advertiser={ad.advertiser}
-            contextualized_ad={ad.contextualized_ad}
-            task_id={adData.task?.id}
-            task_price_usd={adData.task?.price_usd}
-            isStreaming={isStreaming}
-            clickable={true}
-            display_thumbs={true}
-            onTaskClick={handleTaskClick}
-            dropdownComponent={taskInterface}
-            isDropdownClosing={isClosing}
-            taskState={taskState}
-          />
-          
-
+        {/* AdTile and Earn Button wrapper */}
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "transition-all duration-500 ease-in-out flex-1",
+            shouldExpandAd ? "max-w-full" : "max-w-[calc(100%-7rem)]"
+          )}>
+            <AdTile
+              link={ad.clickthrough_link}
+              advertiser={ad.advertiser}
+              contextualized_ad={ad.contextualized_ad}
+              isStreaming={isStreaming}
+              clickable={true}
+              display_thumbs={true}
+              onTaskClick={handleTaskClick}
+              dropdownComponent={taskInterface}
+              isDropdownClosing={isClosing}
+              taskState={taskState}
+            />
+          </div>
+          {/* Earn Button */}
+          {adData.task?.price_usd && (!isButtonFadingOut || (isButtonFadingOut && !shouldExpandAd && !isClosing)) && (
+            <div className={cn(
+              "flex-shrink-0 transition-all duration-300 ease-in-out relative",
+              isButtonFadingOut && !taskCompleted ? "opacity-0 scale-95" : "opacity-100 scale-100"
+            )}>
+              <div 
+                className="relative inline-block"
+                onMouseEnter={() => setShowEarnButtonTooltip(true)}
+                onMouseLeave={() => setShowEarnButtonTooltip(false)}
+              >
+                <button
+                  onClick={handleTaskClick}
+                  disabled={isStreaming || taskCompleted || isClosing}
+                  className={cn(
+                    "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 transition-all duration-300 ease-in-out",
+                    taskCompleted ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-green-200 dark:hover:bg-green-700/40",
+                    (isStreaming || isClosing) && !taskCompleted && "opacity-50 cursor-not-allowed"
+                  )}
+                  style={{ borderRadius: '1rem' }}
+                >
+                  {taskCompleted ? `+$${parseFloat(adData.task.price_usd).toFixed(2)}` : `Earn $${parseFloat(adData.task.price_usd).toFixed(2)}`}
+                </button>
+                
+                {/* Tooltip */}
+                {showEarnButtonTooltip && isStreaming && (
+                  <div className="absolute bottom-full -left-1/2 transform -translate-x-1/2 mb-1 z-50 px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white text-xs rounded shadow-lg whitespace-nowrap custom-tooltip pointer-events-none">
+                    Please wait for the response to complete
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Thank you message */}
@@ -469,7 +594,8 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </>
     );
   }
 
@@ -477,20 +603,36 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
   if (previousState === 'complete') {
     return (
       <div className="relative">
-        <AdTile
-          link={ad.clickthrough_link}
-          advertiser={ad.advertiser}
-          contextualized_ad={ad.contextualized_ad}
-          task_id={adData.task?.id}
-          task_price_usd={adData.task?.price_usd}
-          isStreaming={isStreaming}
-          clickable={true}
-          display_thumbs={true}
-          onTaskClick={handleTaskClick}
-          dropdownComponent={null}
-          isDropdownClosing={false}
-          taskState={taskState}
-        />
+        {/* AdTile and Completed Earn Button wrapper */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <AdTile
+              link={ad.clickthrough_link}
+              advertiser={ad.advertiser}
+              contextualized_ad={ad.contextualized_ad}
+              isStreaming={isStreaming}
+              clickable={true}
+              display_thumbs={true}
+              onTaskClick={handleTaskClick}
+              dropdownComponent={null}
+              isDropdownClosing={false}
+              taskState={taskState}
+            />
+          </div>
+          
+          {/* Completed Earn Button */}
+          {adData.task?.price_usd && (
+            <div className="flex-shrink-0">
+              <button
+                disabled={true}
+                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed"
+                style={{ borderRadius: '1rem' }}
+              >
+                +${parseFloat(adData.task.price_usd).toFixed(2)}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

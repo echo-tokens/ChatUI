@@ -9,6 +9,7 @@ import { useAuthContext } from '~/hooks/AuthContext';
 import useAvatar from '~/hooks/Messages/useAvatar';
 import { UserIcon } from '~/components/svg';
 import { useLocalize } from '~/hooks';
+import { useUserInfo } from '~/hooks/useUserInfo';
 import Settings from './Settings';
 import store from '~/store';
 
@@ -19,6 +20,7 @@ function AccountSettings() {
   const balanceQuery = useGetUserBalance({
     enabled: !!isAuthenticated && startupConfig?.balance?.enabled,
   });
+  const { data: userInfo, isLoading: userInfoLoading } = useUserInfo();
   const [showSettings, setShowSettings] = useState(false);
   const [showFiles, setShowFiles] = useRecoilState(store.showFiles);
 
@@ -57,10 +59,23 @@ function AccountSettings() {
           </div>
         </div>
         <div
-          className="mt-2 grow overflow-hidden text-ellipsis whitespace-nowrap text-left text-text-primary"
+          className="grow overflow-hidden text-left"
           style={{ marginTop: '0', marginLeft: '0' }}
         >
-          {user?.name ?? user?.username ?? localize('com_nav_user')}
+          <div className="text-ellipsis whitespace-nowrap text-text-primary text-sm">
+            {user?.name ?? user?.username ?? localize('com_nav_user')}
+          </div>
+          {userInfo && !userInfoLoading && (
+            <div className="flex gap-3 text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+              <span>Trust: <span className="font-medium text-green-600 dark:text-green-400">{userInfo.trust.trust_level}</span></span>
+              <span>Earned: <span className="font-medium text-blue-600 dark:text-blue-400">${userInfo.task_earnings.total_earnings.toFixed(2)}</span></span>
+            </div>
+          )}
+          {userInfoLoading && (
+            <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+              Loading...
+            </div>
+          )}
         </div>
       </Select.Select>
       <Select.SelectPopover
@@ -74,6 +89,25 @@ function AccountSettings() {
         <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
           {user?.email ?? localize('com_nav_user')}
         </div>
+        
+        {/* Trust Level and Earnings */}
+        {userInfo && !userInfoLoading && (
+          <>
+            <div className="ml-3 mr-2 pb-1 text-xs text-gray-600 dark:text-gray-400">
+              Trust Level: <span className="font-medium text-green-600 dark:text-green-400">{userInfo.trust.trust_level}</span>
+            </div>
+            <div className="ml-3 mr-2 pb-2 text-xs text-gray-600 dark:text-gray-400">
+              Lifetime Earnings: <span className="font-medium text-blue-600 dark:text-blue-400">${userInfo.task_earnings.total_earnings.toFixed(2)}</span>
+            </div>
+          </>
+        )}
+        
+        {userInfoLoading && (
+          <div className="ml-3 mr-2 pb-2 text-xs text-gray-500 dark:text-gray-500">
+            Loading trust & earnings...
+          </div>
+        )}
+        
         <DropdownMenuSeparator />
         {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (
           <>
