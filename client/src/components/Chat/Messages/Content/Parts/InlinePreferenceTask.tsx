@@ -114,7 +114,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
     
     setIsAnimating(true);
     
-    if (selection_method === 'pick_one') {
+    if (selection_method === 'pick_one' || selection_method === 'AB_click') {
       // Single selection - replace current selection
       setSelectedAds(new Set([index]));
       setHasSelection(true);
@@ -190,7 +190,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
     setIsSubmitting(true);
     
     try {
-              // Extract ad_ids from the selected ads' clickthrough links
+        // Extract ad_ids from the selected ads' clickthrough links
         const adIds = Array.from(selection).map(index => {
           const ad = adData.ads?.[index];
           if (!ad || !ad.clickthrough_link) return null;
@@ -199,6 +199,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             // Extract the first term from the link extension
             const url = new URL(ad.clickthrough_link.startsWith('http') ? ad.clickthrough_link : `https://${ad.clickthrough_link}`);
             const pathParts = url.pathname.split('/').filter(part => part.length > 0);
+            console.log('pathParts', pathParts);
             return {ad_id: pathParts.length > 0 ? pathParts[0] : null, selection_index: index};
           } catch (error) {
             console.error('Error parsing URL:', error);

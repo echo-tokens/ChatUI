@@ -20,11 +20,11 @@ router.get('/user-info/:userId', requireJwtAuth, async (req, res) => {
     const url = `${accountManagementUrl}/api/accounts/user-info/${userId}`;
     
     // Use ECHO_STREAM_API_KEY for service-to-service authentication
-    const apiKey = process.env.ECHO_STREAM_API_KEY;
+    const apiKey = process.env.ACCOUNT_MANAGEMENT_API_KEY;
     if (!apiKey) {
-      logger.error('[accounts proxy] ECHO_STREAM_API_KEY not configured');
+      logger.error('[accounts proxy] ACCOUNT_MANAGEMENT_API_KEY not configured');
       return res.status(500).json({ 
-        error: 'Server configuration error: ECHO_STREAM_API_KEY not set' 
+        error: 'Server configuration error: ACCOUNT_MANAGEMENT_API_KEY not set' 
       });
     }
 
@@ -35,7 +35,7 @@ router.get('/user-info/:userId', requireJwtAuth, async (req, res) => {
       apiKeyPreview: apiKey ? `${apiKey.substring(0, 8)}...` : 'none',
       accountManagementUrl,
       method: 'GET',
-      authMethod: 'ECHO_STREAM_API_KEY'
+      authMethod: 'ACCOUNT_MANAGEMENT_API_KEY'
     });
 
     let response;
@@ -214,11 +214,11 @@ router.post('/verify-task', requireJwtAuth, async (req, res) => {
     const url = `${accountManagementUrl}/api/accounts/verify-task`;
     
     // Use ECHO_STREAM_API_KEY for service-to-service authentication
-    const apiKey = process.env.ECHO_STREAM_API_KEY;
+    const apiKey = process.env.ACCOUNT_MANAGEMENT_API_KEY;
     if (!apiKey) {
-      logger.error('[accounts proxy] ECHO_STREAM_API_KEY not configured');
+      logger.error('[accounts proxy] ACCOUNT_MANAGEMENT_API_KEY not configured');
       return res.status(500).json({ 
-        error: 'Server configuration error: ECHO_STREAM_API_KEY not set' 
+        error: 'Server configuration error: ACCOUNT_MANAGEMENT_API_KEY not set' 
       });
     }
 
