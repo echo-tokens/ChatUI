@@ -546,9 +546,8 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
               taskState={taskState}
             />
           </div>
-          
           {/* Earn Button */}
-          {adData.task?.price_usd && (!shouldExpandAd || isClosing || (taskCompleted && !isButtonFadingOut)) && (
+          {adData.task?.price_usd && (!isButtonFadingOut || (isButtonFadingOut && !shouldExpandAd && !isClosing)) && (
             <div className={cn(
               "flex-shrink-0 transition-all duration-300 ease-in-out relative",
               isButtonFadingOut && !taskCompleted ? "opacity-0 scale-95" : "opacity-100 scale-100"
