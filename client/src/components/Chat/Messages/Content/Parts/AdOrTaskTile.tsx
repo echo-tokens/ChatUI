@@ -10,8 +10,8 @@ interface AdOrTaskTileProps {
 
 // dropdown is always for the existing ad
 
-type SelectionMethod = 'pick_one' | 'pick_multiple' | 'free_response' | 'insertion_location' | 'likert' | 'AB_click' | 'AB_rating' | 'comparison';
-type InlineSelectionMethod = 'pick_one' | 'pick_multiple' | 'AB_click';
+type SelectionMethod = 'pick_one' | 'pick_multiple' | 'free_response' | 'insertion_location' | 'likert';
+type InlineSelectionMethod = 'pick_one' | 'pick_multiple';
 
 interface ParsedAdData {
   task?: {
@@ -49,20 +49,18 @@ const AdOrTaskTile = memo(({ content, isStreaming }: AdOrTaskTileProps) => {
     return null;
   }
 
-  if ((uiDisplay === 'inline_preference' || uiDisplay === 'side-by-side') && adData.task) {
+  if (uiDisplay === 'inline_preference' && adData.task) {
+    console.log('Inline preference requested:', adData);
     return <InlinePreferenceTask adData={adData} isStreaming={isStreaming} />;
   }
 
   if (uiDisplay === 'dropdown' && adData.task) {
+    console.log('Dropdown task requested:', adData);
     return <DropdownTask adData={adData} isStreaming={isStreaming} />;
   }
 
   if (uiDisplay === 'ad_tile') {
-    return <AdTile link={adData.ads[0].clickthrough_link} advertiser={adData.ads[0].advertiser} contextualized_ad={adData.ads[0].contextualized_ad} isStreaming={isStreaming} />;
-  }
-
-  // Default: show simple ad tile for ads without ui_display or task
-  if (adData.ads && adData.ads.length > 0) {
+    console.log('Ad tile display requested:', adData);
     return <AdTile link={adData.ads[0].clickthrough_link} advertiser={adData.ads[0].advertiser} contextualized_ad={adData.ads[0].contextualized_ad} isStreaming={isStreaming} />;
   }
 
