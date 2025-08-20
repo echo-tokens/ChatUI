@@ -29,7 +29,10 @@ const jwtLogin = () =>
         }
         
         if (user) {
-          user.id = user._id.toString();
+          logger.info(`[jwtLogin] JWT payload.id: ${payload.id}, DB user._id: ${user._id}, converted user.id: ${user._id.toString()}`);
+          // Use JWT payload.id to maintain consistency between frontend and backend
+          // This ensures the same user ID is used in both contexts
+          user.id = payload.id;
           
           // Handle role from account auth service payload
           if (payload?.role && !user.role) {

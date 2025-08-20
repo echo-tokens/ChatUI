@@ -4,52 +4,63 @@ import type {
 
 // Fetch user info from AccountManagement service
 export async function fetchUserInfo(userId: string, token: string): Promise<UserInfoResponse> {
+  // Use relative URL to go through Vite proxy in development
+  // This will be proxied to http://localhost:3080 by Vite in dev mode
+  // In production, this will hit the same origin
+  const fullUrl = `/api/accounts/user-info/${userId}`;
+  
+  console.log('[fetchUserInfo] Starting API call:', {
+    url: fullUrl,
+    userId,
+    hasToken: !!token,
+    tokenPreview: token ? `${token.substring(0, 20)}...` : 'no token',
+    note: 'Using relative URL to go through Vite proxy'
+  });
+
   try {
-    const accountManagementUrl = process.env.ACCOUNT_MANAGEMENT_URL || 'http://localhost:3081';
-    const response = await fetch(`${accountManagementUrl}/api/accounts/user-info/${userId}`, {
+    const response = await fetch(fullUrl, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
 
+    console.log('[fetchUserInfo] Response received:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch user info: ${response.status} ${response.statusText}`);
+      let errorBody;
+      let errorMessage;
+      try {
+        errorBody = await response.text();
+        const errorJson = JSON.parse(errorBody);
+        errorMessage = errorJson.error || errorJson.message || errorJson.details || errorBody;
+      } catch {
+        errorMessage = errorBody || response.statusText;
+      }
+      console.error('[fetchUserInfo] Error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorBody,
+        parsedMessage: errorMessage
+      });
+      throw new Error(errorMessage || `Failed to fetch user info: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('[fetchUserInfo] Success! Data received:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching user info from AccountManagement:', error);
-    // Return mock data as fallback
-    return getMockUserInfo(userId);
+    console.error('[fetchUserInfo] Fetch failed:', {
+      error,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorStack: error instanceof Error ? error.stack : undefined,
+      url: fullUrl
+    });
+    throw error;
   }
-}
-
-// Mock data fallback
-function getMockUserInfo(userId: string): UserInfoResponse {
-  return {
-    user_id: userId,
-    trust: {
-      trust_level: 95,
-      change_in_trust: 5
-    },
-    chat_streak: 14,
-    referral_data: {
-      sent_out_referrals: 8,
-      approved_referrals: 3,
-      max_referrals: 50,
-      referral_earnings: 45.75,
-      referral_code: "REF123ABC"
-    },
-    task_earnings: {
-      total_earnings: 247.50,
-      paid_earnings: 200.00,
-      confirmed_earnings: 23.50,
-      pending_earnings: 24.00,
-      earnings_week: 12.25,
-      earnings_month: 78.90
-    },
-    account_created: "2024-03-15T10:30:00"
-  };
 } 

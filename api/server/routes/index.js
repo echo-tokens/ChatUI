@@ -28,6 +28,7 @@ const user = require('./user');
 const mcp = require('./mcp');
 const tasks = require('./tasks');
 const help = require('./help');
+const accounts = require('./accounts');
 
 module.exports = {
   edit,
@@ -60,4 +61,5 @@ module.exports = {
   mcp,
   tasks,
   help,
+  accounts,
 };

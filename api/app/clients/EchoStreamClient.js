@@ -206,16 +206,6 @@ class EchoStreamClient extends BaseClient {
       'Authorization': `Bearer ${userApiKey}`
     }
 
-    debug(debugGroups.STREAMING, 'sendCompletion called with payload:', JSON.stringify(payload, null, 2));
-    debug(debugGroups.STREAMING, 'Final request payload:', JSON.stringify(requestPayload, null, 2));
-    debug(debugGroups.STREAMING, 'Full request details:', {
-      url: this.baseURL,
-      method: 'POST',
-      headers: headers,
-      hasModel: !!requestPayload.model,
-      model: requestPayload.model,
-      messagesCount: Array.isArray(requestPayload.messages) ? requestPayload.messages.length : 'not-array'
-    });
     logger.info('EchoStreamClient: Sending request to', this.baseURL);
     logger.debug('EchoStreamClient: Request payload', requestPayload);
 
@@ -266,7 +256,6 @@ class EchoStreamClient extends BaseClient {
       stream.on('data', (chunk) => {
         chunkCount++;
         const chunkStr = chunk.toString();
-        debug(debugGroups.STREAMING, `CHUNK #${chunkCount} received (${chunkStr.length} chars)`);
         
         buffer += chunkStr;
         const lines = buffer.split('\n');
@@ -275,7 +264,6 @@ class EchoStreamClient extends BaseClient {
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6);
-            debug(debugGroups.SSE, `Extracted SSE data: "${data}"`);
             
             if (data === '[DONE]') {
               debug(debugGroups.STREAMING, 'Received [DONE], ending stream');
@@ -288,15 +276,23 @@ class EchoStreamClient extends BaseClient {
               const content = parsed.choices?.[0]?.delta?.content;
               const type = parsed.choices?.[0]?.delta?.type;
               
-              debug(debugGroups.SSE, 'Parsed SSE data:', { 
-                content: content ? `"${content}"` : 'undefined',
+              // DEBUG: Check for ads and tasks in the response
+              debug(debugGroups.GENERAL, 'EchoStreamClient parsed SSE data:', {
                 hasChoices: !!parsed.choices,
-                parsedKeys: Object.keys(parsed)
+                content: content ? `"${content}"` : 'undefined',
+                type: type,
+                hasAds: !!parsed.ads,
+                adsCount: parsed.ads ? parsed.ads.length : 0,
+                hasTask: !!parsed.task,
+                taskData: parsed.task ? JSON.stringify(parsed.task) : 'undefined',
+                hasInsertionId: !!parsed.insertion_id,
+                insertionId: parsed.insertion_id,
+                allKeys: Object.keys(parsed)
               });
               
+              // Handle content chunks
               if (content) {
                 fullResponse += content;
-                debug(debugGroups.STREAMING, `Received streaming content: "${content}" (${content.length} chars, total: ${fullResponse.length})`);
                 
                 // Use SplitStreamHandler pattern like normal endpoints
                 if (this.streamHandler) {
@@ -311,6 +307,36 @@ class EchoStreamClient extends BaseClient {
                 } else if (onProgress) {
                   // Fallback: call onProgress directly (should not happen with proper setup)
                   onProgress(content);
+                }
+              }
+              
+              // Handle ads/tasks chunks
+              if (parsed.ads || parsed.task) {
+                debug(debugGroups.GENERAL, 'EchoStreamClient processing ads/task chunk IMMEDIATELY');
+                
+                // Format ad/task data as [AD]...[/AD] tags for frontend parsing
+                const adData = {
+                  ...(parsed.task && { task: parsed.task }),
+                  ...(parsed.ads && { ads: parsed.ads }),
+                  ...(parsed.ui_display && { ui_display: parsed.ui_display })
+                };
+                
+                const adContent = `[AD]${JSON.stringify(adData)}[/AD]`;
+                debug(debugGroups.GENERAL, 'EchoStreamClient formatted ad content:', adContent);
+                
+                fullResponse += adContent;
+                
+                // Send ad content through the stream handler
+                if (this.streamHandler) {
+                  const openAIChunk = {
+                    choices: [{
+                      delta: { content: adContent },
+                      finish_reason: null
+                    }]
+                  };
+                  this.streamHandler.handle(openAIChunk);
+                } else if (onProgress) {
+                  onProgress(adContent);
                 }
               }
             } catch (parseError) {

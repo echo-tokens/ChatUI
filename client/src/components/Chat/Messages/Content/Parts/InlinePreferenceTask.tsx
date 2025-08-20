@@ -2,6 +2,8 @@ import { memo, useState, useEffect } from 'react';
 import { cn } from '~/utils';
 import AdTile from './AdTile';
 import { useAuthContext } from '~/hooks/AuthContext';
+import useToast from '~/hooks/useToast';
+import { NotificationSeverity } from '~/common';
 import { SelectionMethod, InlineSelectionMethod } from './AdOrTaskTile';
 
 interface ParsedAdData {
@@ -26,6 +28,7 @@ interface InlinePreferenceTaskProps {
 
 const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTaskProps) => {
   const { token } = useAuthContext();
+  const { showToast } = useToast();
   const [selectedAds, setSelectedAds] = useState<Set<number>>(new Set());
   const [hasSelection, setHasSelection] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -113,11 +116,11 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
     
     setIsAnimating(true);
     
-    if (selection_method === 'pick_one') {
+    if (selection_method === 'pick_one' || selection_method === 'AB_click') {
       // Single selection - replace current selection
       setSelectedAds(new Set([index]));
       setHasSelection(true);
-      // Submit immediately for pick_one
+      // Submit immediately for pick_one and AB_click
       submitSelection(new Set([index]));
     } else {
       // Multiple selection - toggle selection
@@ -140,6 +143,41 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
     
     // Submit selection for pick_multiple
     await submitSelection(selectedAds);
+  };
+
+  const verifyTaskTrustLevel = async (taskId: string) => {
+    try {
+      const response = await fetch('/api/accounts/verify-task', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: taskId
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Task verification result:', data);
+        
+        // Display trust level update message
+        const isGreen = data.trustworthy;
+        const trustChange = data.trust_level_updated;
+        
+        showToast({
+          message: `Trust level updated to ${trustChange}`,
+          severity: isGreen ? NotificationSeverity.SUCCESS : NotificationSeverity.ERROR,
+          showIcon: true,
+          duration: 5000, // Show for 5 seconds
+        });
+      } else {
+        console.error('Task verification failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error verifying task:', error);
+    }
   };
 
   const submitSelection = async (selection: Set<number>) => {
@@ -179,6 +217,9 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
 
         if (response.ok) {
           console.log('Task submission successful');
+          
+          // Call task verification asynchronously
+          verifyTaskTrustLevel(adData.task.id);
           
           // Pick a random ad from the selection
           const selectedArray = Array.from(selection);

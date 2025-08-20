@@ -2,6 +2,8 @@ import { memo, useState, useEffect } from 'react';
 import { cn } from '~/utils';
 import AdTile from './AdTile';
 import { useAuthContext } from '~/hooks/AuthContext';
+import useToast from '~/hooks/useToast';
+import { NotificationSeverity } from '~/common';
 import { SelectionMethod } from './AdOrTaskTile';
 
 interface ParsedAdData {
@@ -27,6 +29,7 @@ interface DropdownTaskProps {
 
 const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
   const { token } = useAuthContext();
+  const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [showTask, setShowTask] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -116,6 +119,41 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
     setIsLoading(true); // Start loading state
   };
 
+  const verifyTaskTrustLevel = async (taskId: string) => {
+    try {
+      const response = await fetch('/api/accounts/verify-task', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: taskId
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Task verification result:', data);
+        
+        // Display trust level update message
+        const isGreen = data.trustworthy;
+        const trustChange = data.trust_level_updated;
+        
+        showToast({
+          message: `Trust level updated to ${trustChange}`,
+          severity: isGreen ? NotificationSeverity.SUCCESS : NotificationSeverity.ERROR,
+          showIcon: true,
+          duration: 5000, // Show for 5 seconds
+        });
+      } else {
+        console.error('Task verification failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error verifying task:', error);
+    }
+  };
+
   const handleTaskSubmit = async () => {
     if (!adData.task?.id || !token) return;
     
@@ -161,6 +199,10 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
 
       if (response.ok) {
         console.log('Task submission successful');
+        
+        // Call task verification asynchronously
+        verifyTaskTrustLevel(adData.task.id);
+        
         setTaskCompleted(true);
         setTaskState('complete');
         

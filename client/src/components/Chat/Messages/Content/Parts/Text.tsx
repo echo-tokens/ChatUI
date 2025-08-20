@@ -1,4 +1,4 @@
-import { memo, useMemo, ReactElement } from 'react';
+import React, { memo, useMemo, ReactElement } from 'react';
 import { useRecoilValue } from 'recoil';
 import MarkdownLite from '~/components/Chat/Messages/Content/MarkdownLite';
 import Markdown from '~/components/Chat/Messages/Content/Markdown';
@@ -76,7 +76,7 @@ const TextPart = memo(({ text, isCreatedByUser, showCursor }: TextPartProps) => 
       }
       return null;
     }).filter(Boolean);
-  }, [text, isCreatedByUser, enableUserMsgMarkdown, isLatestMessage, isSubmitting, showCursor]);
+  }, [text, isCreatedByUser, enableUserMsgMarkdown, isLatestMessage]);
 
   return (
     <div

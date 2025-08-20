@@ -43,10 +43,27 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
           console.log('Loading user data for:', currentUser.id);
           const data = await fetchUserInfo(currentUser.id, token);
           console.log('User info response:', data);
+          
+          // Check if this is mock data
+          if (data._mock) {
+            setError(data._message || "Using demo data - Account Management service is temporarily unavailable");
+          }
+          
           setUserInfo(data);
         } catch (error) {
           console.error('Error loading user data:', error);
-          setError('Failed to load user data. Please try again.');
+          let errorMessage = "Can't connect to Earnings server";
+          if (error instanceof Error) {
+            // Show more specific error messages
+            if (error.message.includes('Account Management service')) {
+              errorMessage = error.message;
+            } else if (error.message.includes('Failed to connect')) {
+              errorMessage = "Can't connect to Earnings server. Please check if the service is running.";
+            } else if (error.message && !error.message.includes('Failed to fetch')) {
+              errorMessage = error.message;
+            }
+          }
+          setError(errorMessage);
         } finally {
           setIsLoading(false);
         }
@@ -65,7 +82,18 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
         setUserInfo(data);
       } catch (error) {
         console.error('Error refreshing user data:', error);
-        setError('Failed to refresh data. Please try again.');
+        let errorMessage = "Can't connect to Earnings server";
+        if (error instanceof Error) {
+          // Show more specific error messages
+          if (error.message.includes('Account Management service')) {
+            errorMessage = error.message;
+          } else if (error.message.includes('Failed to connect')) {
+            errorMessage = "Can't connect to Earnings server. Please check if the service is running.";
+          } else if (error.message && !error.message.includes('Failed to fetch')) {
+            errorMessage = error.message;
+          }
+        }
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -116,6 +144,41 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
   };
 
 
+  // Error state - but continue showing page if it's just mock data
+  if (error && !userInfo) {
+    return (
+      <div className={cn('h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6', className)}>
+        <div className="max-w-6xl mx-auto min-h-full">
+          <div className="flex flex-col items-center justify-center min-h-[400px]">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md w-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">
+                  Connection Error
+                </h3>
+              </div>
+              <p className="text-red-700 dark:text-red-300 mb-4">
+                {error}
+              </p>
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Loading state
   if (isLoading || !userInfo) {
     return (
@@ -159,6 +222,21 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
   return (
     <div className={cn('h-full overflow-y-auto bg-gray-50 dark:bg-gray-900', className)}>
       <div className="max-w-6xl mx-auto p-6 space-y-6 min-h-full">
+        {/* Warning banner for mock data */}
+        {error && userInfo && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span className="text-yellow-800 dark:text-yellow-200 font-medium">Demo Mode</span>
+            </div>
+            <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+              {error}
+            </p>
+          </div>
+        )}
+        
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -235,7 +313,7 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
             
             <div className="space-y-3">
               <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(userInfo.task_earnings.pending_earnings)}
+                {userInfo ? formatCurrency(userInfo.task_earnings.pending_earnings) : 'N/A'}
               </div>
             </div>
           </div>
@@ -250,12 +328,12 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
             
             <div className="space-y-4">
               <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(userInfo.task_earnings.confirmed_earnings)}
+                {userInfo ? formatCurrency(userInfo.task_earnings.confirmed_earnings) : 'N/A'}
               </div>
               
               <Button
                 onClick={handleCashOut}
-                disabled={userInfo.task_earnings.confirmed_earnings <= 0}
+                disabled={!userInfo || userInfo.task_earnings.confirmed_earnings <= 0}
                 className="w-full"
                 size="lg"
               >
@@ -274,11 +352,11 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
             
             <div className="space-y-4">
               <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(userInfo.task_earnings.total_earnings)}
+                {userInfo ? formatCurrency(userInfo.task_earnings.total_earnings) : 'N/A'}
               </div>
               
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Paid out: {formatCurrency(userInfo.task_earnings.paid_earnings)}
+                Paid out: {userInfo ? formatCurrency(userInfo.task_earnings.paid_earnings) : 'N/A'}
               </div>
             </div>
           </div>
@@ -299,7 +377,7 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
 
             <div className="text-center">
               <div className="text-4xl font-bold text-orange-600 dark:text-orange-400 mb-2">
-                {userInfo.chat_streak}
+                {userInfo ? userInfo.chat_streak : 'N/A'}
               </div>
               <div className="text-lg text-gray-600 dark:text-gray-400">
                 Days Active
@@ -325,51 +403,55 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                    {userInfo.referral_data.approved_referrals}
+                    {userInfo ? userInfo.referral_data.approved_referrals : 'N/A'}
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">Approved</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
-                    {userInfo.referral_data.sent_out_referrals}
+                    {userInfo ? userInfo.referral_data.sent_out_referrals : 'N/A'}
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">Sent</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                    {formatCurrency(userInfo.referral_data.referral_earnings)}
+                    {userInfo ? formatCurrency(userInfo.referral_data.referral_earnings) : 'N/A'}
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">Earned</div>
                 </div>
               </div>
 
-              <ProgressBar
-                value={userInfo.referral_data.sent_out_referrals}
-                max={userInfo.referral_data.max_referrals}
-                color="purple"
-                label={`${userInfo.referral_data.max_referrals - userInfo.referral_data.sent_out_referrals} remaining`}
-              />
+              {userInfo && (
+                <ProgressBar
+                  value={userInfo.referral_data.sent_out_referrals}
+                  max={userInfo.referral_data.max_referrals}
+                  color="purple"
+                  label={`${userInfo.referral_data.max_referrals - userInfo.referral_data.sent_out_referrals} remaining`}
+                />
+              )}
 
               <div className="flex gap-2">
                 <Button
-                  onClick={() => handleCopy(userInfo.referral_data.referral_code, 'referral_code')}
+                  onClick={() => userInfo && handleCopy(userInfo.referral_data.referral_code, 'referral_code')}
                   variant="outline"
                   className="flex-1"
                   size="sm"
+                  disabled={!userInfo}
                 >
                   {copiedField === 'referral_code' ? (
                     <>Copied!</>
                   ) : (
                     <>
                       <Copy className="h-4 w-4 mr-2" />
-                      Copy Code: {userInfo.referral_data.referral_code}
+                      Copy Code: {userInfo ? userInfo.referral_data.referral_code : 'N/A'}
                     </>
                   )}
                 </Button>
                 <Button
-                  onClick={() => window.open(`mailto:?subject=Join Echo LLM&body=Use my referral code ${userInfo.referral_data.referral_code} to get started with Echo LLM!`, '_blank')}
+                  onClick={() => userInfo && window.open(`mailto:?subject=Join Echo LLM&body=Use my referral code ${userInfo.referral_data.referral_code} to get started with Echo LLM!`, '_blank')}
                   variant="outline"
                   size="sm"
+                  disabled={!userInfo}
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Button>
@@ -388,10 +470,10 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                {userInfo.trust.trust_level}
+                {userInfo ? userInfo.trust.trust_level : 'N/A'}
               </div>
               <div className="font-semibold text-gray-900 dark:text-white">Trust Level</div>
-              {userInfo.trust.change_in_trust !== 0 && (
+              {userInfo && userInfo.trust.change_in_trust !== 0 && (
                 <div className={cn(
                   "text-sm mt-1",
                   userInfo.trust.change_in_trust > 0 
@@ -405,7 +487,7 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
 
             <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-2">
-                {userInfo.chat_streak}
+                {userInfo ? userInfo.chat_streak : 'N/A'}
               </div>
               <div className="font-semibold text-gray-900 dark:text-white">Chat Streak</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Days active</div>
@@ -413,7 +495,7 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
 
             <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">
-                {userInfo.referral_data.approved_referrals}
+                {userInfo ? userInfo.referral_data.approved_referrals : 'N/A'}
               </div>
               <div className="font-semibold text-gray-900 dark:text-white">Referrals</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Approved</div>
@@ -434,9 +516,9 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Earnings</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { label: 'This Week', amount: userInfo.task_earnings.earnings_week },
-              { label: 'This Month', amount: userInfo.task_earnings.earnings_month },
-              { label: 'All Time', amount: userInfo.task_earnings.total_earnings },
+              { label: 'This Week', amount: userInfo ? userInfo.task_earnings.earnings_week : 0 },
+              { label: 'This Month', amount: userInfo ? userInfo.task_earnings.earnings_month : 0 },
+              { label: 'All Time', amount: userInfo ? userInfo.task_earnings.total_earnings : 0 },
             ].map((stat) => (
               <div key={stat.label} className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div className="text-xl font-bold text-gray-900 dark:text-white">
@@ -465,26 +547,6 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
         )}
       </div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
-            <Activity className="h-4 w-4" />
-            <span className="font-medium">Error</span>
-          </div>
-          <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-            {error}
-          </p>
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            size="sm"
-            className="mt-2"
-          >
-            Try Again
-          </Button>
-        </div>
-      )}
 
       {/* Modals */}
       <CashOutModal
