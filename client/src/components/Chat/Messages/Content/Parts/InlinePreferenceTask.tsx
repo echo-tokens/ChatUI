@@ -112,11 +112,11 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
     
     setIsAnimating(true);
     
-    if (selection_method === 'pick_one' || selection_method === 'AB_click') {
+    if (selection_method === 'pick_one') {
       // Single selection - replace current selection
       setSelectedAds(new Set([index]));
       setHasSelection(true);
-      // Submit immediately for pick_one and AB_click
+      // Submit immediately for pick_one
       submitSelection(new Set([index]));
     } else {
       // Multiple selection - toggle selection
