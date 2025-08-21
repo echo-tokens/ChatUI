@@ -5,14 +5,12 @@ const { logger } = require('~/config');
 
 // Hardcoded model restrictions - only allow these specific models
 const ALLOWED_MODELS = {
-  echo_stream: [
-    // Current OpenAI Models (via Echo Stream)
-    'gpt-4o', 'o1', 'gpt-4o-mini',
-    // Current Anthropic Models (via Echo Stream)
-    'claude-3-5-sonnet-20241022', 'claude-3-opus-20240229',
-    // Current Google Models (via Echo Stream)
-    'gemini-2.0-flash-exp', 'gemini-1.5-pro-latest'
-  ]
+  // Current OpenAI Models (via Echo Stream)
+  openai:['gpt-4o', 'o1', 'gpt-4o-mini', 'gpt-5'],
+  // Current Anthropic Models (via Echo Stream)
+  anthropic:['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229'],
+  // Current Google Models (via Echo Stream)
+  google:['gemini-2.0-flash-exp', 'gemini-1.5-pro-latest']
 };
 
 /**
@@ -35,10 +33,6 @@ const getModelsConfig = async (req) => {
  */
 async function loadModels(req) {
   const cache = getLogStores(CacheKeys.CONFIG_STORE);
-  
-  // Clear the cache to ensure our hardcoded restrictions are always applied
-  await cache.delete(CacheKeys.MODELS_CONFIG);
-  
   const cachedModelsConfig = await cache.get(CacheKeys.MODELS_CONFIG);
   if (cachedModelsConfig) {
     return applyModelRestrictions(cachedModelsConfig);
@@ -48,7 +42,7 @@ async function loadModels(req) {
 
   const modelConfig = { ...defaultModelsConfig, ...customModelsConfig };
   const restrictedModelConfig = applyModelRestrictions(modelConfig);
-
+  
   await cache.set(CacheKeys.MODELS_CONFIG, restrictedModelConfig);
   return restrictedModelConfig;
 }
@@ -61,28 +55,16 @@ async function loadModels(req) {
 function applyModelRestrictions(modelConfig) {
   const restrictedConfig = { ...modelConfig };
 
-  // Remove disabled providers
-  delete restrictedConfig.openAI;
-  delete restrictedConfig.anthropic;
-  delete restrictedConfig.google;
-
-  // Remove xAI provider
-  delete restrictedConfig.xai;
-
-  // Apply echo_stream restrictions
-  if (restrictedConfig.echo_stream) {
-    restrictedConfig.echo_stream = restrictedConfig.echo_stream.filter(model => 
-      ALLOWED_MODELS.echo_stream.includes(model)
-    );
-  }
-
-  // Remove any other endpoints that might exist
-  const allowedEndpoints = ['echo_stream', 'initial'];
-  Object.keys(restrictedConfig).forEach(endpoint => {
-    if (!allowedEndpoints.includes(endpoint)) {
-      delete restrictedConfig[endpoint];
-    }
-  });
+  // if (restrictedConfig.echo_stream) {
+  //   restrictedConfig.echo_stream = restrictedConfig.echo_stream.filter(model => {
+  //     for (const provider in ALLOWED_MODELS) {
+  //       if (ALLOWED_MODELS[provider].includes(model)) {
+  //         return true;
+  //       }
+  //     }
+  //     return false;
+  //   });
+  // }
 
   return restrictedConfig;
 }

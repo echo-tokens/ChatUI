@@ -15,8 +15,23 @@ async function loadConfigModels(req) {
     return {};
   }
 
-  const { endpoints = {} } = customConfig ?? {};
+  const { endpoints = {}, interface: interfaceConfig = {} } = customConfig ?? {};
   const modelsConfig = {};
+  
+  // Handle standard endpoints from librechat.yaml (they're under interface, not endpoints)
+  if (interfaceConfig[EModelEndpoint.openAI]?.models?.default) {
+    modelsConfig[EModelEndpoint.openAI] = interfaceConfig[EModelEndpoint.openAI].models.default;
+    // Also set agents to use the same models as openAI
+    modelsConfig[EModelEndpoint.agents] = interfaceConfig[EModelEndpoint.openAI].models.default;
+  }
+  
+  if (interfaceConfig[EModelEndpoint.anthropic]?.models?.default) {
+    modelsConfig[EModelEndpoint.anthropic] = interfaceConfig[EModelEndpoint.anthropic].models.default;
+  }
+  
+  if (interfaceConfig[EModelEndpoint.google]?.models?.default) {
+    modelsConfig[EModelEndpoint.google] = interfaceConfig[EModelEndpoint.google].models.default;
+  }
   const azureEndpoint = endpoints[EModelEndpoint.azureOpenAI];
   const azureConfig = req.app.locals[EModelEndpoint.azureOpenAI];
   const { modelNames } = azureConfig ?? {};

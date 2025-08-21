@@ -29,7 +29,8 @@ class EchoStreamClient extends BaseClient {
     };
     
     this.addParams = options.addParams || {};
-    this.sender = options.sender || 'Echo';
+    this.sender = options.modelDisplayLabel || 'Echo';
+    this.endpoint = options.endpoint || 'echo_stream';
     
     // Call setOptions like normal endpoints do to set up this.options properly
     this.setOptions(options);
@@ -418,7 +419,7 @@ class EchoStreamClient extends BaseClient {
 
   async titleConvo({ text, responseText = '' }) {
     // Simple title generation for echo_stream - just return default title
-    return 'Echo Stream Chat';
+    return text.length > 50 ? text.substring(0, 50) + '...' : text;
   }
 
   getBuildMessagesOptions(opts) {
@@ -436,8 +437,8 @@ class EchoStreamClient extends BaseClient {
 
   getSaveOptions() {
     return {
-      modelLabel: 'Echo Stream',
-      endpoint: 'echo_stream'
+      modelLabel: this.sender,
+      endpoint: this.endpoint
     };
   }
 }

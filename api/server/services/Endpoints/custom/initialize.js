@@ -10,9 +10,6 @@ const { getOpenAIConfig, createHandleLLMNewToken, resolveHeaders, getGoogleConfi
 const { getUserKeyValues, checkUserKeyExpiry } = require('~/server/services/UserService');
 const { getCustomEndpointConfig } = require('~/server/services/Config');
 const { fetchModels } = require('~/server/services/ModelService');
-const OpenAIClient = require('~/app/clients/OpenAIClient');
-const AnthropicClient = require('~/app/clients/AnthropicClient');
-const GoogleClient = require('~/app/clients/GoogleClient');
 const EchoStreamClient = require('~/app/clients/EchoStreamClient');
 const { isUserProvided } = require('~/server/utils');
 const getLogStores = require('~/cache/getLogStores');
@@ -26,31 +23,7 @@ const { PROXY } = process.env;
  * @returns {string} - The client type ('openai', 'anthropic', 'google', 'echo_stream')
  */
 function getClientType(model, endpoint) {
-  // FORCE echo_stream client for echo_stream endpoint - no exceptions
-  if (endpoint === 'echo_stream') {
-    console.log(`DEBUG: Forcing echo_stream client for endpoint: ${endpoint}, model: ${model}`);
-    return 'echo_stream';
-  }
-  
-  if (!model) return 'openai';
-  
-  const modelLower = model.toLowerCase();
-  
-  // Anthropic models (only for non-echo_stream endpoints)
-  if (modelLower.includes('claude')) {
-    console.log(`DEBUG: Using anthropic client for model: ${model}, endpoint: ${endpoint}`);
-    return 'anthropic';
-  }
-  
-  // Google models (only for non-echo_stream endpoints)
-  if (modelLower.includes('gemini')) {
-    console.log(`DEBUG: Using google client for model: ${model}, endpoint: ${endpoint}`);
-    return 'google';
-  }
-  
-  // OpenAI models (default)
-  console.log(`DEBUG: Using openai client for model: ${model}, endpoint: ${endpoint}`);
-  return 'openai';
+  return 'echo_stream';
 }
 
 /**
@@ -189,125 +162,22 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
 
   // Determine which client to use based on the model and endpoint
   const model = endpointOption?.model_parameters?.model;
-  const clientType = getClientType(model, endpoint);
   
-  console.log('DEBUG: After getClientType - clientType:', clientType, 'optionsOnly:', optionsOnly);
+  console.log('DEBUG: optionsOnly:', optionsOnly);
+  console.log('DEBUG: model:', model);
+  console.log('DEBUG: endpoint:', endpoint);
 
   // For echo_stream, we bypass optionsOnly to force actual client creation
-  if (optionsOnly && clientType === 'echo_stream') {
+  if (optionsOnly) {
     console.log('DEBUG: Bypassing optionsOnly for echo_stream - will create actual client instead');
-  }
-
-  if (optionsOnly && clientType !== 'echo_stream') {
-    // Skip optionsOnly for echo_stream to force actual client creation
-    console.log('DEBUG: optionsOnly path - processing for clientType:', clientType);
-    const modelOptions = endpointOption?.model_parameters ?? {};
-      
-      if (endpoint !== Providers.OLLAMA) {
-        clientOptions = Object.assign(
-          {
-            modelOptions,
-          },
-          clientOptions,
-        );
-        clientOptions.modelOptions.user = req.user.id;
-        
-        // Use appropriate config function based on client type
-        let options;
-        console.log('DEBUG: optionsOnly path - clientType:', clientType);
-        if (clientType === 'anthropic') {
-          const { getLLMConfig } = require('~/server/services/Endpoints/anthropic/llm');
-          options = getLLMConfig(apiKey, clientOptions);
-        } else if (clientType === 'google') {
-        console.log('DEBUG: optionsOnly - USING GOOGLE CLIENT (this should NOT happen for echo_stream!)');
-        // Google client expects credentials object
-        const credentials = JSON.stringify({
-          GOOGLE_API_KEY: apiKey,
-          GOOGLE_SERVICE_KEY: null
-        });
-        
-        // Only disable thinking for models that don't support it
-        const googleClientOptions = {
-          ...clientOptions,
-          modelOptions: {
-            ...clientOptions.modelOptions,
-            thinking: supportsThinking(model) ? clientOptions.modelOptions?.thinking : false,
-            thinkingBudget: supportsThinking(model) ? clientOptions.modelOptions?.thinkingBudget : 0
-          }
-        };
-        
-        options = getGoogleConfig(credentials, googleClientOptions);
-      } else {
-        // Default to OpenAI
-        options = getOpenAIConfig(apiKey, clientOptions, endpoint);
-        if (options != null) {
-          options.useLegacyContent = true;
-        }
-      }
-      
-      if (!customOptions.streamRate) {
-        console.log('DEBUG: optionsOnly - returning options:', JSON.stringify(options, null, 2));
-        return options;
-      }
-      
-      // Add streaming callbacks for OpenAI
-      if (clientType === 'openai' && options.llmConfig) {
-        options.llmConfig.callbacks = [
-          {
-            handleLLMNewToken: createHandleLLMNewToken(clientOptions.streamRate),
-          },
-        ];
-      }
-      
-      return options;
-    }
-
-    if (clientOptions.reverseProxyUrl) {
-      modelOptions.baseUrl = clientOptions.reverseProxyUrl.split('/v1')[0];
-      delete clientOptions.reverseProxyUrl;
-    }
-
-    return {
-      useLegacyContent: true,
-      llmConfig: modelOptions,
-    };
   }
 
   // Create the appropriate client based on model type
   let client;
   let clientApiKey = apiKey;
   
-  console.log('DEBUG: Creating client - clientType:', clientType);
-  
-  if (clientType === 'echo_stream') {
-    console.log('DEBUG: Creating EchoStreamClient');
-    client = new EchoStreamClient(apiKey, clientOptions);
-  } else if (clientType === 'anthropic') {
-    console.log('DEBUG: Creating AnthropicClient (this should NOT happen for echo_stream!)');
-    client = new AnthropicClient(apiKey, clientOptions);
-  } else if (clientType === 'google') {
-    console.log('DEBUG: Creating GoogleClient (this should NOT happen for echo_stream!)');
-    // Google client expects credentials object
-    clientApiKey = JSON.stringify({
-      GOOGLE_API_KEY: apiKey,
-      GOOGLE_SERVICE_KEY: null
-    });
-    
-    // Only disable thinking for models that don't support it
-    const googleClientOptions = {
-      ...clientOptions,
-      modelOptions: {
-        ...clientOptions.modelOptions,
-        thinking: supportsThinking(model) ? clientOptions.modelOptions?.thinking : false,
-        thinkingBudget: supportsThinking(model) ? clientOptions.modelOptions?.thinkingBudget : 0
-      }
-    };
-    
-    client = new GoogleClient(clientApiKey, googleClientOptions);
-  } else {
-    // Default to OpenAI
-    client = new OpenAIClient(apiKey, clientOptions);
-  }
+  console.log('DEBUG: Creating EchoStreamClient');
+  client = new EchoStreamClient(apiKey, clientOptions);
 
   const result = {
     client,

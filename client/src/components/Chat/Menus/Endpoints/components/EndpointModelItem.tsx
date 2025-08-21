@@ -3,37 +3,8 @@ import { EarthIcon } from 'lucide-react';
 import { isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import type { Endpoint } from '~/common';
 import { useModelSelectorContext } from '../ModelSelectorContext';
+import { MODEL_DISPLAY_NAMES } from '../utils';
 import { CustomMenuItem as MenuItem } from '../CustomMenu';
-
-// Hardcoded model display name mappings
-const MODEL_DISPLAY_NAMES = {
-  // OpenAI models
-  'gpt-4o': 'GPT-4o',
-  'o1': 'o3',
-  'gpt-4o-mini': 'o4-mini',
-  'echo-gpt-4o': 'Echo GPT-4o',
-
-  // Anthropic models
-  'claude-3-5-sonnet-20241022': 'Claude 4 Sonnet',
-  'claude-3-opus-20240229': 'Claude 4 Opus',
-  'echo-claude': 'Echo Claude',
-
-  // Google models
-  'gemini-2.0-flash-exp': 'Gemini 2.0 Flash',
-  'gemini-1.5-pro-latest': 'Gemini 2.0 Pro',
-  'echo-gemini': 'Echo Gemini',
-
-  // xAI models
-  'grok-3-mini': 'Grok 3 Mini',
-  'grok-3': 'Grok 3',
-  'echo-grok': 'Echo Grok',
-
-  // Echo Stream models (Railway service) - These use modelSpecs instead
-  'echo_stream_gpt4o': 'Echo GPT-4o',
-  'echo_stream_claude': 'Echo Claude',
-  'echo_stream_gemini': 'Echo Gemini',
-  'echo_stream_grok': 'Echo Grok'
-};
 
 interface EndpointModelItemProps {
   modelId: string | null;

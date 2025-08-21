@@ -83,6 +83,7 @@ Please specify a correct \`imageOutputType\` value (case-sensitive).
       https://www.librechat.ai/docs/configuration/librechat_yaml`,
     );
   }
+
   if (!result.success) {
     let errorMessage = `Invalid custom config file at ${configPath}:
 ${JSON.stringify(result.error, null, 2)}`;

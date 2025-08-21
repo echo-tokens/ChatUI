@@ -255,6 +255,9 @@ export function getIconKey({
   if (endpointIconURL && EModelEndpoint[endpointIconURL] != null) {
     return endpointIconURL;
   }
+  if (endpointType === EModelEndpoint.custom) {
+    return endpoint ?? 'unknown';
+  }
   return endpointType ? 'unknown' : (endpoint ?? 'unknown');
 }
 

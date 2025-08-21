@@ -16,22 +16,55 @@ interface:
 endpoints:
   # Railway Echo Stream Service - Intelligent Ad Integration
   custom:
-    - name: "echo_stream"
+    - name: "openAI" # used to be "echo_stream" when there is one custom endpoint
       baseURL: "${ECHO_STREAM_BASE_URL}"
       apiKey: "${ECHO_STREAM_API_KEY}"
       models:
         default: [
-          # Current OpenAI Models (via Echo Stream)
-          "gpt-4o", "o1", "gpt-4o-mini",
-          # Current Anthropic Models (via Echo Stream)  
-          "claude-3-5-sonnet-20241022", "claude-3-opus-20240229",
-          # Current Google Models (via Echo Stream)
-          "gemini-2.0-flash-exp", "gemini-1.5-pro-latest"
+          "gpt-4o", "o1", "gpt-4o-mini", "gpt-5"
         ]
         fetch: false
       titleConvo: true
       titleModel: "gpt-4o-mini"
-      modelDisplayLabel: "Echo"
+      modelDisplayLabel: "GPT"
+      streamRate: 1
+      headers:
+        "X-Service-Type": "echo-proxy"
+        "User-Agent": "LibreChat/1.0"
+      addParams:
+        stream: true
+        include_ads: true
+      directEndpoint: true
+    - name: "anthropic"
+      baseURL: "${ECHO_STREAM_BASE_URL}"
+      apiKey: "${ECHO_STREAM_API_KEY}"
+      models:
+        default: [
+          "claude-3-5-sonnet-20241022", "claude-3-opus-20240229"
+        ]
+        fetch: false
+      titleConvo: true
+      titleModel: "claude-3-5-sonnet-20241022"
+      modelDisplayLabel: "Claude"
+      streamRate: 1
+      headers:
+        "X-Service-Type": "echo-proxy"
+        "User-Agent": "LibreChat/1.0"
+      addParams:
+        stream: true
+        include_ads: true
+      directEndpoint: true
+    - name: "google"
+      baseURL: "${ECHO_STREAM_BASE_URL}"
+      apiKey: "${ECHO_STREAM_API_KEY}"
+      models:
+        default: [
+          "gemini-2.0-flash-exp", "gemini-1.5-pro-latest"
+        ]
+        fetch: false
+      titleConvo: true
+      titleModel: "gemini-2.0-flash-exp"
+      modelDisplayLabel: "Gemini"
       streamRate: 1
       headers:
         "X-Service-Type": "echo-proxy"
@@ -44,7 +77,7 @@ endpoints:
   # openAI:
   #   apiKey: "${OPENAI_API_KEY}"
   #   models:
-  #     default: ["gpt-4o", "o1", "gpt-4o-mini"]
+  #     default: ["gpt-4o", "o1", "gpt-4o-mini", "gpt-5"]
   #     fetch: false
   #   titleConvo: true
   #   titleModel: "gpt-4o-mini"
@@ -73,31 +106,31 @@ endpoints:
 # Enable file uploads (ChatGPT functionality)
 fileConfig:
   endpoints:
-    # openAI:
-    #   fileLimit: 10
-    #   fileSizeLimit: 100
-    #   totalSizeLimit: 500
-    #   supportedMimeTypes:
-    #     - "image/.*"
-    #     - "application/pdf"
-    #     - "text/.*"
-    #     - "application/.*"
-    # anthropic:
-    #   fileLimit: 5
-    #   fileSizeLimit: 100
-    #   totalSizeLimit: 500
-    #   supportedMimeTypes:
-    #     - "image/.*"
-    #     - "application/pdf"
-    #     - "text/.*"
-    # google:
-    #   fileLimit: 10
-    #   fileSizeLimit: 100
-    #   totalSizeLimit: 500
-    #   supportedMimeTypes:
-    #     - "image/.*"
-    #     - "application/pdf"
-    #     - "text/.*"
+    openAI:
+      fileLimit: 10
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "application/pdf"
+        - "text/.*"
+        - "application/.*"
+    anthropic:
+      fileLimit: 5
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "application/pdf"
+        - "text/.*"
+    google:
+      fileLimit: 10
+      fileSizeLimit: 100
+      totalSizeLimit: 500
+      supportedMimeTypes:
+        - "image/.*"
+        - "application/pdf"
+        - "text/.*"
     xai:
       fileLimit: 5
       fileSizeLimit: 100
