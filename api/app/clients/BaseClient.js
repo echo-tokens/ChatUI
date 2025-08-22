@@ -931,6 +931,7 @@ class BaseClient {
       conversationId: message.conversationId || 'unknown',
       endpoint: this.options.endpoint,
       endpointType: this.options.endpointType,
+      model: this.modelOptions?.model ?? this.model,
       ...endpointOptions,
     };
 
