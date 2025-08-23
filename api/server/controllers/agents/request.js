@@ -398,7 +398,8 @@ const AgentController = async (req, res, next, initializeClient, addTitle) => {
     if (req.body.files && client.options?.attachments) {
       userMessage.files = [];
       const messageFiles = new Set(req.body.files.map((file) => file.file_id));
-      for (let attachment of client.options.attachments) {
+
+      for (let attachment of await client.options.attachments) {
         if (messageFiles.has(attachment.file_id)) {
           userMessage.files.push({ ...attachment });
         }

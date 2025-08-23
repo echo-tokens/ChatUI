@@ -191,23 +191,23 @@ async function encodeAndFormat(req, files, endpoint, mode) {
       continue;
     }
 
-    if (endpoint && endpoint === EModelEndpoint.google && mode === VisionModes.generative) {
-      delete imagePart.image_url;
-      imagePart.inlineData = {
-        mimeType: file.type,
-        data: imageContent,
-      };
-    } else if (endpoint && endpoint === EModelEndpoint.google) {
-      imagePart.image_url = imagePart.image_url.url;
-    } else if (endpoint && endpoint === EModelEndpoint.anthropic) {
-      imagePart.type = 'image';
-      imagePart.source = {
-        type: 'base64',
-        media_type: file.type,
-        data: imageContent,
-      };
-      delete imagePart.image_url;
-    }
+    // if (endpoint && endpoint === EModelEndpoint.google && mode === VisionModes.generative) {
+    //   delete imagePart.image_url;
+    //   imagePart.inlineData = {
+    //     mimeType: file.type,
+    //     data: imageContent,
+    //   };
+    // } else if (endpoint && endpoint === EModelEndpoint.google) {
+    //   imagePart.image_url = imagePart.image_url.url;
+    // } else if (endpoint && endpoint === EModelEndpoint.anthropic) {
+    //   imagePart.type = 'image';
+    //   imagePart.source = {
+    //     type: 'base64',
+    //     media_type: file.type,
+    //     data: imageContent,
+    //   };
+    //   delete imagePart.image_url;
+    // }
 
     result.image_urls.push({ ...imagePart });
     result.files.push({ ...fileMetadata });
