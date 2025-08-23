@@ -65,7 +65,6 @@ class EchoStreamClient extends BaseClient {
       conversationId: messageOptions?.conversationId
     });
 
-    this.conversationFiles = [];
     if (this.options.attachments) {
       const attachments = await this.options.attachments;
 
@@ -76,79 +75,22 @@ class EchoStreamClient extends BaseClient {
           [messages[messages.length - 1].messageId]: attachments,
         };
       }
-
-      const files = await this.addImageURLs(
-        messages[messages.length - 1],
-        attachments,
-      );
-
-      this.options.attachments = files;
-      this.conversationFiles = [files];
     }
+
+    const files = await Promise.all(messages.map(async (message) => {
+      return this.addImageURLs(
+        message,
+        message.files || []
+      );
+    }));
+    this.options.attachments = files[-1];
+    this.conversationFiles = files;
     
     if (!messages || !Array.isArray(messages)) {
       debug(debugGroups.GENERAL, 'buildMessages - Invalid messages input:', messages);
       return { prompt: [] };
     }
     
-    // Check if we need to get conversation history from database
-    if (messageOptions?.conversationId && messageOptions.conversationId !== 'new') {
-      try {
-        debug(debugGroups.GENERAL, 'buildMessages - Getting conversation history for:', messageOptions.conversationId);
-        
-        // Try to get conversation history like normal endpoints do
-        const { getMessages } = require('~/models');
-        const conversationMessages = await getMessages({ 
-          conversationId: messageOptions.conversationId 
-        });
-
-        const files = await Promise.all(conversationMessages.map(async (message) => {
-          return this.addImageURLs(
-            message,
-            message.files || []
-          );
-        }));
-
-        this.conversationFiles = [...files, ...this.conversationFiles];
-        
-        debug(debugGroups.GENERAL, 'buildMessages - Retrieved conversation messages:', {
-          count: conversationMessages?.length || 0,
-          messages: conversationMessages?.map(m => ({
-            id: m.messageId,
-            isUser: m.isCreatedByUser,
-            text: m.text?.substring(0, 50) + '...'
-          }))
-        });
-        
-        if (conversationMessages && conversationMessages.length > 0) {
-          // Build full conversation history
-          const historyMessages = conversationMessages.map(msg => ({
-            role: msg.isCreatedByUser ? 'user' : 'assistant',
-            content: msg.text || msg.content
-          }));
-          
-          // Add current message to history
-          const currentMessages = messages.map(msg => ({
-            role: msg.isCreatedByUser ? 'user' : 'assistant',
-            content: msg.text || msg.content
-          }));
-          
-          const fullMessages = [...historyMessages, ...currentMessages];
-          
-          debug(debugGroups.GENERAL, 'buildMessages - Built full conversation:', {
-            historyCount: historyMessages.length,
-            currentCount: currentMessages.length,
-            totalCount: fullMessages.length,
-            preview: fullMessages.map(m => `${m.role}: ${m.content?.substring(0, 30)}...`)
-          });
-          
-          return { prompt: fullMessages };
-        }
-      } catch (error) {
-        debug(debugGroups.GENERAL, 'buildMessages - Error getting conversation history:', error.message);
-      }
-    }
-
     // Fallback to just current messages
     const apiMessages = messages.map(msg => ({
       role: msg.isCreatedByUser ? 'user' : 'assistant',
