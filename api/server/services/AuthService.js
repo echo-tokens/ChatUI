@@ -27,6 +27,9 @@ const { registerSchema } = require('~/strategies/validators');
 const { supabase } = require('~/lib/supabase');
 const { v4: uuidv4 } = require('uuid');
 
+// Get table names from environment variables
+const STREAMING_SERVICE_API_KEYS_TABLE = process.env.STREAMING_SERVICE_API_KEYS_TABLE || 'streaming_service_api_keys';
+
 const domains = {
   client: process.env.DOMAIN_CLIENT,
   server: process.env.DOMAIN_SERVER,
@@ -177,7 +180,7 @@ const createUserAPIKey = async (userId) => {
     
     // Insert the API key into the streaming_service_api_keys table
     const { data, error } = await supabase
-      .from('streaming_service_api_keys')
+      .from(STREAMING_SERVICE_API_KEYS_TABLE)
       .insert({
         user_id: userId,
         api_key: apiKey,
