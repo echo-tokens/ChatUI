@@ -34,11 +34,17 @@ export interface UserInfoResponse {
   };
   task_earnings: {
     total_earnings: number;
-    paid_earnings: number;
-    confirmed_earnings: number;
-    pending_earnings: number;
-    earnings_week: number;
-    earnings_month: number;
+    paid_out_earnings: number;
+    paid_out_tasks: number;
+    unpaid_approved_earnings: number;
+    unpaid_approved_tasks: number;
+    unpaid_pending_earnings: number;
+    unpaid_pending_tasks: number;
+    weekly_payouts: {
+      week_start: string;
+      week_end: string;
+      paid_out_earnings: number;
+    }[];
   };
   account_created: string;
 }

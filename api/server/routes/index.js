@@ -29,6 +29,7 @@ const mcp = require('./mcp');
 const tasks = require('./tasks');
 const help = require('./help');
 const accounts = require('./accounts');
+const stripe = require('./stripe');
 
 module.exports = {
   edit,
@@ -62,4 +63,5 @@ module.exports = {
   tasks,
   help,
   accounts,
+  stripe,
 };

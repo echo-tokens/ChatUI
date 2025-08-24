@@ -10,6 +10,7 @@ import Search from './Search';
 import Root from './Root';
 import EarningsPage from './EarningsPage';
 import EarnRoute from './EarnRoute';
+import StripeConfirmationPage from './StripeConfirmationPage';
 
 const AuthLayout = () => (
   <AuthContextProvider>
@@ -66,6 +67,10 @@ export const router = createBrowserRouter([
           {
             path: 'earn',
             element: <EarnRoute />,
+          },
+          {
+            path: 'earnings/stripe-confirmation',
+            element: <StripeConfirmationPage />,
           },
         ],
       },
