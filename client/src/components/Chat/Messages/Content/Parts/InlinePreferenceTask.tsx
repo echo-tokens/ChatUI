@@ -272,52 +272,94 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
   // If selection has been made and animation is complete, show only the selected ad(s) in full width
   if (hasSelection && showChosenAd) {
     return (
-      <div className="space-y-2">
-        {Array.from(selectedAds).map((index) => {
-          const ad = adData.ads?.[index];
-          if (!ad) return null; // Skip if ad is undefined
-          return (
-            <div
-              key={index}
-              className="overflow-hidden transition-all duration-1000 ease-in"
-              style={{
-                maxHeight: showChosenAd ? `${chosenAdHeight}px` : '0px'
-              }}
-            >
-              <AdTile
-                link={ad.clickthrough_link}
-                advertiser={ad.advertiser}
-                contextualized_ad={ad.contextualized_ad}
-                clickable={true}
-                display_thumbs={true}
-                isStreaming={isStreaming}
-              />
+      <div className="relative">
+        {/* AdTile and Completed Earn Button wrapper */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            {/* Show only the selected ads */}
+            <div className="space-y-2">
+              {Array.from(selectedAds).map((index) => {
+                const ad = adData.ads?.[index];
+                if (!ad) return null; // Skip if ad is undefined
+                return (
+                  <div
+                    key={index}
+                    className="overflow-hidden transition-all duration-1000 ease-in"
+                    style={{
+                      maxHeight: showChosenAd ? `${chosenAdHeight}px` : '0px'
+                    }}
+                  >
+                    <AdTile
+                      link={ad.clickthrough_link}
+                      advertiser={ad.advertiser}
+                      contextualized_ad={ad.contextualized_ad}
+                      clickable={true}
+                      display_thumbs={true}
+                      isStreaming={isStreaming}
+                    />
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+          
+          {/* Completed Earn Button */}
+          {adData.task?.price_usd && (
+            <div className="flex-shrink-0">
+              <button
+                disabled={true}
+                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed"
+                style={{ borderRadius: '1rem' }}
+              >
+                +${parseFloat(adData.task.price_usd).toFixed(2)}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
-  // If task was already completed, show the chosen ad from user submission
+  // If task was already completed, show the ad without dropdown
   if (previousState === 'complete') {
     return (
-      <div className="space-y-2">
-        {Array.from(selectedAds).map((index) => {
-          const ad = adData.ads?.[index];
-          if (!ad) return null; // Skip if ad is undefined
-          return (
-            <AdTile
-              key={index}
-              link={ad.clickthrough_link}
-              advertiser={ad.advertiser}
-              contextualized_ad={ad.contextualized_ad}
-              clickable={true}
-              display_thumbs={true}
-              isStreaming={isStreaming}
-            />
-          );
-        })}
+      <div className="relative">
+        {/* AdTile and Completed Earn Button wrapper */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            {/* Show only the selected ads */}
+            <div className="space-y-2">
+              {Array.from(selectedAds).map((index) => {
+                const ad = adData.ads?.[index];
+                if (!ad) return null; // Skip if ad is undefined
+                return (
+                  <AdTile
+                    key={index}
+                    link={ad.clickthrough_link}
+                    advertiser={ad.advertiser}
+                    contextualized_ad={ad.contextualized_ad}
+                    clickable={true}
+                    display_thumbs={true}
+                    isStreaming={isStreaming}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Completed Earn Button */}
+          {adData.task?.price_usd && (
+            <div className="flex-shrink-0">
+              <button
+                disabled={true}
+                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed"
+                style={{ borderRadius: '1rem' }}
+              >
+                +${parseFloat(adData.task.price_usd).toFixed(2)}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

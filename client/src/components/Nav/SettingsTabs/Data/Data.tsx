@@ -13,15 +13,15 @@ function Data() {
 
   return (
     <div className="flex flex-col gap-3 p-1 text-sm text-text-primary">
-      <div className="pb-3">
+      {/* <div className="pb-3">
         <ImportConversations />
-      </div>
-      <div className="pb-3">
+      </div> */}
+      {/* <div className="pb-3">
         <SharedLinks />
-      </div>
-      <div className="pb-3">
+      </div> */}
+      {/* <div className="pb-3">
         <RevokeAllKeys />
-      </div>
+      </div> */}
       <div className="pb-3">
         <DeleteCache />
       </div>

@@ -267,11 +267,12 @@ export type TAgentsEndpoint = z.infer<typeof agentsEndpointSchema>;
 
 export const endpointSchema = baseEndpointSchema.merge(
   z.object({
-    name: z.string().refine((value) => !eModelEndpointSchema.safeParse(value).success, {
-      message: `Value cannot be one of the default endpoint (EModelEndpoint) values: ${Object.values(
-        EModelEndpoint,
-      ).join(', ')}`,
-    }),
+    // name: z.string().refine((value) => !eModelEndpointSchema.safeParse(value).success, {
+    //   message: `Value cannot be one of the default endpoint (EModelEndpoint) values: ${Object.values(
+    //     EModelEndpoint,
+    //   ).join(', ')}`,
+    // }),
+    name: z.string(),
     apiKey: z.string(),
     baseURL: z.string(),
     models: z.object({
@@ -973,16 +974,16 @@ const fitlerAssistantModels = (str: string) => {
 const openAIModels = defaultModels[EModelEndpoint.openAI];
 
 export const initialModelsConfig: TModelsConfig = {
-  initial: [],
-  [EModelEndpoint.openAI]: openAIModels,
-  [EModelEndpoint.assistants]: openAIModels.filter(fitlerAssistantModels),
-  [EModelEndpoint.agents]: openAIModels, // TODO: Add agent models (agentsModels)
-  [EModelEndpoint.gptPlugins]: openAIModels,
-  [EModelEndpoint.azureOpenAI]: openAIModels,
-  [EModelEndpoint.chatGPTBrowser]: ['text-davinci-002-render-sha'],
-  [EModelEndpoint.google]: defaultModels[EModelEndpoint.google],
-  [EModelEndpoint.anthropic]: defaultModels[EModelEndpoint.anthropic],
-  [EModelEndpoint.bedrock]: defaultModels[EModelEndpoint.bedrock],
+  initial: {},
+  [EModelEndpoint.openAI]: { default: openAIModels },
+  [EModelEndpoint.assistants]: { default: openAIModels.filter(fitlerAssistantModels) },
+  [EModelEndpoint.agents]: { default: openAIModels }, // TODO: Add agent models (agentsModels)
+  [EModelEndpoint.gptPlugins]: { default: openAIModels },
+  [EModelEndpoint.azureOpenAI]: { default: openAIModels },
+  [EModelEndpoint.chatGPTBrowser]: { default: ['text-davinci-002-render-sha'] },
+  [EModelEndpoint.google]: { default: defaultModels[EModelEndpoint.google] },
+  [EModelEndpoint.anthropic]: { default: defaultModels[EModelEndpoint.anthropic] },
+  [EModelEndpoint.bedrock]: { default: defaultModels[EModelEndpoint.bedrock] },
 };
 
 export const EndpointURLs = {

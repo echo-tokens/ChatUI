@@ -32,9 +32,13 @@ export const useEndpoints = ({
   endpointsConfig: TEndpointsConfig;
   startupConfig: TStartupConfig | undefined;
 }) => {
-  const modelsQuery = useGetModelsQuery();
+  const modelsQuery = useGetModelsQuery({
+    refetchOnMount: 'always',
+    staleTime: 0, // Force refetch
+  });
   const { conversation } = useChatContext();
   const { data: endpoints = [] } = useGetEndpointsQuery({ select: mapEndpoints });
+  console.log('DEBUG: endpoints:', endpoints);
   const { instanceProjectId } = startupConfig ?? {};
   const interfaceConfig = startupConfig?.interface ?? {};
   const includedEndpoints = useMemo(
@@ -96,7 +100,14 @@ export const useEndpoints = ({
   const mappedEndpoints: Endpoint[] = useMemo(() => {
     return filteredEndpoints.map((ep) => {
       const endpointType = getEndpointField(endpointsConfig, ep, 'type');
+      console.log('DEBUG: endpointType:', endpointType);
       const iconKey = getIconKey({ endpoint: ep, endpointsConfig, endpointType });
+      {
+        console.log('DEBUG: iconKey:', iconKey);
+        console.log('DEBUG: endpointsConfig:', endpointsConfig);
+        console.log('DEBUG: ep:', ep);
+        console.log('DEBUG: endpointType:', endpointType);
+      }
       const Icon = icons[iconKey];
       const endpointIconURL = getEndpointField(endpointsConfig, ep, 'iconURL');
       const hasModels =
@@ -183,12 +194,12 @@ export const useEndpoints = ({
       else if (
         ep !== EModelEndpoint.agents &&
         ep !== EModelEndpoint.assistants &&
-        (modelsQuery.data?.[ep]?.length ?? 0) > 0
+        (Array.isArray(modelsQuery.data?.[ep]) ? modelsQuery.data?.[ep]?.length ?? 0 : 0) > 0
       ) {
-        result.models = modelsQuery.data?.[ep]?.map((model) => ({
+        result.models = Array.isArray(modelsQuery.data?.[ep]) ? modelsQuery.data?.[ep]?.map((model) => ({
           name: model,
           isGlobal: false,
-        }));
+        })) : [];
       }
 
       return result;

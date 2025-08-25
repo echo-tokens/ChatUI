@@ -4,6 +4,7 @@ const { logger } = require('~/config');
 const { debug, debugGroups } = require('~/server/utils/debug');
 const { SplitStreamHandler } = require('@librechat/agents');
 const { createStreamEventHandlers } = require('@librechat/api');
+const { encodeAndFormat } = require('~/server/services/Files/images/encode');
 const { jwtVerify } = require('jose');
 const { supabase } = require('~/lib/supabase');
 
@@ -29,7 +30,8 @@ class EchoStreamClient extends BaseClient {
     };
     
     this.addParams = options.addParams || {};
-    this.sender = options.sender || 'Echo';
+    this.sender = options.modelDisplayLabel || 'Echo';
+    this.endpoint = options.endpoint || 'echo_stream';
     
     // Call setOptions like normal endpoints do to set up this.options properly
     this.setOptions(options);
@@ -62,59 +64,31 @@ class EchoStreamClient extends BaseClient {
       messageOptionsKeys: messageOptions ? Object.keys(messageOptions) : 'null',
       conversationId: messageOptions?.conversationId
     });
+
+    if (this.options.attachments) {
+      const attachments = await this.options.attachments;
+
+      if (this.message_file_map) {
+        this.message_file_map[messages[messages.length - 1].messageId] = attachments;
+      } else {
+        this.message_file_map = {
+          [messages[messages.length - 1].messageId]: attachments,
+        };
+      }
+    }
+
+    const files = await Promise.all(messages.map(async (message) => {
+      return this.addImageURLs(
+        message,
+        message.files || []
+      );
+    }));
+    this.options.attachments = files[-1];
+    this.conversationFiles = files;
     
     if (!messages || !Array.isArray(messages)) {
       debug(debugGroups.GENERAL, 'buildMessages - Invalid messages input:', messages);
       return { prompt: [] };
-    }
-    
-    // Check if we need to get conversation history from database
-    if (messageOptions?.conversationId && messageOptions.conversationId !== 'new') {
-      try {
-        debug(debugGroups.GENERAL, 'buildMessages - Getting conversation history for:', messageOptions.conversationId);
-        
-        // Try to get conversation history like normal endpoints do
-        const { getMessages } = require('~/models');
-        const conversationMessages = await getMessages({ 
-          conversationId: messageOptions.conversationId 
-        });
-        
-        debug(debugGroups.GENERAL, 'buildMessages - Retrieved conversation messages:', {
-          count: conversationMessages?.length || 0,
-          messages: conversationMessages?.map(m => ({
-            id: m.messageId,
-            isUser: m.isCreatedByUser,
-            text: m.text?.substring(0, 50) + '...'
-          }))
-        });
-        
-        if (conversationMessages && conversationMessages.length > 0) {
-          // Build full conversation history
-          const historyMessages = conversationMessages.map(msg => ({
-            role: msg.isCreatedByUser ? 'user' : 'assistant',
-            content: msg.text || msg.content
-          }));
-          
-          // Add current message to history
-          const currentMessages = messages.map(msg => ({
-            role: msg.isCreatedByUser ? 'user' : 'assistant',
-            content: msg.text || msg.content
-          }));
-          
-          const fullMessages = [...historyMessages, ...currentMessages];
-          
-          debug(debugGroups.GENERAL, 'buildMessages - Built full conversation:', {
-            historyCount: historyMessages.length,
-            currentCount: currentMessages.length,
-            totalCount: fullMessages.length,
-            preview: fullMessages.map(m => `${m.role}: ${m.content?.substring(0, 30)}...`)
-          });
-          
-          return { prompt: fullMessages };
-        }
-      } catch (error) {
-        debug(debugGroups.GENERAL, 'buildMessages - Error getting conversation history:', error.message);
-      }
     }
     
     // Fallback to just current messages
@@ -191,13 +165,17 @@ class EchoStreamClient extends BaseClient {
   async sendCompletion(payload, opts = {}) {
     let reply = '';
     const requestPayload = {
-      messages: payload,
+      messages: payload.map((message, index) => ({
+        ...message,
+        files: this.conversationFiles[index]
+      })),
       model: this.modelOptions?.model || 'gpt-4o-mini', // Required by external API
       stream: true,
       include_ads: true,
       user_id: opts.user,
       ...this.addParams
     };
+    console.log("DEBUG: requestPayload", requestPayload);
 
     // const userApiKey = await this.getUserApiKeyFromToken(opts.authToken);
     const userApiKey = process.env.ECHO_STREAM_API_KEY;
@@ -418,7 +396,28 @@ class EchoStreamClient extends BaseClient {
 
   async titleConvo({ text, responseText = '' }) {
     // Simple title generation for echo_stream - just return default title
-    return 'Echo Stream Chat';
+    return text.length > 50 ? text.substring(0, 50) + '...' : text;
+  }
+
+  /**
+   *
+   * Adds image URLs to the message object and returns the files
+   *
+   * @param {TMessage[]} messages
+   * @param {MongoFile[]} files
+   * @returns {Promise<MongoFile[]>}
+   */
+  async addImageURLs(message, attachments) {
+    const { files, image_urls } = await encodeAndFormat(
+      this.options.req,
+      attachments,
+      this.options.endpoint,
+    );
+    files.forEach((file, index) => {
+      file.url = image_urls[index].image_url.url;
+    });
+    message.image_urls = image_urls.length ? image_urls : undefined;
+    return files;
   }
 
   getBuildMessagesOptions(opts) {
@@ -436,8 +435,8 @@ class EchoStreamClient extends BaseClient {
 
   getSaveOptions() {
     return {
-      modelLabel: 'Echo Stream',
-      endpoint: 'echo_stream'
+      modelLabel: this.sender,
+      endpoint: this.endpoint
     };
   }
 }

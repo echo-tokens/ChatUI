@@ -54,6 +54,8 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
   const { conversation, newConversation } = useChatContext();
   const modelSpecs = useMemo(() => startupConfig?.modelSpecs?.list ?? [], [startupConfig]);
 
+  console.log('DEBUG conversation!:', conversation);
+
   const { mappedEndpoints, endpointRequiresUserKey } = useEndpoints({
     agentsMap,
     assistantsMap,

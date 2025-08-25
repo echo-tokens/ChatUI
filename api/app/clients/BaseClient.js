@@ -763,7 +763,8 @@ class BaseClient {
 
     if (this.options.attachments) {
       try {
-        saveOptions.files = this.options.attachments.map((attachments) => attachments.file_id);
+        const attachments = await this.options.attachments;
+        saveOptions.files = Array.isArray(attachments) ? attachments.map((attachments) => attachments.file_id) : [attachments.file_id];
       } catch (error) {
         logger.error('[BaseClient] Error mapping attachments for conversation', error);
       }
@@ -931,6 +932,7 @@ class BaseClient {
       conversationId: message.conversationId || 'unknown',
       endpoint: this.options.endpoint,
       endpointType: this.options.endpointType,
+      model: this.modelOptions?.model ?? this.model,
       ...endpointOptions,
     };
 

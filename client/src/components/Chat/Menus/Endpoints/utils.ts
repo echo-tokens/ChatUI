@@ -166,19 +166,17 @@ export function getSelectedIcon({
 const MODEL_DISPLAY_NAMES = {
   // OpenAI models
   'gpt-4o': 'GPT-4o',
-  'o1': 'o3',
-  'gpt-4o-mini': 'o4-mini',
-  'echo-gpt-4o': 'Echo GPT-4o',
+  'o1': 'o1',
+  'gpt-4o-mini': 'GPT-4o Mini',
+  'gpt-5': 'GPT-5',
   
   // Anthropic models
-  'claude-3-5-sonnet-20241022': 'Claude 4 Sonnet',
-  'claude-3-opus-20240229': 'Claude 4 Opus',
-  'echo-claude': 'Echo Claude',
+  'claude-3-5-sonnet-20241022': 'Claude 3.5 Sonnet',
+  'claude-3-opus-20240229': 'Claude 3.5 Opus',
   
   // Google models
-  'gemini-2.0-flash-exp': 'Gemini 2.0 Flash',
-  'gemini-1.5-pro-latest': 'Gemini 2.0 Pro',
-  'echo-gemini': 'Echo Gemini',
+  'gemini-2.0-flash-exp': 'Gemini 2.0 Flash Exp',
+  'gemini-1.5-pro-latest': 'Gemini 1.5 Pro',
   
   // xAI models
   'grok-3-mini': 'Grok 3 Mini',
@@ -245,3 +243,5 @@ export const getDisplayValue = ({
 
   return localize('com_ui_select_model');
 };
+
+export { MODEL_DISPLAY_NAMES };

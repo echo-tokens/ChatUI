@@ -124,6 +124,7 @@ const startServer = async () => {
   app.use('/api/tasks', routes.tasks);
   app.use('/api/help', routes.help);
   app.use('/api/accounts', routes.accounts);
+  app.use('/api/stripe', routes.stripe);
 
   // Add the error controller one more time after all routes
   app.use(errorController);

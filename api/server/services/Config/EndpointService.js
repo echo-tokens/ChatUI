@@ -30,9 +30,10 @@ module.exports = {
     useAzurePlugins,
     userProvidedOpenAI,
     // googleKey,                                 // DISABLED - Provider disabled
-    // [EModelEndpoint.anthropic]: generateConfig(anthropicApiKey),           // DISABLED
+    [EModelEndpoint.anthropic]: generateConfig('blank', 'blank'),           // DISABLED
     [EModelEndpoint.chatGPTBrowser]: generateConfig(chatGPTToken),
-    // [EModelEndpoint.openAI]: generateConfig(openAIApiKey, OPENAI_REVERSE_PROXY),  // DISABLED
+    [EModelEndpoint.openAI]: generateConfig('blank', 'blank'),  // DISABLED
+    [EModelEndpoint.google]: generateConfig('blank', 'blank'),  // DISABLED
     [EModelEndpoint.azureOpenAI]: generateConfig(azureOpenAIApiKey, AZURE_OPENAI_BASEURL),
     [EModelEndpoint.assistants]: generateConfig(
       assistantsApiKey,

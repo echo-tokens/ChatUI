@@ -149,6 +149,7 @@
         "@supabase/supabase-js": "^2.53.0",
         "http-proxy-middleware": "^3.0.5",
         "js-yaml": "^4.1.0",
+        "stripe": "^18.4.0",
         "uuid": "^9.0.1"
     }
 }

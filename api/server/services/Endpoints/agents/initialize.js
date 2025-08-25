@@ -80,31 +80,33 @@ const initializeClient = async ({ req, res, endpointOption }) => {
     const endpoint = endpointOption.endpoint;
     let initializeRegularClient;
     
-    switch (endpoint) {
-      case 'openAI':
-      case 'azureOpenAI':
-        initializeRegularClient = require('~/server/services/Endpoints/openAI/initialize');
-        break;
-      case 'google':
-        initializeRegularClient = require('~/server/services/Endpoints/google/initialize');
-        break;
-      case 'anthropic':
-        initializeRegularClient = require('~/server/services/Endpoints/anthropic/initialize');
-        break;
-      case 'bedrock':
-        initializeRegularClient = require('~/server/services/Endpoints/bedrock/initialize');
-        break;
-      case 'assistants':
-        initializeRegularClient = require('~/server/services/Endpoints/assistants/initalize');
-        break;
-      case 'azureAssistants':
-        initializeRegularClient = require('~/server/services/Endpoints/azureAssistants/initialize');
-        break;
-      default:
-        // For custom endpoints like echo_stream
-        initializeRegularClient = require('~/server/services/Endpoints/custom/initialize');
-        break;
-    }
+    initializeRegularClient = require('~/server/services/Endpoints/custom/initialize');
+    
+    // switch (endpoint) {
+    //   case 'openAI':
+    //   case 'azureOpenAI':
+    //     initializeRegularClient = require('~/server/services/Endpoints/openAI/initialize');
+    //     break;
+    //   case 'google':
+    //     initializeRegularClient = require('~/server/services/Endpoints/google/initialize');
+    //     break;
+    //   case 'anthropic':
+    //     initializeRegularClient = require('~/server/services/Endpoints/anthropic/initialize');
+    //     break;
+    //   case 'bedrock':
+    //     initializeRegularClient = require('~/server/services/Endpoints/bedrock/initialize');
+    //     break;
+    //   case 'assistants':
+    //     initializeRegularClient = require('~/server/services/Endpoints/assistants/initalize');
+    //     break;
+    //   case 'azureAssistants':
+    //     initializeRegularClient = require('~/server/services/Endpoints/azureAssistants/initialize');
+    //     break;
+    //   default:
+    //     // For custom endpoints like echo_stream
+    //     initializeRegularClient = require('~/server/services/Endpoints/custom/initialize');
+    //     break;
+    // }
     
     console.log('DEBUG: AGENTS/INITIALIZE - Using initialize function for endpoint:', endpoint);
     return await initializeRegularClient({ req, res, endpointOption });

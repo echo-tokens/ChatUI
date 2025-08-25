@@ -4,6 +4,11 @@ const { updateUser, createUser } = require('~/models');
 const { supabase } = require('~/lib/supabase');
 const OpenAI = require('openai');
 
+// Get table names from environment variables
+const TASKS_TABLE = process.env.TASKS_TABLE || 'tasks_new';
+const EXPERIMENTS_TABLE = process.env.EXPERIMENTS_TABLE || 'experiments_new';
+const AD_GEN_LOGS_TABLE = process.env.AD_GEN_LOGS_TABLE || 'ad_gen_logs';
+
 const MOCK = false;
 
 /**
@@ -29,7 +34,7 @@ const getTaskInfo = async (taskId, userId) => {
 
     // First, get the task from the tasks_new table
     const { data: task, error: taskError } = await supabase
-      .from('tasks_new')
+      .from(TASKS_TABLE)
       .select('*')
       .eq('id', taskId)
       .single();
@@ -40,7 +45,7 @@ const getTaskInfo = async (taskId, userId) => {
 
     // Get the experiment details from the experiments_new table
     const { data: experiment, error: experimentError } = await supabase
-      .from('experiments_new')
+      .from(EXPERIMENTS_TABLE)
       .select('*')
       .eq('experiment_name', task.experiment_name)
       .single();
@@ -52,7 +57,7 @@ const getTaskInfo = async (taskId, userId) => {
     // Since tasks_new no longer stores outputs, we need to get ad data from the ad_gen_logs table
     // using the ad_gen_id from the task
     const { data: adGenLog, error: adGenError } = await supabase
-      .from('ad_gen_logs')
+      .from(AD_GEN_LOGS_TABLE)
       .select('*')
       .eq('id', task.ad_gen_id)
       .single();
@@ -109,7 +114,7 @@ const submitTask = async (taskId, result) => {
 
     // Store the task result in the database
     const { data, error } = await supabase
-      .from('tasks_new')
+      .from(TASKS_TABLE)
       .update({ 
         user_submission: result,
         completed_at: new Date().toISOString()
@@ -155,7 +160,7 @@ const checkTaskCompletion = async (taskId) => {
 
     // Get the task from the tasks_new table
     const { data: task, error: taskError } = await supabase
-      .from('tasks_new')
+      .from(TASKS_TABLE)
       .select('user_submission, completed_at')
       .eq('id', taskId)
       .single();

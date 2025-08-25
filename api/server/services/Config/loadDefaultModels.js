@@ -17,13 +17,13 @@ const { logger } = require('~/config');
 async function loadDefaultModels(req) {
   try {
     const [
-      // openAI,              // DISABLED - Provider disabled
-      // anthropic,           // DISABLED - Provider disabled
+      openAI,              // DISABLED - Provider disabled
+      anthropic,           // DISABLED - Provider disabled
       azureOpenAI,
       gptPlugins,
       assistants,
       azureAssistants,
-      // google,              // DISABLED - Provider disabled
+      google,              // DISABLED - Provider disabled
       bedrock,
     ] = await Promise.all([
       // getOpenAIModels({ user: req.user.id }).catch((error) => {           // DISABLED
@@ -63,10 +63,10 @@ async function loadDefaultModels(req) {
     ]);
 
     return {
-      // [EModelEndpoint.openAI]: openAI,               // DISABLED - Provider disabled
-      [EModelEndpoint.agents]: [],                      // Updated to empty array since openAI is disabled
-      // [EModelEndpoint.google]: google,               // DISABLED - Provider disabled
-      // [EModelEndpoint.anthropic]: anthropic,         // DISABLED - Provider disabled
+      [EModelEndpoint.openAI]: openAI,
+      [EModelEndpoint.agents]: openAI, // Use openAI models for agents
+      [EModelEndpoint.google]: google,
+      [EModelEndpoint.anthropic]: anthropic,
       [EModelEndpoint.gptPlugins]: gptPlugins,
       [EModelEndpoint.azureOpenAI]: azureOpenAI,
       [EModelEndpoint.assistants]: assistants,
