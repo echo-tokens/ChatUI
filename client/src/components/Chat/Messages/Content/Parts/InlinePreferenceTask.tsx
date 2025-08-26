@@ -200,7 +200,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             const url = new URL(ad.clickthrough_link.startsWith('http') ? ad.clickthrough_link : `https://${ad.clickthrough_link}`);
             const pathParts = url.pathname.split('/').filter(part => part.length > 0);
             console.log('pathParts', pathParts);
-            return {ad_id: pathParts.length > 0 ? pathParts[0] : null, selection_index: index};
+            return {ad_id: pathParts.length > 0 ? pathParts[pathParts.length - 1] : null, selection_index: index};
           } catch (error) {
             console.error('Error parsing URL:', error);
             return null;
