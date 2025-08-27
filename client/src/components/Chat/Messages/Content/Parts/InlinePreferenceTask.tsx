@@ -42,7 +42,6 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
   const [showChosenAd, setShowChosenAd] = useState(false);
-  const [chosenAdHeight, setChosenAdHeight] = useState(0);
   const [isCollapsing, setIsCollapsing] = useState(false);
   const selection_method = (adData.task?.selection_method as InlineSelectionMethod) || 'pick_one';
 
@@ -250,7 +249,6 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             setTaskCompleted(true);
             setPreviousState('complete');
             setShowChosenAd(true);
-            setChosenAdHeight(200); // Set a reasonable height for the ad
           }, 1800);
           
         } else {
@@ -286,7 +284,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
                     key={index}
                     className="overflow-hidden transition-all duration-1000 ease-in"
                     style={{
-                      maxHeight: showChosenAd ? `${chosenAdHeight}px` : '0px'
+                      maxHeight: showChosenAd ? `400px` : '0px'
                     }}
                   >
                     <AdTile
