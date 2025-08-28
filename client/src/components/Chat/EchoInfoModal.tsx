@@ -9,7 +9,6 @@ import {
   OGDialogFooter,
   Button 
 } from '~/components/ui';
-import { DollarSign } from 'lucide-react';
 
 interface EchoInfoModalProps {
   children: React.ReactNode;
@@ -34,60 +33,70 @@ export default function EchoInfoModal({ children }: EchoInfoModalProps) {
       <OGDialogTrigger asChild>
         {children}
       </OGDialogTrigger>
-      <OGDialogContent className="max-w-2xl bg-surface-dialog text-text-primary">
+      <OGDialogContent className="max-w-[min(42rem,calc(100%-2rem))] bg-surface-dialog text-text-primary mx-auto">
         <OGDialogHeader className="text-center">
           {/* Echo Logo */}
-          <div className="mb-4 flex justify-center">
+          <div className="my-2 flex justify-center">
             <img
               src={logoSrc}
               alt="echo"
               className="h-12 w-auto object-contain"
             />
           </div>
-          <OGDialogTitle className="text-xl font-semibold">
+          {/* <OGDialogTitle className="text-xl font-semibold pt-2 text-center">
             AI, democratized
-          </OGDialogTitle>
+          </OGDialogTitle> */}
         </OGDialogHeader>
         
         {/* Main Content */}
-        <div className="px-6 py-4">
-          <div className="space-y-4 text-center">
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              Yesterday's internet ran on keyword roulette and cookie crumbs; the AI era can hear authentic intent. 
-            </p>
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              Echo channels that intelligence to swap blanket ads for precise introductions—only the products and services that truly advance your goal. 
-            </p>
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              Advertisers reward that relevance, letting us keep world-class chat perpetually free and share the value back to you.
-            </p>
+        <div className="space-y-6 px-6 py-2">
+          <div className="space-y-4">
+            <ul className="space-y-3 text-left">
+              <li className="flex items-start gap-3">
+                <div className="mt-2.5 h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500 flex-shrink-0"></div>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  Yesterday's internet ran on keyword roulette and cookie crumbs; the AI era can hear authentic intent.
+                </p>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="mt-2.5 h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500 flex-shrink-0"></div>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  Echo channels that intelligence to swap blanket ads for precise introductions—only the products and services that truly advance your goal.
+                </p>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="mt-2.5 h-2 w-2 rounded-full bg-gray-400 dark:bg-gray-500 flex-shrink-0"></div>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  Advertisers reward that relevance, letting us keep world-class chat perpetually free and share the value back to you.
+                </p>
+              </li>
+            </ul>
           </div>
           
           {/* Payout Section */}
-          <div className="flex items-center justify-center gap-6 rounded-lg bg-surface-secondary p-6">
-            {/* Average Monthly Payout Display */}
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-2 text-2xl font-bold text-green-600 dark:text-green-400">
-                <DollarSign className="h-6 w-6" />
-                <span>65</span>
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Average Monthly Payout
+                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  $65
+                </p>
               </div>
-              <p className="text-sm text-text-secondary">
-                Average Monthly Payout
-              </p>
+              
+              <Button
+                onClick={handleSetupPayouts}
+                variant="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 font-medium"
+              >
+                Go to Earnings
+              </Button>
             </div>
-            
-            {/* Set Up Payouts Button */}
-            <Button
-              onClick={handleSetupPayouts}
-              variant="submit"
-              className="bg-green-600 px-6 py-2 text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
-            >
-              Set Up Payouts
-            </Button>
           </div>
         </div>
         
-        <OGDialogFooter>
+        {/* <OGDialogFooter>
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
@@ -95,7 +104,7 @@ export default function EchoInfoModal({ children }: EchoInfoModalProps) {
           >
             Close
           </Button>
-        </OGDialogFooter>
+        </OGDialogFooter> */}
       </OGDialogContent>
     </OGDialog>
   );
