@@ -562,7 +562,7 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
                   onClick={handleTaskClick}
                   disabled={isStreaming || taskCompleted || isClosing}
                   className={cn(
-                    "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 transition-all duration-300 ease-in-out",
+                    "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 transition-all duration-300 ease-in-out select-none",
                     taskCompleted ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-green-200 dark:hover:bg-green-700/40",
                     (isStreaming || isClosing) && !taskCompleted && "opacity-50 cursor-not-allowed"
                   )}
@@ -626,7 +626,7 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
             <div className="flex-shrink-0">
               <button
                 disabled={true}
-                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed"
+                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed select-none"
                 style={{ borderRadius: '1rem' }}
               >
                 +${parseFloat(adData.task.price_usd).toFixed(2)}

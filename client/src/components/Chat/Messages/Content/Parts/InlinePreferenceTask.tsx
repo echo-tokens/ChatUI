@@ -307,7 +307,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             <div className="flex-shrink-0">
               <button
                 disabled={true}
-                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed"
+                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed select-none"
                 style={{ borderRadius: '1rem' }}
               >
                 +${parseFloat(adData.task.price_usd).toFixed(2)}
@@ -351,7 +351,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             <div className="flex-shrink-0">
               <button
                 disabled={true}
-                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed"
+                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed select-none"
                 style={{ borderRadius: '1rem' }}
               >
                 +${parseFloat(adData.task.price_usd).toFixed(2)}
@@ -393,7 +393,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
           {adData.task?.price_usd && (
             <div className="relative">
               <span className={cn(
-                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-2 py-1 transition-all duration-1000 relative z-10",
+                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-2 py-1 transition-all duration-1000 relative z-10 select-none",
                 showPulse && "animate-pulse scale-125 shadow-lg"
               )}>
                 {showPulse ? `+$${parseFloat(adData.task.price_usd).toFixed(2)}` : `Earn $${parseFloat(adData.task.price_usd).toFixed(2)}`}
@@ -409,7 +409,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             </div>
           )}
           {adData.task?.instructions && (
-            <span className="text-sm text-gray-700 dark:text-gray-300">
+            <span className="text-sm text-gray-700 dark:text-gray-300 select-none">
               {adData.task.instructions}
             </span>
           )}
@@ -440,7 +440,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             }}
           >
             {/* Option label */}
-            <div className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
+            <div className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 select-none">
               Option {index + 1}:
             </div>
 
