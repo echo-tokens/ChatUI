@@ -43,6 +43,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
   const [showPulse, setShowPulse] = useState(false);
   const [showChosenAd, setShowChosenAd] = useState(false);
   const [isCollapsing, setIsCollapsing] = useState(false);
+  const [visitWebsiteHovered, setVisitWebsiteHovered] = useState(false);
   const selection_method = (adData.task?.selection_method as InlineSelectionMethod) || 'pick_one';
 
   // Check task completion status on component load
@@ -427,7 +428,9 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
                   : 'border-blue-500 dark:border-blue-400 shadow-lg'
                 : isLoading 
                   ? 'border-gray-200 dark:border-gray-300'
-                  : 'border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400',
+                  : visitWebsiteHovered
+                    ? 'border-gray-300 dark:border-gray-500'
+                    : 'border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400',
               isAnimating && selectedAds.has(index) && 'animate-pulse',
               'cursor-pointer' // Show pointer cursor
             )}
@@ -450,6 +453,8 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
                 clickable={false}
                 display_thumbs={false}
                 isStreaming={isStreaming}
+                showVisitWebsite={true}
+                onVisitWebsiteHover={setVisitWebsiteHovered}
               />
             </div>
           </div>

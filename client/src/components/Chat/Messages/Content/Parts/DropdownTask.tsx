@@ -58,6 +58,7 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
       //   setPreviousState('incomplete');
       //   return;
       // }
+      console.log('Checking task completion:', adData.task?.id, token);
       if (!adData.task?.id || !token) return;
       
       try {
