@@ -65,9 +65,6 @@ class EchoStreamClient extends BaseClient {
       conversationId: messageOptions?.conversationId
     });
 
-    console.log("DEBUG: messages", messages);
-    console.log("DEBUG: this.options.attachments", this.options.attachments);
-
     if (this.options.attachments) {
       const attachments = await this.options.attachments;
 
