@@ -53,7 +53,7 @@ export default function useMessageHelpers(props: TMessageProps) {
       textKey !== latestText.current ||
       (latestText.current && convoId !== latestText.current.split(Constants.COMMON_DIVIDER)[2])
     ) {
-      logger.log('[useMessageHelpers] Setting latest message: ', logInfo);
+      // logger.log('[useMessageHelpers] Setting latest message: ', logInfo);
       latestText.current = textKey;
       setLatestMessage({ ...message });
     } else {

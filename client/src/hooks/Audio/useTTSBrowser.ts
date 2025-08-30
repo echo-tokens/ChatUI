@@ -45,12 +45,12 @@ const useTTSBrowser = (props?: TUseTextToSpeech) => {
       if (lastSelectedVoice != null) {
         const currentVoice =
           typeof lastSelectedVoice === 'object' ? lastSelectedVoice.value : lastSelectedVoice;
-        logger.log('useTextToSpeech.ts - Effect:', { voices, voice: currentVoice });
+        // logger.log('useTextToSpeech.ts - Effect:', { voices, voice: currentVoice });
         setVoice(currentVoice);
         return;
       }
 
-      logger.log('useTextToSpeech.ts - Effect:', { voices, voice: firstVoice.value });
+      // logger.log('useTextToSpeech.ts - Effect:', { voices, voice: firstVoice.value });
       setVoice(firstVoice.value);
     }
   }, [setVoice, voice, voices]);

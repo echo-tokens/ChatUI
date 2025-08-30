@@ -74,7 +74,6 @@ function useTextToSpeechBrowser({
     }
 
     text = text.replace(/\[AD\].*?\[\/AD\]/g, '');
-    console.log('[Browser TTS] Parsed message:', text);
 
     const synth = window.speechSynthesis;
     const voice = voices.find((v) => v.value === voiceName);

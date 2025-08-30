@@ -34,7 +34,7 @@ const latestMessageFamily = atomFamily<TMessage | null, string | number | null>(
     ({ onSet, node }) => {
       onSet(async (newValue) => {
         const key = Number(node.key.split(Constants.COMMON_DIVIDER)[1]);
-        logger.log('Recoil Effect: Setting latestMessage', { key, newValue });
+        // logger.log('Recoil Effect: Setting latestMessage', { key, newValue });
       });
     },
   ] as const,
@@ -52,7 +52,7 @@ const latestMessageKeysSelector = selector<(string | number)[]>({
     return keys.filter((key) => get(latestMessageFamily(key)) !== null);
   },
   set: ({ set }, newKeys) => {
-    logger.log('setting latestMessageKeys', { newKeys });
+    // logger.log('setting latestMessageKeys', { newKeys });
     set(latestMessageKeysAtom, newKeys);
   },
 });
@@ -76,7 +76,7 @@ const conversationByIndex = atomFamily<TConversation | null, string | number>({
     ({ onSet, node }) => {
       onSet(async (newValue, oldValue) => {
         const index = Number(node.key.split('__')[1]);
-        logger.log('conversation', 'Setting conversation:', { index, newValue, oldValue });
+        // logger.log('conversation', 'Setting conversation:', { index, newValue, oldValue });
         if (newValue?.assistant_id != null && newValue.assistant_id) {
           localStorage.setItem(
             `${LocalStorageKeys.ASST_ID_PREFIX}${index}${newValue.endpoint}`,
@@ -347,7 +347,7 @@ function useClearLatestMessages(context?: string) {
             continue;
           }
 
-          logger.log(`[clearAllLatestMessages] resetting latest message; key: ${key}`);
+          // logger.log(`[clearAllLatestMessages] resetting latest message; key: ${key}`);
           reset(latestMessageFamily(key));
         }
 

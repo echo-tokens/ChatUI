@@ -12,12 +12,12 @@ export default function buildTree({
     return null;
   }
 
-  console.log('DEBUG: buildTree input messages order:', messages.map(m => ({
-    id: m.messageId?.substring(0, 8),
-    isUser: m.isCreatedByUser,
-    parent: m.parentMessageId?.substring(0, 8) || m.parentMessageId,
-    createdAt: m.createdAt
-  })));
+  // console.log('DEBUG: buildTree input messages order:', messages.map(m => ({
+  //   id: m.messageId?.substring(0, 8),
+  //   isUser: m.isCreatedByUser,
+  //   parent: m.parentMessageId?.substring(0, 8) || m.parentMessageId,
+  //   createdAt: m.createdAt
+  // })));
 
   const messageMap: Record<string, ParentMessage> = {};
   const rootMessages: TMessage[] = [];
@@ -48,15 +48,15 @@ export default function buildTree({
     const extendedMessage = messageMap[message.messageId];
     const parentMessage = messageMap[parentId];
     
-    console.log('DEBUG: buildTree processing message:', {
-      messageId: message.messageId?.substring(0, 8),
-      originalParentId: message.parentMessageId,
-      processedParentId: parentId,
-      isCreatedByUser: message.isCreatedByUser,
-      willBeRootMessage: !parentMessage,
-      hasParentInMap: !!parentMessage,
-      constantsNoParent: Constants.NO_PARENT
-    });
+    // console.log('DEBUG: buildTree processing message:', {
+    //   messageId: message.messageId?.substring(0, 8),
+    //   originalParentId: message.parentMessageId,
+    //   processedParentId: parentId,
+    //   isCreatedByUser: message.isCreatedByUser,
+    //   willBeRootMessage: !parentMessage,
+    //   hasParentInMap: !!parentMessage,
+    //   constantsNoParent: Constants.NO_PARENT
+    // });
     
     if (parentMessage) {
       parentMessage.children.push(extendedMessage);
@@ -66,16 +66,16 @@ export default function buildTree({
     }
   });
 
-  console.log('DEBUG: buildTree final result:', {
-    rootMessagesCount: rootMessages.length,
-    rootMessages: rootMessages.map(m => ({
-      id: m.messageId?.substring(0, 8),
-      isUser: m.isCreatedByUser,
-      parent: m.parentMessageId,
-      childrenCount: m.children?.length || 0,
-      text: m.text?.substring(0, 30) + '...'
-    }))
-  });
+  // console.log('DEBUG: buildTree final result:', {
+  //   rootMessagesCount: rootMessages.length,
+  //   rootMessages: rootMessages.map(m => ({
+  //     id: m.messageId?.substring(0, 8),
+  //     isUser: m.isCreatedByUser,
+  //     parent: m.parentMessageId,
+  //     childrenCount: m.children?.length || 0,
+  //     text: m.text?.substring(0, 30) + '...'
+  //   }))
+  // });
 
   return rootMessages;
 }

@@ -163,9 +163,9 @@ const initializeClient = async ({ req, res, endpointOption, optionsOnly, overrid
   // Determine which client to use based on the model and endpoint
   const model = endpointOption?.model_parameters?.model;
   
-  console.log('DEBUG: optionsOnly:', optionsOnly);
-  console.log('DEBUG: model:', model);
-  console.log('DEBUG: endpoint:', endpoint);
+  // console.log('DEBUG: optionsOnly:', optionsOnly);
+  // console.log('DEBUG: model:', model);
+  // console.log('DEBUG: endpoint:', endpoint);
 
   // For echo_stream, we bypass optionsOnly to force actual client creation
   if (optionsOnly) {

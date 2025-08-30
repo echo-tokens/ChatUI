@@ -164,17 +164,17 @@ const useNewConvo = (index = 0) => {
         }
         const isCancelled = conversation.conversationId?.startsWith('_');
         if (isCancelled) {
-          logger.log(
-            'conversation',
-            'Cancelled conversation, setting to `new` in `useNewConvo`',
-            conversation,
-          );
+          // logger.log(
+          //   'conversation',
+          //   'Cancelled conversation, setting to `new` in `useNewConvo`',
+          //   conversation,
+          // );
           setConversation({
             ...conversation,
             conversationId: Constants.NEW_CONVO as string,
           });
         } else {
-          logger.log('conversation', 'Setting conversation from `useNewConvo`', conversation);
+          // logger.log('conversation', 'Setting conversation from `useNewConvo`', conversation);
           setConversation(conversation);
         }
         setSubmission({} as TSubmission);

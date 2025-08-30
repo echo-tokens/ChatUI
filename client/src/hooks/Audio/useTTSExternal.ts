@@ -47,11 +47,11 @@ const useTTSExternal = (props?: TUseTextToSpeech) => {
     if (voices.length) {
       const lastSelectedVoice = voices.find((v) => v === voice);
       if (lastSelectedVoice != null) {
-        logger.log('useTextToSpeech.ts - Effect:', { voices, voice: lastSelectedVoice });
+        // logger.log('useTextToSpeech.ts - Effect:', { voices, voice: lastSelectedVoice });
         setVoice(lastSelectedVoice.toString());
         return;
       }
-      logger.log('useTextToSpeech.ts - Effect:', { voices, voice: firstVoice });
+      // logger.log('useTextToSpeech.ts - Effect:', { voices, voice: firstVoice });
       setVoice(firstVoice.toString());
     }
   }, [setVoice, voice, voices]);

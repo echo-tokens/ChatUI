@@ -34,7 +34,6 @@ export const useUserInfo = () => {
         throw new Error('User not authenticated');
       }
 
-      console.log('useUserInfo: Fetching user info for:', user.id, token);
       try {
         return await request.get<UserInfoResponse>(`/api/accounts/user-info/${user.id}`);
       } catch (error: any) {
