@@ -411,34 +411,6 @@ const setAuthTokens = async (userId, res, sessionId = null) => {
   try {
     const user = await getUserById(userId);
     const token = await generateToken(user);
-
-    let session;
-    let refreshToken;
-    let refreshTokenExpires;
-
-    if (sessionId) {
-      session = await findSession({ sessionId: sessionId }, { lean: false });
-      refreshTokenExpires = session.expiration.getTime();
-      refreshToken = await generateRefreshToken(session);
-    } else {
-      const result = await createSession(userId);
-      session = result.session;
-      refreshToken = result.refreshToken;
-      refreshTokenExpires = session.expiration.getTime();
-    }
-
-    res.cookie('refreshToken', refreshToken, {
-      expires: new Date(refreshTokenExpires),
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'strict',
-    });
-    res.cookie('token_provider', 'librechat', {
-      expires: new Date(refreshTokenExpires),
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'strict',
-    });
     return token;
   } catch (error) {
     logger.error('[setAuthTokens] Error in setting authentication tokens:', error);

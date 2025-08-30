@@ -69,11 +69,11 @@ export default function useMessageHelpers(props: TMessageProps) {
   const handleScroll = useCallback(
     (event: unknown) => {
       throttle(() => {
-        logger.log(
-          'message_scrolling',
-          `useMessageHelpers: setting abort scroll to ${isSubmitting}, handleScroll event`,
-          event,
-        );
+        // logger.log(
+        //   'message_scrolling',
+        //   `useMessageHelpers: setting abort scroll to ${isSubmitting}, handleScroll event`,
+        //   event,
+        // );
         if (isSubmitting) {
           setAbortScroll(true);
         } else {

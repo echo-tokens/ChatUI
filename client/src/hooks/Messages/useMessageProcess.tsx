@@ -65,11 +65,11 @@ export default function useMessageProcess({ message }: { message?: TMessage | nu
   const handleScroll = useCallback(
     (event: unknown | TouchEvent | WheelEvent) => {
       throttle(() => {
-        logger.log(
-          'message_scrolling',
-          `useMessageProcess: setting abort scroll to ${isSubmittingFamily}, handleScroll event`,
-          event,
-        );
+        // logger.log(
+        //   'message_scrolling',
+        //   `useMessageProcess: setting abort scroll to ${isSubmittingFamily}, handleScroll event`,
+        //   event,
+        // );
         if (isSubmittingFamily) {
           setAbortScroll(true);
         } else {

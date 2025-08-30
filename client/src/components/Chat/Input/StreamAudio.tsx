@@ -167,7 +167,7 @@ export default function StreamAudio({ index = 0 }) {
           logger.log(promiseTimeoutMessage);
           return;
         }
-        logger.error('Error fetching audio:', error);
+        // logger.error('Error fetching audio:', error);
         setIsFetching(false);
         setGlobalAudioURL(null);
       } finally {

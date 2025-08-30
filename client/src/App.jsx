@@ -41,7 +41,7 @@ const App = () => {
       console.log('App: Dispatching tokenUpdated event');
       window.dispatchEvent(new CustomEvent('tokenUpdated', { detail: cookieToken }));
     } else if (cookieToken && localStorageToken) {
-      console.log('App: Both cookie and localStorage have tokens - clearing cookie to prevent conflicts');
+      console.log('App: Both cookie and localStorage have tokens - overwriting localStorage to prevent conflicts');
       // Clear the cookie to prevent conflicts
       localStorage.setItem('authToken', cookieToken);
     }

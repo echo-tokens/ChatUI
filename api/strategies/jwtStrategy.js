@@ -11,6 +11,11 @@ const jwtLogin = () =>
       secretOrKey: process.env.CHAT_UI_JWT_SECRET,
     },
     async (payload, done) => {
+      if (payload?.exp < (Date.now() / 1000)) {
+        logger.warn('[jwtLogin] JwtStrategy => access token expired: ' + payload?.id);
+        done(null, false);
+        return;
+      }
       try {
         // Handle both ChatUI and account auth service JWT payloads
         // Account auth service sends: { id, email, name, role, account_status }

@@ -165,10 +165,10 @@ const abortScrollFamily = atomFamily<boolean, string | number>({
     ({ onSet, node }) => {
       onSet(async (newValue) => {
         const key = Number(node.key.split(Constants.COMMON_DIVIDER)[1]);
-        logger.log('message_scrolling', 'Recoil Effect: Setting abortScrollByIndex', {
-          key,
-          newValue,
-        });
+        // logger.log('message_scrolling', 'Recoil Effect: Setting abortScrollByIndex', {
+        //   key,
+        //   newValue,
+        // });
       });
     },
   ] as const,
