@@ -6,6 +6,7 @@ import useToast from '~/hooks/useToast';
 import { NotificationSeverity } from '~/common';
 import { useQueryClient } from '@tanstack/react-query';
 import { SelectionMethod } from './AdOrTaskTile';
+import { request } from 'librechat-data-provider';
 
 interface ParsedAdData {
   task?: {
@@ -62,31 +63,19 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
       if (!adData.task?.id || !token) return;
       
       try {
-        const response = await fetch(`/api/tasks/completion/${adData.task.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.completed && data.user_submission) {
-            setTaskCompleted(true);
-            // Set the selected options from user submission
-            if (Array.isArray(data.user_submission) && data.user_submission.length > 0) {
-              setSelectedOptions(new Set(data.user_submission));
-            }
-            setPreviousState('complete');
-            setTaskState('complete');
-            setShowEarnedText(true);
-          } else {
-            setPreviousState('incomplete');
-            setTaskState('incomplete');
+        const data = await request.get(`/api/tasks/completion/${adData.task.id}`) as any;
+        if (data.completed && data.user_submission) {
+          setTaskCompleted(true);
+          // Set the selected options from user submission
+          if (Array.isArray(data.user_submission) && data.user_submission.length > 0) {
+            setSelectedOptions(new Set(data.user_submission));
           }
+          setPreviousState('complete');
+          setTaskState('complete');
+          setShowEarnedText(true);
         } else {
-          setPreviousState('unloaded');
-          setTaskState('unloaded');
+          setPreviousState('incomplete');
+          setTaskState('incomplete');
         }
       } catch (error) {
         console.error('Error checking task completion:', error);
@@ -135,38 +124,25 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
 
   const verifyTaskTrustLevel = async (taskId: string) => {
     try {
-      const response = await fetch('/api/accounts/verify-task', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: taskId
-        }),
+      const data = await request.post('/api/accounts/verify-task', {
+        id: taskId
+      });
+      console.log('Task verification result:', data);
+
+      // Display trust level update message
+      const isGreen = data.trustworthy;
+      const trustChange = data.trust_level_updated;
+
+      showToast({
+        message: `Trust level updated to ${trustChange}`,
+        severity: isGreen ? NotificationSeverity.SUCCESS : NotificationSeverity.ERROR,
+        showIcon: true,
+        duration: 5000, // Show for 5 seconds
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Task verification result:', data);
-        
-        // Display trust level update message
-        const isGreen = data.trustworthy;
-        const trustChange = data.trust_level_updated;
-        
-        showToast({
-          message: `Trust level updated to ${trustChange}`,
-          severity: isGreen ? NotificationSeverity.SUCCESS : NotificationSeverity.ERROR,
-          showIcon: true,
-          duration: 5000, // Show for 5 seconds
-        });
-
-        // Immediately refresh user info in profile to show updated trust/earnings
-        if (user?.id) {
-          queryClient.invalidateQueries({ queryKey: ['userInfo', user.id] });
-        }
-      } else {
-        console.error('Task verification failed:', response.statusText);
+      // Immediately refresh user info in profile to show updated trust/earnings
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['userInfo', user.id] });
       }
     } catch (error) {
       console.error('Error verifying task:', error);
@@ -204,62 +180,51 @@ const DropdownTask = memo(({ adData, isStreaming }: DropdownTaskProps) => {
     setIsSubmittingAnimation(true);
     
     try {
-      const response = await fetch('/api/tasks/submit', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          taskId: adData.task.id,
-          result: result
-        }),
+      const data = await request.post('/api/tasks/submit', {
+        taskId: adData.task.id,
+        result: result
       });
 
-      if (response.ok) {
-        console.log('Task submission successful');
-        
-        // Call task verification asynchronously
-        verifyTaskTrustLevel(adData.task.id);
-        
-        setTaskCompleted(true);
-        setTaskState('complete');
-        
-        // Start pulse animation immediately and change to +$price text
-        setShowPulse(true);
-        setShowEarnedText(true);
-        
-        // Stop pulse animation after 1.5 seconds but keep the +$price text
-        setTimeout(() => {
-          setShowPulse(false);
-        }, 1500);
-        
-        // After submit animation completes (500ms), show thank you message
-        setTimeout(() => {
-          setShowSubmitThankYou(true);
-          setIsSubmittingAnimation(false);
-        }, 500);
-        
-        // After button returns, wait a bit then start closing
-        setTimeout(() => {
-          setShouldExpandAd(false);
-          setIsButtonFadingOut(false);
-          setIsClosing(true);
-          
-          // After close animation completes (800ms), clean up
-          setTimeout(() => {
-            setShowTask(false);
-            setIsClosing(false);
-            setShowSubmitThankYou(false);
-            setSelectedOptions(new Set());
-            setFreeResponseText('');
-          }, 800);
-        }, 2500); // Total of 2.5 seconds before auto-close
-        
-      } else {
-        console.error('Task submission failed');
+      console.log('Task submission successful');
+
+      // Call task verification asynchronously
+      verifyTaskTrustLevel(adData.task.id);
+
+      setTaskCompleted(true);
+      setTaskState('complete');
+
+      // Start pulse animation immediately and change to +$price text
+      setShowPulse(true);
+      setShowEarnedText(true);
+
+      // Stop pulse animation after 1.5 seconds but keep the +$price text
+      setTimeout(() => {
+        setShowPulse(false);
+      }, 1500);
+
+      // After submit animation completes (500ms), show thank you message
+      setTimeout(() => {
+        setShowSubmitThankYou(true);
         setIsSubmittingAnimation(false);
-      }
+      }, 500);
+
+      // After button returns, wait a bit then start closing
+      setTimeout(() => {
+        setShouldExpandAd(false);
+        setIsButtonFadingOut(false);
+        setIsClosing(true);
+
+        // After close animation completes (800ms), clean up
+        setTimeout(() => {
+          setShowTask(false);
+          setIsClosing(false);
+          setShowSubmitThankYou(false);
+          setSelectedOptions(new Set());
+          setFreeResponseText('');
+        }, 800);
+      }, 2500); // Total of 2.5 seconds before auto-close
+
+      setIsSubmittingAnimation(false);
     } catch (error) {
       console.error('Error submitting task:', error);
       setIsSubmittingAnimation(false);

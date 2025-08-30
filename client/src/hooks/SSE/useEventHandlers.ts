@@ -13,6 +13,7 @@ import {
   tConvoUpdateSchema,
   isAssistantsEndpoint,
 } from 'librechat-data-provider';
+import { request } from 'librechat-data-provider';
 import type { TMessage, TConversation, EventSubmission } from 'librechat-data-provider';
 import type { TResData, TFinalResData, ConvoGenerator } from '~/common';
 import type { InfiniteData } from '@tanstack/react-query';
@@ -728,41 +729,19 @@ export default function useEventHandlers({
       }
 
       try {
-        const response = await fetch(`${EndpointURLs[endpoint ?? '']}/abort`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            abortKey: runAbortKey,
-            endpoint,
-          }),
+        const response = await request.post(`${EndpointURLs[endpoint ?? '']}/abort`, {
+          abortKey: runAbortKey,
+          endpoint,
         });
 
         // Check if the response is JSON
-        const contentType = response.headers.get('content-type');
-        if (contentType != null && contentType.includes('application/json')) {
-          const data = await response.json();
-          if (response.status === 404) {
-            setIsSubmitting(false);
-            return;
-          }
-          if (data.final === true) {
-            finalHandler(data, submission);
-          } else {
-            cancelHandler(data, submission);
-          }
-        } else if (response.status === 204 || response.status === 200) {
+        if (response && response.status === 404) {
           setIsSubmitting(false);
-        } else {
-          throw new Error(
-            'Unexpected response from server; Status: ' +
-              response.status +
-              ' ' +
-              response.statusText,
-          );
+          return;
         }
+
+        // Handle successful response
+        setIsSubmitting(false);
       } catch (error) {
         const errorResponse = createErrorMessage({
           getMessages,

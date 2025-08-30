@@ -9,6 +9,7 @@ import { getLatestText, logger } from '~/utils';
 import { useAuthContext } from '~/hooks';
 import { globalAudioId } from '~/common';
 import store from '~/store';
+import axios from 'axios';
 
 function timeoutPromise(ms: number, message?: string) {
   return new Promise((_, reject) =>
@@ -93,20 +94,20 @@ export default function StreamAudio({ index = 0 }) {
         }
 
         logger.log('Fetching audio...', navigator.userAgent);
-        const response = await fetch('/api/files/speech/tts', {
-          method: 'POST',
+        const response = await axios.post('/api/files/speech/tts', JSON.stringify({
+          messageId: latestMessage?.messageId,
+          runId: activeRunId,
+          voice
+        }), {
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ messageId: latestMessage?.messageId, runId: activeRunId, voice }),
+          responseType: 'stream'
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch audio');
-        }
-        if (!response.body) {
+        if (!response.data) {
           throw new Error('Null Response body');
         }
 
-        const reader = response.body.getReader();
+        const reader = response.data.getReader();
 
         const type = 'audio/mpeg';
         const browserSupportsType =

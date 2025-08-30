@@ -4,6 +4,7 @@ import { cn } from '~/utils';
 import { Button, TooltipAnchor } from '~/components/ui';
 import DataSharingAgreementModal from './DataSharingAgreementModal';
 import { useAuthContext } from '~/hooks/AuthContext';
+import { request } from 'librechat-data-provider';
 
 interface TaskStats {
   tasks_completed: number;
@@ -51,18 +52,9 @@ export default function TaskEarningsDashboard({
     try {
       setStatsError(null);
       setStatsLoaded(false);
-      const response = await fetch(`/api/tasks/stats/${user._id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setTaskStats(data);
-        setStatsLoaded(true);
-      } else {
-        throw new Error(`Failed to load task statistics: ${response.status} ${response.statusText}`);
-      }
+      const data = await request.get(`/api/tasks/stats/${user._id}`) as any;
+      setTaskStats(data);
+      setStatsLoaded(true);
     } catch (error) {
       console.error('Error loading task data:', error);
       setStatsError('Failed to load task statistics. Please check your connection and try again.');
@@ -76,19 +68,9 @@ export default function TaskEarningsDashboard({
       setDataSharingError(null);
       setDataSharingStatusLoaded(false);
 
-      const response = await fetch(`/api/tasks/data-sharing-status/${user._id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsDataSharingEnrolled(data.enrolled);
-        setDataSharingStatusLoaded(true);
-      } else {
-        throw new Error(`Failed to check data sharing status: ${response.status} ${response.statusText}`);
-      }
+      const data = await request.get(`/api/tasks/data-sharing-status/${user._id}`) as any;
+      setIsDataSharingEnrolled(data.enrolled);
+      setDataSharingStatusLoaded(true);
     } catch (error) {
       console.error('Error checking data sharing enrollment:', error);
       setDataSharingError('Failed to check data sharing enrollment status. Please refresh the page.');
@@ -125,24 +107,13 @@ export default function TaskEarningsDashboard({
   const handleAcceptAgreement = async () => {
     try {
       setAgreementError(null);
-      const response = await fetch(`/api/tasks/accept-data-sharing/${user._id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      await request.post(`/api/tasks/accept-data-sharing/${user._id}`, {});
 
-      if (response.ok) {
-        setIsDataSharingEnrolled(true);
-        setDataSharingStatusLoaded(true);
-        setDataSharingError(null);
-        // Refresh task data after enrollment
-        await loadTaskData();
-      } else {
-        const errorText = await response.text();
-        setAgreementError(`Failed to accept data sharing agreement: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
-      }
+      setIsDataSharingEnrolled(true);
+      setDataSharingStatusLoaded(true);
+      setDataSharingError(null);
+      // Refresh task data after enrollment
+      await loadTaskData();
     } catch (error) {
       console.error('Error accepting data sharing agreement:', error);
       setAgreementError('Failed to accept data sharing agreement. Please try again.');

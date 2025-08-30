@@ -7,6 +7,7 @@ import ProgressBar from './ProgressBar';
 import Tooltip from './Tooltip';
 import { fetchUserInfo } from '~/api/trust-r2';
 import { useAuthContext } from '~/hooks/AuthContext';
+import { request } from 'librechat-data-provider';
 import type {
   User,
   PayoutRequest,
@@ -59,21 +60,10 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
   // Function to check Stripe connection status
   const checkStripeConnection = async () => {
     if (!currentUser?.id || !token) return;
-    
+
     try {
-      const response = await fetch(`/api/stripe/has-connected-account/${currentUser.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setStripeConnectionStatus(data.has_connected_account ? 'connected' : 'not_connected');
-      } else {
-        console.error('Failed to check Stripe connection status');
-        setStripeConnectionStatus('not_connected');
-      }
+      const data = await request.get(`/api/stripe/has-connected-account/${currentUser.id}`) as any;
+      setStripeConnectionStatus(data.has_connected_account ? 'connected' : 'not_connected');
     } catch (error) {
       console.error('Error checking Stripe connection:', error);
       setStripeConnectionStatus('not_connected');
@@ -183,29 +173,15 @@ export default function StreamlinedEarningsDashboard({ user, className }: Stream
 
     try {
       console.log('Initiating payout for user:', userInfo.user_id);
-      const response = await fetch(`/api/stripe/transfer-payout`, {
-        method: 'POST',
-        body: JSON.stringify({
-          user_id: userInfo.user_id
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const data = await request.post('/api/stripe/transfer-payout', {
+        user_id: userInfo.user_id
+      }) as any;
 
-      const data = await response.json();
+      setTransferStatus('success');
+      setTransferMessage(`Successfully initiated transfer!`);
 
-      if (response.ok) {
-        setTransferStatus('success');
-        setTransferMessage(`Successfully initiated transfer!`);
-        
-        // Refresh user data to show updated earnings
-        await handleRefresh();
-      } else {
-        setTransferStatus('error');
-        setTransferMessage(data.error || 'Transfer failed');
-      }
+      // Refresh user data to show updated earnings
+      await handleRefresh();
     } catch (error) {
       console.error('Error processing payout:', error);
       setTransferStatus('error');

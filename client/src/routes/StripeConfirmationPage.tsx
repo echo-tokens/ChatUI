@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { request } from 'librechat-data-provider';
 
 export default function StripeConfirmationPage() {
   const [searchParams] = useSearchParams();
@@ -56,48 +57,35 @@ export default function StripeConfirmationPage() {
 
       try {
         setStatus('updating');
-        const response = await fetch('/api/stripe/connect-stripe-account', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            user_id: authUser.id,
-            code: code,
-          }),
+        await request.post('/api/stripe/connect-stripe-account', {
+          user_id: authUser.id,
+          code: code,
         });
 
-        if (response.ok) {
+        setStatus('success');
+        // Clear the URL parameters to prevent code reuse
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Redirect to earnings page after 3 seconds
+        setTimeout(() => {
+          navigate('/earnings');
+        }, 3000);
+      } catch (error: any) {
+        console.error('Error connecting Stripe account:', error);
+
+        // Handle the case where the code was already used (account already connected)
+        if (error?.response?.data?.error && error.response.data.error.includes('already been used')) {
           setStatus('success');
-          // Clear the URL parameters to prevent code reuse
+          setErrorMessage('Stripe account already connected successfully!');
+          // Clear the URL parameters
           window.history.replaceState({}, document.title, window.location.pathname);
           // Redirect to earnings page after 3 seconds
           setTimeout(() => {
             navigate('/earnings');
           }, 3000);
         } else {
-          const errorData = await response.json();
-          
-          // Handle the case where the code was already used (account already connected)
-          if (errorData.error && errorData.error.includes('already been used')) {
-            setStatus('success');
-            setErrorMessage('Stripe account already connected successfully!');
-            // Clear the URL parameters
-            window.history.replaceState({}, document.title, window.location.pathname);
-            // Redirect to earnings page after 3 seconds
-            setTimeout(() => {
-              navigate('/earnings');
-            }, 3000);
-          } else {
-            setStatus('error');
-            setErrorMessage(errorData.error || 'Failed to connect Stripe account');
-          }
+          setStatus('error');
+          setErrorMessage(error?.response?.data?.error || error?.message || 'Failed to connect Stripe account');
         }
-      } catch (error) {
-        console.error('Error connecting Stripe account:', error);
-        setStatus('error');
-        setErrorMessage('Network error occurred while connecting Stripe account');
       }
     };
 

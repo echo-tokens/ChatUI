@@ -61,8 +61,10 @@ const useTTSExternal = (props?: TUseTextToSpeech) => {
     timerRef.current = window.setTimeout(() => {
       if (isMouseDownRef.current) {
         const messageContent = content ?? '';
-        const parsedMessage =
+        let parsedMessage =
           typeof messageContent === 'string' ? messageContent : parseTextParts(messageContent);
+        parsedMessage = parsedMessage.replace(/\[AD\].*?\[\/AD\]/g, '');
+        console.log('[useTTSExternal] Parsed message:', parsedMessage);
         generateSpeech(parsedMessage, false);
       }
     }, 1000);
@@ -81,8 +83,10 @@ const useTTSExternal = (props?: TUseTextToSpeech) => {
       pauseGlobalAudio();
     } else {
       const messageContent = content ?? '';
-      const parsedMessage =
+      let parsedMessage =
         typeof messageContent === 'string' ? messageContent : parseTextParts(messageContent);
+      parsedMessage = parsedMessage.replace(/\[AD\].*?\[\/AD\]/g, '');
+      console.log('[useTTSExternal] Parsed message:', parsedMessage);
       generateSpeech(parsedMessage, false);
     }
   };
