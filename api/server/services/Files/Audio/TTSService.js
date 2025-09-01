@@ -289,6 +289,10 @@ class TTSService {
   async processTextToSpeech(req, res) {
     const { input, voice: requestVoice } = req.body;
 
+    console.log('[processTextToSpeech] Input:', input);
+
+    input = input.replace(/\[AD\].*?\[\/AD\]/g, '');
+
     if (!input) {
       return res.status(400).send('Missing text in request body');
     }

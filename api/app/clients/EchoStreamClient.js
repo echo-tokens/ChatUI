@@ -75,6 +75,7 @@ class EchoStreamClient extends BaseClient {
           [messages[messages.length - 1].messageId]: attachments,
         };
       }
+      messages[messages.length - 1].files = attachments;
     }
 
     const files = await Promise.all(messages.map(async (message) => {
@@ -83,7 +84,7 @@ class EchoStreamClient extends BaseClient {
         message.files || []
       );
     }));
-    this.options.attachments = files[-1];
+    this.options.attachments = files[files.length - 1];
     this.conversationFiles = files;
     
     if (!messages || !Array.isArray(messages)) {

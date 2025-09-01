@@ -1,6 +1,7 @@
 import { memo, useState, useEffect } from 'react';
 import { cn } from '~/utils';
 import { useAuthContext } from '~/hooks/AuthContext';
+import { request } from 'librechat-data-provider';
 
 interface AdTileProps {
   link?: string;
@@ -11,13 +12,15 @@ interface AdTileProps {
   isStreaming: boolean;
   clickable?: boolean;
   display_thumbs?: boolean;
+  showVisitWebsite?: boolean;
   onTaskClick?: () => void;
   dropdownComponent?: React.ReactNode;
   isDropdownClosing?: boolean;
   taskState?: 'unloaded' | 'incomplete' | 'complete';
+  onVisitWebsiteHover?: (isHovering: boolean) => void;
 }
 
-const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_usd, isStreaming, clickable = true, display_thumbs = true, onTaskClick, dropdownComponent, isDropdownClosing, taskState }: AdTileProps) => {
+const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_usd, isStreaming, clickable = true, display_thumbs = true, showVisitWebsite = false, onTaskClick, dropdownComponent, isDropdownClosing, taskState, onVisitWebsiteHover }: AdTileProps) => {
   const { token } = useAuthContext();
   const [isVisible, setIsVisible] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -87,23 +90,11 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
     }
 
     try {
-      const response = await fetch('/api/tasks/thumb-rating', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ad_insertion_id: adInsertionId,
-          thumb_rating: rating
-        })
+      await request.post('/api/tasks/thumb-rating', {
+        ad_insertion_id: adInsertionId,
+        thumb_rating: rating
       });
-
-      if (!response.ok) {
-        console.error('Failed to submit thumb rating');
-      } else {
-        console.log('Thumb rating submitted successfully');
-      }
+      console.log('Thumb rating submitted successfully');
     } catch (error) {
       console.error('Error submitting thumb rating:', error);
     }
@@ -126,28 +117,12 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
     }
 
     try {
-      const response = await fetch('/api/tasks/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ad_insertion_id: adInsertionId,
-          product_feedback: feedbackText,
-          relevance_rating: relevancyRating
-        })
+      await request.post('/api/tasks/feedback', {
+        ad_insertion_id: adInsertionId,
+        product_feedback: feedbackText,
+        relevance_rating: relevancyRating
       });
-
-      if (!response.ok) {
-        console.error('Failed to submit feedback');
-        // Re-enable if there's an error
-        setFeedbackDisabled(false);
-        setIsSubmitting(false);
-        return;
-      } else {
-        console.log('Feedback submitted successfully');
-      }
+      console.log('Feedback submitted successfully');
     } catch (error) {
       console.error('Error submitting feedback:', error);
       // Re-enable if there's an error
@@ -247,10 +222,23 @@ const AdTile = memo(({ link, advertiser, contextualized_ad, task_id, task_price_
           )}
           <div className="flex-1 min-w-0">
             {advertiserName && (
-              <div className="mt-2 leading-none">
+              <div className="mt-2 leading-none flex items-center justify-between">
                 <span className="text-gray-400 dark:text-gray-400 text-xs font-bold">
                   {advertiserName}
                 </span>
+                {linkUrl && showVisitWebsite && (
+                  <a
+                    href={linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseEnter={() => onVisitWebsiteHover?.(true)}
+                    onMouseLeave={() => onVisitWebsiteHover?.(false)}
+                    className="text-gray-400 dark:text-gray-500 text-xs hover:text-gray-600 dark:hover:text-gray-400 underline transition-colors"
+                  >
+                    Visit Website
+                  </a>
+                )}
               </div>
             )}
             {description && (

@@ -95,21 +95,21 @@ const useTextToSpeech = (props?: TUseTextToSpeech) => {
       if (lastSelectedVoice != null) {
         const currentVoice =
           typeof lastSelectedVoice === 'object' ? lastSelectedVoice.value : lastSelectedVoice;
-        logger.log('useTextToSpeech.ts - Effect:', { voices, voice: currentVoice });
+        // logger.log('useTextToSpeech.ts - Effect:', { voices, voice: currentVoice });
         setVoice(currentVoice?.toString() ?? undefined);
         return;
       }
 
-      logger.log('useTextToSpeech.ts - Effect:', { voices, voice: firstVoice.value });
+      // logger.log('useTextToSpeech.ts - Effect:', { voices, voice: firstVoice.value });
       setVoice(firstVoice.value?.toString() ?? undefined);
     } else if (voices.length) {
       const lastSelectedVoice = voices.find((v) => v === voice);
       if (lastSelectedVoice != null) {
-        logger.log('useTextToSpeech.ts - Effect:', { voices, voice: lastSelectedVoice });
+        // logger.log('useTextToSpeech.ts - Effect:', { voices, voice: lastSelectedVoice });
         setVoice(lastSelectedVoice.toString());
         return;
       }
-      logger.log('useTextToSpeech.ts - Effect:', { voices, voice: firstVoice });
+      // logger.log('useTextToSpeech.ts - Effect:', { voices, voice: firstVoice });
       setVoice(firstVoice.toString());
     }
   }, [setVoice, textToSpeechEndpoint, voice, voices]);
@@ -119,8 +119,10 @@ const useTextToSpeech = (props?: TUseTextToSpeech) => {
     timerRef.current = window.setTimeout(() => {
       if (isMouseDownRef.current) {
         const messageContent = content ?? '';
-        const parsedMessage =
+        let parsedMessage =
           typeof messageContent === 'string' ? messageContent : parseTextParts(messageContent);
+        parsedMessage = parsedMessage.replace(/\[AD\].*?\[\/AD\]/g, '');
+        console.log('[useTextToSpeech] Parsed message:', parsedMessage);
         generateSpeech(parsedMessage, false);
       }
     }, 1000);
@@ -139,8 +141,10 @@ const useTextToSpeech = (props?: TUseTextToSpeech) => {
       pauseGlobalAudio();
     } else {
       const messageContent = content ?? '';
-      const parsedMessage =
+      let parsedMessage =
         typeof messageContent === 'string' ? messageContent : parseTextParts(messageContent);
+      parsedMessage = parsedMessage.replace(/\[AD\].*?\[\/AD\]/g, '');
+      console.log('[useTextToSpeech] Parsed message:', parsedMessage);
       generateSpeech(parsedMessage, false);
     }
   };

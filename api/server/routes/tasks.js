@@ -159,13 +159,15 @@ router.post('/thumb-rating', async (req, res) => {
     }
 
     // Upsert thumb rating into Supabase
+    let error = null;
     if (thumb_rating !== null) {
-      const { data, error } = await supabase
+      const result = await supabase
         .from('ad_gen_logs')
         .update({
           thumb_rating: thumb_rating || null
         })
         .eq('id', ad_insertion_id);
+      error = result.error;
     }
 
     if (error) {

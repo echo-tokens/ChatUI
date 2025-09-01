@@ -5,6 +5,7 @@ import { Button } from '~/components/ui';
 import AdPlacementAndDescriptionTaskView from './AdPlacementAndDescriptionTaskView';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { useOutletContext } from 'react-router-dom';
+import { request } from 'librechat-data-provider';
 import type { ContextType } from '~/common';
 
 interface Task {
@@ -51,27 +52,16 @@ export default function TasksView({ user, onBack, className }: TasksViewProps) {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const response = await fetch(`/api/tasks/claim-and-load/${user.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
 
-      if (response.status === 301) {
+      const response = await request.post(`/api/tasks/claim-and-load/${user.id}`, {});
+
+      if (response && response.status === 301) {
         setError('No tasks are currently available for you. Please check back later.');
         setCurrentTask(null);
         return;
       }
 
-      if (!response.ok) {
-        throw new Error('Failed to load task');
-      }
-
-      const task = await response.json();
-      setCurrentTask(task);
+      setCurrentTask(response);
       setTaskResponse({});
     } catch (error) {
       console.error('Error loading task:', error);
@@ -100,18 +90,7 @@ export default function TasksView({ user, onBack, className }: TasksViewProps) {
         response: currentTaskResponse
       };
 
-      const response = await fetch(`/api/tasks/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(submission)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit task');
-      }
+      await request.post('/api/tasks/submit', submission);
 
       // Task submitted successfully, try to load next task
       await claimAndLoadTask();

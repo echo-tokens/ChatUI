@@ -34,9 +34,10 @@ export function createSessionMethods(mongoose: typeof import('mongoose')) {
         user: userId,
         expiration: options.expiration || new Date(Date.now() + expires),
       });
-      const refreshToken = await generateRefreshToken(currentSession);
+      // const refreshToken = await generateRefreshToken(currentSession);
 
-      return { session: currentSession, refreshToken };
+      // return { session: currentSession, refreshToken };
+      return { session: currentSession, refreshToken: '' };
     } catch (error) {
       logger.error('[createSession] Error creating session:', error);
       throw new SessionError('Failed to create session', 'CREATE_SESSION_FAILED');

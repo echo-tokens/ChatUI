@@ -63,6 +63,9 @@ export default function useCopyToClipboard({
         }, '');
       }
 
+      // Remove AD tags and their content
+      messageText = messageText.replace(/\n\n\[AD\][\s\S]*?\[\/AD\]\n\n/g, '');
+
       // Early return if no search data
       if (!searchResults || Object.keys(searchResults).length === 0) {
         // Clean up any citation markers before returning

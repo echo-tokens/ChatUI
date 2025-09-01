@@ -49,20 +49,15 @@ const AdOrTaskTile = memo(({ content, isStreaming }: AdOrTaskTileProps) => {
     return null;
   }
 
-  console.log('uiDisplay', uiDisplay, adData);
-
   if (uiDisplay === 'side-by-side' && adData.task) {
-    console.log('Inline preference requested:', adData);
     return <InlinePreferenceTask adData={adData} isStreaming={isStreaming} />;
   }
 
   if (uiDisplay === 'dropdown' && adData.task) {
-    console.log('Dropdown task requested:', adData);
     return <DropdownTask adData={adData} isStreaming={isStreaming} />;
   }
 
   if (uiDisplay === 'ad_tile') {
-    console.log('Ad tile display requested:', adData);
     return <AdTile link={adData.ads[0].clickthrough_link} advertiser={adData.ads[0].advertiser} contextualized_ad={adData.ads[0].contextualized_ad} isStreaming={isStreaming} />;
   }
 

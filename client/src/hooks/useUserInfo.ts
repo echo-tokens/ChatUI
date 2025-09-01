@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuthContext } from './AuthContext';
+import { request } from '../../../packages/data-provider';
 
 interface TrustData {
   trust_level: number;
@@ -33,18 +34,12 @@ export const useUserInfo = () => {
         throw new Error('User not authenticated');
       }
 
-      const response = await fetch(`/api/accounts/user-info/${user.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user info: ${response.statusText}`);
+      try {
+        return await request.get<UserInfoResponse>(`/api/accounts/user-info/${user.id}`);
+      } catch (error: any) {
+        console.error('useUserInfo: Error fetching user info:', error);
+        throw new Error(`Failed to fetch user info: ${error?.message || 'Unknown error'}`);
       }
-
-      return response.json();
     },
     enabled: !!user?.id && !!token,
     staleTime: 5 * 60 * 1000, // 5 minutes

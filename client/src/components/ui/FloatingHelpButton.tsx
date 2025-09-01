@@ -4,6 +4,7 @@ import { Button } from './Button';
 import { TextareaAutosize } from './TextareaAutosize';
 import { X, Upload } from 'lucide-react';
 import { cn } from '~/utils';
+import { request } from 'librechat-data-provider';
 import type { TMessage } from 'librechat-data-provider';
 
 interface FloatingHelpButtonProps {
@@ -47,25 +48,12 @@ const FloatingHelpButton: React.FC<FloatingHelpButtonProps> = ({ className, conv
           formData.append('files', file);
         });
 
-        const response = await fetch('/api/help/submit', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
+        const result = await request.postMultiPart('/api/help/submit', formData);
 
-        if (response.ok) {
-          const result = await response.json();
-          console.log('Help request submitted successfully:', result);
-          setIsOpen(false);
-          setDescription('');
-          setSelectedFiles([]);
-        } else {
-          const errorData = await response.json();
-          console.error('Failed to submit help request:', errorData);
-          setError(errorData.error || 'Failed to submit help request');
-        }
+        console.log('Help request submitted successfully:', result);
+        setIsOpen(false);
+        setDescription('');
+        setSelectedFiles([]);
       } catch (error) {
         console.error('Error submitting help request:', error);
         setError('Network error. Please try again.');

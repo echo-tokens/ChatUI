@@ -54,7 +54,7 @@ export default function useMessageProcess({ message }: { message?: TMessage | nu
         latestText.current &&
         convoId !== latestText.current.split(Constants.COMMON_DIVIDER)[2])
     ) {
-      logger.log('latest_message', '[useMessageProcess] Setting latest message; logInfo:', logInfo);
+      // logger.log('latest_message', '[useMessageProcess] Setting latest message; logInfo:', logInfo);
       latestText.current = textKey;
       setLatestMessage({ ...message });
     } else {
@@ -65,11 +65,11 @@ export default function useMessageProcess({ message }: { message?: TMessage | nu
   const handleScroll = useCallback(
     (event: unknown | TouchEvent | WheelEvent) => {
       throttle(() => {
-        logger.log(
-          'message_scrolling',
-          `useMessageProcess: setting abort scroll to ${isSubmittingFamily}, handleScroll event`,
-          event,
-        );
+        // logger.log(
+        //   'message_scrolling',
+        //   `useMessageProcess: setting abort scroll to ${isSubmittingFamily}, handleScroll event`,
+        //   event,
+        // );
         if (isSubmittingFamily) {
           setAbortScroll(true);
         } else {

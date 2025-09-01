@@ -49,7 +49,8 @@ const AuthContextProvider = ({
       'user',
       'token',
       'refreshToken',
-      'chatAuthToken'
+      'chatAuthToken',
+      'chatRefreshToken'
     ];
     
     authRelatedKeys.forEach(key => {
@@ -59,7 +60,7 @@ const AuthContextProvider = ({
     // Clear all authentication cookies with multiple domain/path combinations
     const cookiesToClear = [
       'chatAuthToken',
-      'refreshToken', 
+      'chatRefreshToken', 
       'token_provider'
     ];
     

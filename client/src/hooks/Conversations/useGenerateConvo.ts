@@ -44,7 +44,7 @@ const useGenerateConvo = ({
           conversationId: rootConvo.conversationId,
         } as TConversation;
 
-        logger.log('conversation', 'Setting conversation from `useNewConvo`', update);
+        // logger.log('conversation', 'Setting conversation from `useNewConvo`', update);
         return update;
       });
     }

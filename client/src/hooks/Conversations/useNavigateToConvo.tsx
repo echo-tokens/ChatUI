@@ -23,7 +23,7 @@ const useNavigateToConvo = (index = 0) => {
       const data = await queryClient.fetchQuery([QueryKeys.conversation, conversationId], () =>
         dataService.getConversationById(conversationId),
       );
-      logger.log('conversation', 'Fetched fresh conversation data', data);
+      // logger.log('conversation', 'Fetched fresh conversation data', data);
       setConversation(data);
       navigate(`/c/${conversationId ?? Constants.NEW_CONVO}`, { state: { focusChat: true } });
     } catch (error) {
@@ -47,7 +47,7 @@ const useNavigateToConvo = (index = 0) => {
       return;
     }
     const { resetLatestMessage = true, currentConvoId } = options || {};
-    logger.log('conversation', 'Navigating to conversation', conversation);
+    // logger.log('conversation', 'Navigating to conversation', conversation);
     hasSetConversation.current = true;
     setSubmission(null);
     if (resetLatestMessage) {

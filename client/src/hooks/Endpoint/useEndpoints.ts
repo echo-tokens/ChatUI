@@ -38,7 +38,6 @@ export const useEndpoints = ({
   });
   const { conversation } = useChatContext();
   const { data: endpoints = [] } = useGetEndpointsQuery({ select: mapEndpoints });
-  console.log('DEBUG: endpoints:', endpoints);
   const { instanceProjectId } = startupConfig ?? {};
   const interfaceConfig = startupConfig?.interface ?? {};
   const includedEndpoints = useMemo(
@@ -100,13 +99,13 @@ export const useEndpoints = ({
   const mappedEndpoints: Endpoint[] = useMemo(() => {
     return filteredEndpoints.map((ep) => {
       const endpointType = getEndpointField(endpointsConfig, ep, 'type');
-      console.log('DEBUG: endpointType:', endpointType);
+      // console.log('DEBUG: endpointType:', endpointType);
       const iconKey = getIconKey({ endpoint: ep, endpointsConfig, endpointType });
       {
-        console.log('DEBUG: iconKey:', iconKey);
-        console.log('DEBUG: endpointsConfig:', endpointsConfig);
-        console.log('DEBUG: ep:', ep);
-        console.log('DEBUG: endpointType:', endpointType);
+        // console.log('DEBUG: iconKey:', iconKey);
+        // console.log('DEBUG: endpointsConfig:', endpointsConfig);
+        // console.log('DEBUG: ep:', ep);
+        // console.log('DEBUG: endpointType:', endpointType);
       }
       const Icon = icons[iconKey];
       const endpointIconURL = getEndpointField(endpointsConfig, ep, 'iconURL');

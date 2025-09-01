@@ -6,6 +6,7 @@ import useToast from '~/hooks/useToast';
 import { NotificationSeverity } from '~/common';
 import { useQueryClient } from '@tanstack/react-query';
 import { SelectionMethod, InlineSelectionMethod } from './AdOrTaskTile';
+import { request } from 'librechat-data-provider';
 
 interface ParsedAdData {
   task?: {
@@ -43,6 +44,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
   const [showPulse, setShowPulse] = useState(false);
   const [showChosenAd, setShowChosenAd] = useState(false);
   const [isCollapsing, setIsCollapsing] = useState(false);
+  const [visitWebsiteHovered, setVisitWebsiteHovered] = useState(false);
   const selection_method = (adData.task?.selection_method as InlineSelectionMethod) || 'pick_one';
 
   // Check task completion status on component load
@@ -51,37 +53,26 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
       if (!adData.task?.id || !token) return;
       
       try {
-        const response = await fetch(`/api/tasks/completion/${adData.task.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.completed && data.user_submission) {
-            // Task is completed, set the selected ads from user submission
-            // Handle both old format (array of indices) and new format (array of objects with selection_index)
-            let selectedIndices: number[] = [];
-            if (Array.isArray(data.user_submission)) {
-              if (typeof data.user_submission[0] === 'object' && data.user_submission[0]?.selection_index !== undefined) {
-                // New format: array of objects with selection_index
-                selectedIndices = data.user_submission.map((item: any) => item.selection_index).filter((index: number) => index !== null && index !== undefined);
-              } else {
-                // Old format: array of indices
-                selectedIndices = data.user_submission.filter((index: number) => index !== null && index !== undefined);
-              }
+        const data = await request.get(`/api/tasks/completion/${adData.task.id}`) as any;
+        if (data.completed && data.user_submission) {
+          // Task is completed, set the selected ads from user submission
+          // Handle both old format (array of indices) and new format (array of objects with selection_index)
+          let selectedIndices: number[] = [];
+          if (Array.isArray(data.user_submission)) {
+            if (typeof data.user_submission[0] === 'object' && data.user_submission[0]?.selection_index !== undefined) {
+              // New format: array of objects with selection_index
+              selectedIndices = data.user_submission.map((item: any) => item.selection_index).filter((index: number) => index !== null && index !== undefined);
+            } else {
+              // Old format: array of indices
+              selectedIndices = data.user_submission.filter((index: number) => index !== null && index !== undefined);
             }
-            setSelectedAds(new Set(selectedIndices));
-            setHasSelection(selectedIndices.length > 0);
-            setTaskCompleted(true);
-            setPreviousState('complete');
-          } else {
-            setPreviousState('incomplete');
           }
+          setSelectedAds(new Set(selectedIndices));
+          setHasSelection(selectedIndices.length > 0);
+          setTaskCompleted(true);
+          setPreviousState('complete');
         } else {
-          setPreviousState('unloaded');
+          setPreviousState('incomplete');
         }
       } catch (error) {
         console.error('Error checking task completion:', error);
@@ -144,38 +135,25 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
 
   const verifyTaskTrustLevel = async (taskId: string) => {
     try {
-      const response = await fetch('/api/accounts/verify-task', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: taskId
-        }),
+      const data = await request.post('/api/accounts/verify-task', {
+        id: taskId
+      });
+      console.log('Task verification result:', data);
+
+      // Display trust level update message
+      const isGreen = data.trustworthy;
+      const trustChange = data.trust_level_updated;
+
+      showToast({
+        message: `Trust level updated to ${trustChange}`,
+        severity: isGreen ? NotificationSeverity.SUCCESS : NotificationSeverity.ERROR,
+        showIcon: true,
+        duration: 5000, // Show for 5 seconds
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Task verification result:', data);
-        
-        // Display trust level update message
-        const isGreen = data.trustworthy;
-        const trustChange = data.trust_level_updated;
-        
-        showToast({
-          message: `Trust level updated to ${trustChange}`,
-          severity: isGreen ? NotificationSeverity.SUCCESS : NotificationSeverity.ERROR,
-          showIcon: true,
-          duration: 5000, // Show for 5 seconds
-        });
-
-        // Immediately refresh user info in profile to show updated trust/earnings
-        if (user?.id) {
-          queryClient.invalidateQueries({ queryKey: ['userInfo', user.id] });
-        }
-      } else {
-        console.error('Task verification failed:', response.statusText);
+      // Immediately refresh user info in profile to show updated trust/earnings
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['userInfo', user.id] });
       }
     } catch (error) {
       console.error('Error verifying task:', error);
@@ -206,57 +184,47 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
           }
         }).filter(id => id !== null && id.ad_id !== null);
 
-        const response = await fetch('/api/tasks/submit', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            taskId: adData.task.id,
-            result: adIds
-          }),
+        const data = await request.post('/api/tasks/submit', {
+          taskId: adData.task.id,
+          result: adIds
         });
 
-        if (response.ok) {
-          console.log('Task submission successful');
-          
-          // Call task verification asynchronously
-          verifyTaskTrustLevel(adData.task.id);
-          
-          // Pick a random ad from the selection
-          const selectedArray = Array.from(selection);
-          const randomIndex = selectedArray[Math.floor(Math.random() * selectedArray.length)];
-          setRandomSelectedAd(randomIndex);
-          
-          // Start pulse animation from reward box
-          setTimeout(() => {
-            setShowPulse(true);
-          }, 200);
-          
-          // Start collapse animation after 600ms
-          setTimeout(() => {
-            setIsCollapsing(true);
-          }, 600);
-          
-          // Stop pulse animation after 1.5 seconds
-          setTimeout(() => {
-            setShowPulse(false);
-          }, 1500);
-          
-          // After collapse animation, show chosen ad
-          setTimeout(() => {
-            setTaskCompleted(true);
-            setPreviousState('complete');
-            setShowChosenAd(true);
-          }, 1800);
-          
-        } else {
-          console.error('Task submission failed');
-          setIsSubmitting(false);
-        }
-          } catch (error) {
+        console.log('Task submission successful');
+
+        // Call task verification asynchronously
+        verifyTaskTrustLevel(adData.task.id);
+
+        // Pick a random ad from the selection
+        const selectedArray = Array.from(selection);
+        const randomIndex = selectedArray[Math.floor(Math.random() * selectedArray.length)];
+        setRandomSelectedAd(randomIndex);
+
+        // Start pulse animation from reward box
+        setTimeout(() => {
+          setShowPulse(true);
+        }, 200);
+
+        // Start collapse animation after 600ms
+        setTimeout(() => {
+          setIsCollapsing(true);
+        }, 600);
+
+        // Stop pulse animation after 1.5 seconds
+        setTimeout(() => {
+          setShowPulse(false);
+        }, 1500);
+
+        // After collapse animation, show chosen ad
+        setTimeout(() => {
+          setTaskCompleted(true);
+          setPreviousState('complete');
+          setShowChosenAd(true);
+        }, 1800);
+
+        setIsSubmitting(false);
+      } catch (error) {
         console.error('Error submitting task:', error);
+        setIsSubmitting(false);
       }
   };
 
@@ -306,7 +274,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             <div className="flex-shrink-0">
               <button
                 disabled={true}
-                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed"
+                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed select-none"
                 style={{ borderRadius: '1rem' }}
               >
                 +${parseFloat(adData.task.price_usd).toFixed(2)}
@@ -350,7 +318,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             <div className="flex-shrink-0">
               <button
                 disabled={true}
-                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed"
+                className="text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-100 dark:bg-green-800/30 border border-green-200 dark:border-green-600 px-3 py-2 opacity-50 cursor-not-allowed select-none"
                 style={{ borderRadius: '1rem' }}
               >
                 +${parseFloat(adData.task.price_usd).toFixed(2)}
@@ -392,7 +360,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
           {adData.task?.price_usd && (
             <div className="relative">
               <span className={cn(
-                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-2 py-1 transition-all duration-1000 relative z-10",
+                "text-sm font-bold text-gray-700 dark:text-gray-300 min-w-fit whitespace-nowrap bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded px-2 py-1 transition-all duration-1000 relative z-10 select-none",
                 showPulse && "animate-pulse scale-125 shadow-lg"
               )}>
                 {showPulse ? `+$${parseFloat(adData.task.price_usd).toFixed(2)}` : `Earn $${parseFloat(adData.task.price_usd).toFixed(2)}`}
@@ -408,7 +376,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             </div>
           )}
           {adData.task?.instructions && (
-            <span className="text-sm text-gray-700 dark:text-gray-300">
+            <span className="text-sm text-gray-700 dark:text-gray-300 select-none">
               {adData.task.instructions}
             </span>
           )}
@@ -427,7 +395,9 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
                   : 'border-blue-500 dark:border-blue-400 shadow-lg'
                 : isLoading 
                   ? 'border-gray-200 dark:border-gray-300'
-                  : 'border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400',
+                  : visitWebsiteHovered
+                    ? 'border-gray-300 dark:border-gray-500'
+                    : 'border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400',
               isAnimating && selectedAds.has(index) && 'animate-pulse',
               'cursor-pointer' // Show pointer cursor
             )}
@@ -437,7 +407,7 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
             }}
           >
             {/* Option label */}
-            <div className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
+            <div className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 select-none">
               Option {index + 1}:
             </div>
 
@@ -450,6 +420,8 @@ const InlinePreferenceTask = memo(({ adData, isStreaming }: InlinePreferenceTask
                 clickable={false}
                 display_thumbs={false}
                 isStreaming={isStreaming}
+                showVisitWebsite={true}
+                onVisitWebsiteHover={setVisitWebsiteHovered}
               />
             </div>
           </div>

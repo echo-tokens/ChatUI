@@ -73,6 +73,8 @@ function useTextToSpeechBrowser({
       return;
     }
 
+    text = text.replace(/\[AD\].*?\[\/AD\]/g, '');
+
     const synth = window.speechSynthesis;
     const voice = voices.find((v) => v.value === voiceName);
 

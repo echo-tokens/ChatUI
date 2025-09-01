@@ -13,7 +13,7 @@ export default function useIdChangeEffect(conversationId: string) {
 
   useEffect(() => {
     if (conversationId !== lastConvoId.current) {
-      logger.log('conversation', 'Conversation ID change');
+      // logger.log('conversation', 'Conversation ID change');
       resetVisibleArtifacts();
     }
     lastConvoId.current = conversationId;

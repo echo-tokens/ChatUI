@@ -7,10 +7,10 @@ export default function useFocusChatEffect(textAreaRef: React.RefObject<HTMLText
   const navigate = useNavigate();
   useEffect(() => {
     if (textAreaRef?.current && location.state?.focusChat) {
-      logger.log(
-        'conversation',
-        `Focusing textarea on location state change: ${location.pathname}`,
-      );
+      // logger.log(
+      //   'conversation',
+      //   `Focusing textarea on location state change: ${location.pathname}`,
+      // );
 
       /** Check if the device is not a touchscreen */
       if (!window.matchMedia?.('(pointer: coarse)').matches) {
